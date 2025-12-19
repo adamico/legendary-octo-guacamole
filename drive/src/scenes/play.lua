@@ -15,6 +15,7 @@ function Play:update()
    world.sys("controllable", Systems.controllable)()
    world.sys("acceleration", Systems.acceleration)()
    world.sys("velocity", Systems.velocity)()
+   world.sys("drawable,sprite", Systems.change_sprite)()
 end
 
 function Play:draw()

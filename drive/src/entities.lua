@@ -14,9 +14,9 @@ function Entities.spawn_player(world, x, y)
         friction = 0.5,
         vel_x = 0,
         vel_y = 0,
-        sprite_index = GameConstants.Player.sprite_index_offset,
+        sprite_index = GameConstants.Player.sprite_index_offsets.down,
     }
-    return world.ent("player,drawable,velocity,controllable,acceleration,shadow", player)
+    return world.ent("player,velocity,controllable,acceleration,shadow,drawable,sprite", player)
 end
 
 return Entities

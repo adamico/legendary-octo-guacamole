@@ -6,7 +6,11 @@ local GameConstants = {
       invulnerable_time = 120, -- frames
       max_health = 4,
       move_speed = vec(1, 1),
-      sprite_index_offset = 238,
+      sprite_index_offsets = {
+         down = 238,
+         right = 246,
+         up = 253,
+      },
       width = 24,
       height = 32,
    },
