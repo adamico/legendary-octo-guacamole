@@ -23,6 +23,7 @@ function Play:draw()
    rectfill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 21)
    clip()
    map()
+   world.sys("shadow", Systems.draw_shadow)()
    world.sys("drawable", Systems.drawable)()
 end
 

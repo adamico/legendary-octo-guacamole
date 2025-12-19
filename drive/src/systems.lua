@@ -82,4 +82,11 @@ function Systems.drawable(entity)
     spr(t() * 30 % 30 < 15 and entity.sprite_index or entity.sprite_index + 1, entity.x, entity.y)
 end
 
+function Systems.draw_shadow(entity)
+    local shadow_color = 1
+    local x1, y1 = entity.x + 1, entity.y + 11
+    local x2, y2 = entity.x + entity.width - 2, y1 + 6
+    ovalfill(x1, y1, x2, y2, shadow_color)
+end
+
 return Systems
