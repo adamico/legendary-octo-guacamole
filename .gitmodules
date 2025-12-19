@@ -1,0 +1,3 @@
+[submodule "picotron-definitions"]
+	path = picotron-definitions
+	url = https://github.com/ahai64/picotron-definitions.git
