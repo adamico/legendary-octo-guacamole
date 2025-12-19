@@ -1,0 +1,3 @@
+# picotron config
+
+mount / picotron-template/drive

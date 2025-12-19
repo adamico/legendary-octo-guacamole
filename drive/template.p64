@@ -1,0 +1,44 @@
+picotron cartridge // www.picotron.net
+version 2
+
+:: gfx/
+:: map/
+:: sfx/
+:: main.lua
+--[[pod_format="raw",created="2025-12-18 09:37:41",modified="2025-12-18 09:39:20",revision=5]]
+local cart_name = "template"
+
+CARTPATH = ""
+
+if not fetch("src/main.lua") then
+	cd("/")
+	CARTPATH = cart_name..".p64/"
+end
+
+include("src/main.lua")
+
+:: .info.pod
+--[[pod,created="2025-11-13 21:07:43",modified="2025-12-18 12:27:57",runtime=24,workspaces={{location="main.lua#9",workspace_index=1},{location="gfx/0.gfx",workspace_index=2},{location="map/0.map",workspace_index=3}}]]
+:: gfx/.info.pod
+--[[pod,created="2025-11-13 21:07:43",modified="2025-12-18 12:27:57"]]
+:: gfx/0.gfx
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTAxLTE3IDEwOjM1OjQ4Iixtb2RpZmllZD0iMjAyNS0x
+Mi0xOCAxMjoyNToyMCIscmV2aXNpb249MThdXWx6NAB_AAAAEjEAAPMhe1swXT17Ym1wPXB4dQBD
+IBAQBPBWBxAHwBfQF8AHEAfwVixmbGFncz0wLHBhbl94CADLeT0wLHpvb209OH0sPgAf8DEA----
+------------------------------------------------------------11BtPTh9fQ==
+:: map/.info.pod
+--[[pod,created="2025-11-13 21:07:43",modified="2025-12-18 12:27:57"]]
+:: map/0.map
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTAxLTE3IDEwOjM1OjQ4Iixtb2RpZmllZD0iMjAyNS0x
+Mi0xOCAxMjoyNzo1NyIscmV2aXNpb249MjZdXWx6NABSAAAAVgAAAPEfe3tibXA9cHh1AEyAICAA
+-wAA----AyxoaWRkZW49ZmFsc2UscGFuX3g9LTE2OQsA4nk9NDEsdGlsZV9oPTE2CgAQdwoAoHpv
+b209MC41fX0=
+:: sfx/.info.pod
+--[[pod,created="2025-11-13 21:07:43",modified="2025-12-18 12:27:57"]]
+:: sfx/0.sfx
+b64$LS1bW3BvZCxjcmVhdGVkPSIyMDI1LTA3LTMxIDA4OjMwOjI4Iixtb2RpZmllZD0iMjAyNS0w
+Ny0zMSAwODozMDoyOCIscmV2aXNpb249MF1dbHo0AKAAAAALCgAA-zBweHUAAygAAAQABA9AEAIO
+AAGgASACoA4ADxAADfDKAQIDQA8PkAQFBgdADJAICQoLQAyQDwwPDQ8ODEAM8P8BAOv-J6oBEAYP
+MBABIAEgAfAAAhACDhABIA8hIAEwD0Dwww8oD--wxg-4Cg--D4AP9w8NAfAJARAGDjAA------_9
+H-8BAKzPyA9AAA8QQP--sPD-AQD-6lD-----KQ==
+:: [eoc]
