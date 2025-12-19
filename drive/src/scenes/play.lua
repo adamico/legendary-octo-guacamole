@@ -8,7 +8,7 @@ player = {}
 
 function Play:enteredState()
    Log.trace("Entered Play scene")
-   player = Entities.spawn_player(world)
+   player = Entities.spawn_player(world, 10 * 16, 10 * 16)
 end
 
 function Play:update()
