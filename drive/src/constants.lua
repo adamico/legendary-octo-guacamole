@@ -1,19 +1,16 @@
 SCREEN_WIDTH = 480
 SCREEN_HEIGHT = 270
-UI_HEIGHT = 48
-GRID_SIZE = 16
-STARTING_SEEDS = 10
 
-Game = {
+local GameConstants = {
    Player = {
       invulnerable_time = 120, -- frames
       max_health = 4,
       move_speed = vec(1, 1),
-      sprite_index_offset = 8,
+      sprite_index_offset = 238,
       width = 24,
       height = 32,
    },
-   title = "Necrotron",
+   title = "Pizak",
    score = {
    },
    debug = {
@@ -46,18 +43,12 @@ Game = {
    }
 }
 
-Game.controls = {
-   move_up = Game.buttons.up,
-   move_down = Game.buttons.down,
-   move_left = Game.buttons.left,
-   move_right = Game.buttons.right,
-   spawn_tree = Game.buttons.o,
+GameConstants.controls = {
+   move_up = GameConstants.buttons.up,
+   move_down = GameConstants.buttons.down,
+   move_left = GameConstants.buttons.left,
+   move_right = GameConstants.buttons.right,
+   spawn_tree = GameConstants.buttons.o,
 }
 
-Keys = {
-   show_attributes = "f2",
-   show_hitboxes = "f3",
-   godmode = "f4",
-   noclip = "f5",
-   debug = "f6",
-}
+return GameConstants

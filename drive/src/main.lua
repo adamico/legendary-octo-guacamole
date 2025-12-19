@@ -1,9 +1,6 @@
-include("src/constants.lua")
 include("lib/require.lua")
 include("lib/debugui.lua")
 include("lib/eggs.p8/eggs.lua")
-include("lib/hit.p8/hit.lua")
-include("lib/locus.p8/locus.lua")
 
 add_module_path("lib/")
 add_module_path("src/")
@@ -13,6 +10,7 @@ add_module_path("src/systems/")
 
 Class = require("middleclass")
 Stateful = require("stateful")
+GameConstants = require("constants")
 
 Log = require("log")
 Log.init("trace")
