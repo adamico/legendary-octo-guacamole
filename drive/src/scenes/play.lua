@@ -1,3 +1,5 @@
+local Systems = require("systems")
+
 local Play = SceneManager:addState("Play")
 
 world = eggs()
@@ -9,16 +11,15 @@ local function spawn_player()
       y = 10 * 16,
       width = 16,
       height = 16,
-      speed = 2,
-      speed_x = 0,
-      speed_y = 0,
+      -- Movement properties (BoI-style: instant response, almost no slide)
+      accel = 1.2,
+      max_speed = 2,
+      friction = 0.5,
+      vel_x = 0,
+      vel_y = 0,
       sprite_index = GameConstants.Player.sprite_index_offset,
    }
-   return world.ent("player,drawable,velocity,controllable", player)
-end
-
-local draw_entity = function(entity)
-   spr(t() * 30 % 30 < 15 and entity.sprite_index or entity.sprite_index + 1, entity.x, entity.y)
+   return world.ent("player,drawable,velocity,controllable,acceleration", player)
 end
 
 function Play:enteredState()
@@ -27,35 +28,9 @@ function Play:enteredState()
 end
 
 function Play:update()
-   world.sys("controllable", function(entity)
-      local left = btn(GameConstants.controls.move_left)
-      local right = btn(GameConstants.controls.move_right)
-      local up = btn(GameConstants.controls.move_up)
-      local down = btn(GameConstants.controls.move_down)
-
-      -- Determine direction as unit values
-      local dx = 0
-      local dy = 0
-
-      if left then dx = -1 end
-      if right then dx = 1 end
-      if up then dy = -1 end
-      if down then dy = 1 end
-
-      -- Normalize speed for diagonal movement (ceil = slightly faster diagonals)
-      local speed = entity.speed
-      if dx ~= 0 and dy ~= 0 then
-         speed = ceil(speed * 0.7071)
-      end
-
-      entity.speed_x = dx * speed
-      entity.speed_y = dy * speed
-   end)()
-
-   world.sys("velocity", function(entity)
-      entity.x += entity.speed_x
-      entity.y += entity.speed_y
-   end)()
+   world.sys("controllable", Systems.controllable)()
+   world.sys("acceleration", Systems.acceleration)()
+   world.sys("velocity", Systems.velocity)()
 end
 
 function Play:draw()
@@ -64,7 +39,7 @@ function Play:draw()
    rectfill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 21)
    clip()
    map()
-   world.sys("drawable", draw_entity)()
+   world.sys("drawable", Systems.drawable)()
 end
 
 function Play:exitedState()
