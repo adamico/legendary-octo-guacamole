@@ -18,8 +18,8 @@ function Projectile.spawn(world, x, y, dx, dy, recovery_percent, shot_cost)
         sub_y = 0,
         damage = GameConstants.Projectile.damage,
         owner = "player",
-        recovery_percent = recovery_percent or 0.8,
-        shot_cost = shot_cost or 20,
+        recovery_percent = recovery_percent,
+        shot_cost = shot_cost,
         sprite_index = 77,
     }
     return world.ent("projectile,velocity,collidable,drawable,sprite", projectile)

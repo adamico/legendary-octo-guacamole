@@ -31,8 +31,9 @@ end
 Collision.CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_y)
     -- Spawn pickup at wall impact point
     -- Use projectile's own recovery_percent and shot_cost (inherited from player)
-    local recovery = (projectile.shot_cost or 20) * (projectile.recovery_percent or 0.8)
-    Entities.spawn_pickup_projectile(world, projectile.x, projectile.y, recovery)
+    local recovery = (projectile.shot_cost) * (projectile.recovery_percent)
+    Entities.spawn_pickup_projectile(world, projectile.x, projectile.y, projectile.dir_x, projectile.dir_y, recovery,
+        projectile.sprite_index)
     world.del(projectile)
 end
 
@@ -54,7 +55,7 @@ Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, en
     if enemy.hp <= 0 then
         -- Drop HP pickup (100% for MVP)
         local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
-        Entities.spawn_pickup_projectile(world, enemy.x, enemy.y, recovery)
+        Entities.spawn_pickup_projectile(world, enemy.x, enemy.y, recovery, projectile.sprite_index)
 
         -- Delete enemy
         world.del(enemy)
