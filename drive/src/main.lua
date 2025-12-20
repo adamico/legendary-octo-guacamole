@@ -6,6 +6,7 @@ add_module_path("lib/")
 add_module_path("src/")
 add_module_path("src/scenes/")
 add_module_path("src/systems/")
+add_module_path("src/entities/")
 
 Class = require("middleclass")
 Stateful = require("stateful")
