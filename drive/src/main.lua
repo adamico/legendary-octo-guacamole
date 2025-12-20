@@ -5,6 +5,7 @@ include("lib/eggs.p8/eggs.lua")
 add_module_path("lib/")
 add_module_path("src/")
 add_module_path("src/scenes/")
+add_module_path("src/systems/")
 
 Class = require("middleclass")
 Stateful = require("stateful")
