@@ -253,11 +253,13 @@ function Systems.map_collision(entity)
    local h = entity.height or 16
    local sub_x = entity.sub_x or 0
    local sub_y = entity.sub_y or 0
+   local vel_x = entity.vel_x or 0
+   local vel_y = entity.vel_y or 0
 
    -- X collision: predict movement
-   local move_x = flr(sub_x + entity.vel_x)
-   if sub_x + entity.vel_x < 0 and sub_x + entity.vel_x ~= move_x then
-      move_x = ceil(sub_x + entity.vel_x) - 1
+   local move_x = flr(sub_x + vel_x)
+   if sub_x + vel_x < 0 and sub_x + vel_x ~= move_x then
+      move_x = ceil(sub_x + vel_x) - 1
    end
 
    if is_solid(x + move_x, y, w, h) then
@@ -265,10 +267,10 @@ function Systems.map_collision(entity)
       entity.sub_x = 0
    end
 
-   -- Y collision: predict movement (using potentially updated sub_x/vel_x)
-   local move_y = flr(sub_y + entity.vel_y)
-   if sub_y + entity.vel_y < 0 and sub_y + entity.vel_y ~= move_y then
-      move_y = ceil(sub_y + entity.vel_y) - 1
+   -- Y collision: predict movement (using potentially updated sub_x)
+   local move_y = flr(sub_y + vel_y)
+   if sub_y + vel_y < 0 and sub_y + vel_y ~= move_y then
+      move_y = ceil(sub_y + vel_y) - 1
    end
 
    if is_solid(x + (entity.sub_x == 0 and 0 or move_x), y + move_y, w, h) then
@@ -286,8 +288,10 @@ function Systems.projectile_system(entity)
    -- Prediction for next frame
    local sub_x = entity.sub_x or 0
    local sub_y = entity.sub_y or 0
-   local move_x = flr(sub_x + entity.vel_x)
-   local move_y = flr(sub_y + entity.vel_y)
+   local vel_x = entity.vel_x or 0
+   local vel_y = entity.vel_y or 0
+   local move_x = flr(sub_x + vel_x)
+   local move_y = flr(sub_y + vel_y)
 
    if is_solid(entity.x + move_x, entity.y, entity.width, entity.height) or
       is_solid(entity.x, entity.y + move_y, entity.width, entity.height) then

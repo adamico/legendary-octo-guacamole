@@ -32,7 +32,7 @@ end
 
 -- Create a projectile entity
 function Entities.spawn_projectile(world, x, y, dx, dy)
-    local proj = {
+    local projectile = {
         type = "Projectile",
         x = x,
         y = y,
@@ -48,7 +48,7 @@ function Entities.spawn_projectile(world, x, y, dx, dy)
         owner = "player",
         sprite_index = 77,
     }
-    return world.ent("projectile,velocity,collidable,drawable,sprite", proj)
+    return world.ent("projectile,velocity,collidable,drawable,sprite", projectile)
 end
 
 -- Create a pickup entity (stuck projectile)
@@ -59,6 +59,10 @@ function Entities.spawn_pickup_projectile(world, x, y, amount)
         y = y,
         width = 8,
         height = 8,
+        vel_x = 0,
+        vel_y = 0,
+        sub_x = 0,
+        sub_y = 0,
         recovery_amount = amount or 4,
         sprite_index = 77,
     }
