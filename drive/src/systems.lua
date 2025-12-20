@@ -18,7 +18,14 @@ Systems.CollisionHandlers = {
 
 -- Registry for Player + ProjectilePickup interaction
 Systems.CollisionHandlers.entity["Player,ProjectilePickup"] = function(player, pickup)
-   player.hp = min(player.max_hp, player.hp + (pickup.recovery_amount or 16))
+   player.hp += (pickup.recovery_amount or 16)
+
+   -- Bank overflow HP for future mechanics
+   if player.hp > player.max_hp then
+      player.overflow_hp = (player.overflow_hp or 0) + (player.hp - player.max_hp)
+      player.hp = player.max_hp
+   end
+
    world.del(pickup)
 end
 
@@ -150,6 +157,7 @@ function Systems.shooter(entity)
    if (sx ~= 0 or sy ~= 0) and entity.hp > entity.shot_cost then
       -- Fire shot
       entity.hp -= entity.shot_cost
+      entity.time_since_shot = 0 -- Reset regen timer
       local projectile = Entities.spawn_projectile(
          world, entity.x + entity.width / 2 - 2,
          entity.y + entity.height / 2 - 2, sx, sy,
@@ -331,6 +339,25 @@ function Systems.entity_collision(entity1, entity2)
       entity1.y + entity1.height > entity2.y
 end
 
+-- Health regen system: passive HP recovery (60 FPS)
+function Systems.health_regen(entity)
+   if not entity.regen_rate or entity.regen_rate <= 0 then return end
+
+   -- Track time since last shot
+   entity.time_since_shot = (entity.time_since_shot or 0) + (1 / 60)
+
+   -- Only regen after delay
+   if entity.time_since_shot >= entity.regen_delay then
+      entity.hp = entity.hp + (entity.regen_rate / 60)
+
+      -- Bank overflow HP
+      if entity.hp > entity.max_hp then
+         entity.overflow_hp = (entity.overflow_hp or 0) + (entity.hp - entity.max_hp)
+         entity.hp = entity.max_hp
+      end
+   end
+end
+
 -- Health manager: check for death
 function Systems.health_manager(entity)
    if entity.hp and entity.hp <= 0 then
@@ -376,11 +403,13 @@ function Systems.draw_spotlight(entity, clip_square)
    clip()
 end
 
--- UI system: Draw segmented health bar above player
+-- UI system: Draw dynamic three-state health bar above player
 function Systems.draw_health_bar(entity)
    if not entity.hp then return end
 
-   local segments = 5
+   -- Dynamic segment calculation based on player stats
+   local shot_cost = entity.shot_cost or 20
+   local segments = ceil(entity.max_hp / shot_cost)
    local seg_w = 6
    local bar_h = 3
    local gap = 1
@@ -391,14 +420,20 @@ function Systems.draw_health_bar(entity)
    for i = 0, segments - 1 do
       local start_x = px + i * (seg_w + gap)
 
-      -- Fragment Background (Red / Empty)
-      rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
+      -- Calculate HP in this segment
+      local segment_hp = min(shot_cost, max(0, entity.hp - (i * shot_cost)))
 
-      -- Fragment Fill (Green / Life)
-      local seg_hp = min(20, max(0, entity.hp - (i * 20)))
-      if seg_hp > 0 then
-         local fill_w = ceil((seg_hp / 20) * seg_w)
-         rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 11)
+      if segment_hp >= shot_cost then
+         -- Full segment: GREEN (shot ready)
+         rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 11)
+      elseif segment_hp > 0 then
+         -- Partial segment: RED background + ORANGE fill (charging)
+         rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)  -- Red background
+         local fill_w = ceil((segment_hp / shot_cost) * seg_w)
+         rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 9) -- Orange fill
+      else
+         -- Empty segment: RED only (no ammo)
+         rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
       end
    end
 end

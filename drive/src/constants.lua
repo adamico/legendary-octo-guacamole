@@ -18,6 +18,8 @@ local GameConstants = {
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
+      regen_rate = 5,    -- HP per second (0 = disabled)
+      regen_delay = 3.0, -- Seconds without shooting before regen starts
    },
    Projectile = {
       sprite_index_offsets = {

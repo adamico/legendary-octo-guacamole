@@ -38,6 +38,7 @@ function Play:update()
    world.sys("sprite", Systems.change_sprite)()
    -- Check entity-entity collisions for specific combinations
    world.sys("collidable", Systems.resolve_entity_collisions)()
+   world.sys("health", Systems.health_regen)()
    world.sys("health", Systems.health_manager)()
 end
 

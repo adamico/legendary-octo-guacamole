@@ -23,6 +23,10 @@ function Entities.spawn_player(world, x, y)
         max_hp = GameConstants.Player.max_health,
         shot_cost = GameConstants.Player.shot_cost,
         recovery_percent = GameConstants.Player.recovery_percent,
+        regen_rate = GameConstants.Player.regen_rate,
+        regen_delay = GameConstants.Player.regen_delay,
+        time_since_shot = 0,
+        overflow_hp = 0,
         shoot_cooldown = 0,
     }
     return world.ent(
