@@ -22,7 +22,7 @@ function Entities.spawn_player(world, x, y)
         hp = GameConstants.Player.max_health,
         max_hp = GameConstants.Player.max_health,
         shot_cost = GameConstants.Player.shot_cost,
-        recovery_amount = GameConstants.Player.recovery_amount,
+        recovery_percent = GameConstants.Player.recovery_percent,
         shoot_cooldown = 0,
     }
     return world.ent(
@@ -31,7 +31,7 @@ function Entities.spawn_player(world, x, y)
 end
 
 -- Create a projectile entity
-function Entities.spawn_projectile(world, x, y, dx, dy)
+function Entities.spawn_projectile(world, x, y, dx, dy, recovery_percent, shot_cost)
     local projectile = {
         type = "Projectile",
         x = x,
@@ -46,6 +46,8 @@ function Entities.spawn_projectile(world, x, y, dx, dy)
         sub_y = 0,
         damage = 10,
         owner = "player",
+        recovery_percent = recovery_percent or 0.8,
+        shot_cost = shot_cost or 20,
         sprite_index = 77,
     }
     return world.ent("projectile,velocity,collidable,drawable,sprite", projectile)

@@ -10,6 +10,27 @@ local SHADOW_COLOR = 32
 
 local spotlight_initialized = false
 
+-- Collision Handlers Registry
+Systems.CollisionHandlers = {
+   entity = {},
+   map = {}
+}
+
+-- Registry for Player + ProjectilePickup interaction
+Systems.CollisionHandlers.entity["Player,ProjectilePickup"] = function(player, pickup)
+   player.hp = min(player.max_hp, player.hp + (pickup.recovery_amount or 16))
+   world.del(pickup)
+end
+
+-- Registry for Projectile + Map interaction
+Systems.CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_y)
+   -- Spawn pickup at wall impact point
+   -- Use projectile's own recovery_percent and shot_cost (inherited from player)
+   local recovery = (projectile.shot_cost or 20) * (projectile.recovery_percent or 0.8)
+   Entities.spawn_pickup_projectile(world, projectile.x, projectile.y, recovery)
+   world.del(projectile)
+end
+
 -- Initialize the extended palette (colors 32-63)
 -- Defines lighter/darker variants for base colors 0-15
 -- Uses the 50% formula from the user reference
@@ -131,7 +152,8 @@ function Systems.shooter(entity)
       entity.hp -= entity.shot_cost
       local projectile = Entities.spawn_projectile(
          world, entity.x + entity.width / 2 - 2,
-         entity.y + entity.height / 2 - 2, sx, sy
+         entity.y + entity.height / 2 - 2, sx, sy,
+         entity.recovery_percent, entity.shot_cost
       )
       entity.shoot_cooldown = 15 -- Adjust as needed
    end
@@ -245,8 +267,27 @@ local function is_solid(x, y, w, h)
    return false
 end
 
--- Map collision system: check for collisions with the map tiles
-function Systems.map_collision(entity)
+-- Entity-Entity Collision Resolver
+function Systems.resolve_entity_collisions(entity1)
+   -- We iterate over all entities that might collide with entity1
+   -- This is simplified; for a real MVP we might use a spatial hash or target specific tags
+   -- For now, we'll look for handlers that match the current types
+   world.sys("collidable", function(entity2)
+      if entity1 == entity2 then return end
+
+      local type1 = entity1.type or ""
+      local type2 = entity2.type or ""
+      local key = type1..","..type2
+      local handler = Systems.CollisionHandlers.entity[key]
+
+      if handler and Systems.entity_collision(entity1, entity2) then
+         handler(entity1, entity2)
+      end
+   end)()
+end
+
+-- Entity-Map Collision Resolver (Abstracted)
+function Systems.resolve_map_collisions(entity)
    local x = entity.x
    local y = entity.y
    local w = entity.width or 16
@@ -256,53 +297,30 @@ function Systems.map_collision(entity)
    local vel_x = entity.vel_x or 0
    local vel_y = entity.vel_y or 0
 
-   -- X collision: predict movement
-   local move_x = flr(sub_x + vel_x)
-   if sub_x + vel_x < 0 and sub_x + vel_x ~= move_x then
-      move_x = ceil(sub_x + vel_x) - 1
+   local handler = Systems.CollisionHandlers.map[entity.type or ""]
+
+   local function check(axis, vox, voy)
+      local sub = entity["sub_"..axis]
+      local vel = entity["vel_"..axis]
+      local move = flr(sub + vel)
+      if sub + vel < 0 and sub + vel ~= move then
+         move = ceil(sub + vel) - 1
+      end
+
+      local cx = x + vox + (axis == "x" and move or 0)
+      local cy = y + voy + (axis == "y" and move or 0)
+
+      if is_solid(cx, cy, w, h) then
+         if handler then handler(entity, cx, cy) end
+         entity["vel_"..axis] = 0
+         entity["sub_"..axis] = 0
+         return 0
+      end
+      return move
    end
 
-   if is_solid(x + move_x, y, w, h) then
-      entity.vel_x = 0
-      entity.sub_x = 0
-   end
-
-   -- Y collision: predict movement (using potentially updated sub_x)
-   local move_y = flr(sub_y + vel_y)
-   if sub_y + vel_y < 0 and sub_y + vel_y ~= move_y then
-      move_y = ceil(sub_y + vel_y) - 1
-   end
-
-   if is_solid(x + (entity.sub_x == 0 and 0 or move_x), y + move_y, w, h) then
-      entity.vel_y = 0
-      entity.sub_y = 0
-   end
-end
-
--- Projectile system: handle projectile-specific logic (wall impact)
-function Systems.projectile_system(entity)
-   -- Check if it hit a wall in the previous frame (velocity became 0)
-   -- Or check predicted collision
-   local hit_wall = false
-
-   -- Prediction for next frame
-   local sub_x = entity.sub_x or 0
-   local sub_y = entity.sub_y or 0
-   local vel_x = entity.vel_x or 0
-   local vel_y = entity.vel_y or 0
-   local move_x = flr(sub_x + vel_x)
-   local move_y = flr(sub_y + vel_y)
-
-   if is_solid(entity.x + move_x, entity.y, entity.width, entity.height) or
-      is_solid(entity.x, entity.y + move_y, entity.width, entity.height) then
-      hit_wall = true
-   end
-
-   if hit_wall then
-      -- Spawn pickup at wall impact point
-      Entities.spawn_pickup_projectile(world, entity.x, entity.y, 4) -- Default recovery amount
-      world.del(entity)
-   end
+   local mx = check("x", 0, 0)
+   check("y", entity.sub_x == 0 and 0 or mx, 0)
 end
 
 -- Entity collision system: generic overlap check
@@ -311,14 +329,6 @@ function Systems.entity_collision(entity1, entity2)
       entity1.x + entity1.width > entity2.x and
       entity1.y < entity2.y + entity2.height and
       entity1.y + entity1.height > entity2.y
-end
-
--- Pickup manager: handle collecting pickups
-function Systems.pickup_manager(player, pickup)
-   if Systems.entity_collision(player, pickup) then
-      player.hp = min(player.max_hp, player.hp + (pickup.recovery_amount or 0))
-      world.del(pickup)
-   end
 end
 
 -- Health manager: check for death
@@ -366,20 +376,31 @@ function Systems.draw_spotlight(entity, clip_square)
    clip()
 end
 
--- UI system: Draw health bar above player
-function Systems.draw_ui(entity)
+-- UI system: Draw segmented health bar above player
+function Systems.draw_health_bar(entity)
    if not entity.hp then return end
 
-   local bar_w = 20
+   local segments = 5
+   local seg_w = 6
    local bar_h = 3
-   local px = entity.x + entity.width / 2 - bar_w / 2
-   local py = entity.y - 6
+   local gap = 1
+   local total_w = (seg_w + gap) * segments - gap
+   local px = flr(entity.x + (entity.width or 16) / 2 - total_w / 2)
+   local py = flr(entity.y - 8)
 
-   -- Background (Red)
-   rectfill(px, py, px + bar_w, py + bar_h, 8)
-   -- Foreground (Green/Life)
-   local life_w = (entity.hp / entity.max_hp) * bar_w
-   rectfill(px, py, px + life_w, py + bar_h, 11)
+   for i = 0, segments - 1 do
+      local start_x = px + i * (seg_w + gap)
+
+      -- Fragment Background (Red / Empty)
+      rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
+
+      -- Fragment Fill (Green / Life)
+      local seg_hp = min(20, max(0, entity.hp - (i * 20)))
+      if seg_hp > 0 then
+         local fill_w = ceil((seg_hp / 20) * seg_w)
+         rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 11)
+      end
+   end
 end
 
 return Systems

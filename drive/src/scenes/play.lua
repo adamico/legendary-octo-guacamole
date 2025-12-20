@@ -31,15 +31,13 @@ end
 function Play:update()
    world.sys("controllable", Systems.controllable)()
    world.sys("acceleration", Systems.acceleration)()
-   world.sys("collidable", Systems.map_collision)()
+   world.sys("collidable,velocity", Systems.resolve_map_collisions)()
    world.sys("velocity", Systems.velocity)()
    world.sys("animatable", Systems.animatable)()
    world.sys("shooter", Systems.shooter)()
    world.sys("sprite", Systems.change_sprite)()
-   world.sys("projectile", Systems.projectile_system)()
-   world.sys("player", function(p)
-      world.sys("pickup", function(pk) Systems.pickup_manager(p, pk) end)()
-   end)()
+   -- Check entity-entity collisions for specific combinations
+   world.sys("collidable", Systems.resolve_entity_collisions)()
    world.sys("health", Systems.health_manager)()
 end
 
@@ -52,7 +50,7 @@ function Play:draw()
    -- Then shadow and player on top
    world.sys("shadow", function(entity) Systems.draw_shadow(entity, ROOM_CLIP) end)()
    world.sys("drawable", Systems.drawable)()
-   world.sys("health", Systems.draw_ui)()
+   world.sys("health", Systems.draw_health_bar)()
 end
 
 function Play:exitedState()

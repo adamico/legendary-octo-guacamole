@@ -16,8 +16,8 @@ local GameConstants = {
       width = 24,
       height = 32,
       max_health = 100,
-      shot_cost = 5,
-      recovery_amount = 4,
+      shot_cost = 20,
+      recovery_percent = 0.8,
    },
    Projectile = {
       sprite_index_offsets = {
