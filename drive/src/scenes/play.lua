@@ -25,7 +25,12 @@ function Play:enteredState()
    Systems.init_extended_palette()
    -- Initialize spotlight color table for lighting effects
    Systems.init_spotlight()
-   player = Entities.spawn_player(world, 10 * 16, 10 * 16)
+   player = Entities.spawn_player(world, 10 * 16, 2 * 16)
+
+   -- Spawn test enemies for MVP
+   Entities.spawn_enemy(world, 200, 100, "Skulker")
+   Entities.spawn_enemy(world, 150, 150, "Skulker")
+   Entities.spawn_enemy(world, 250, 120, "Skulker")
 end
 
 function Play:update()
@@ -37,6 +42,7 @@ function Play:update()
    world.sys("shooter", Systems.shooter)()
    world.sys("sprite", Systems.change_sprite)()
    -- Check entity-entity collisions for specific combinations
+   world.sys("enemy", Systems.enemy_ai)()
    world.sys("collidable", Systems.resolve_entity_collisions)()
    world.sys("health", Systems.health_regen)()
    world.sys("health", Systems.health_manager)()

@@ -38,6 +38,36 @@ Systems.CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_y)
    world.del(projectile)
 end
 
+-- Registry for Projectile + Enemy interaction
+Systems.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, enemy)
+   -- Deal damage to enemy
+   enemy.hp = enemy.hp - (projectile.damage or GameConstants.Projectile.damage or 10)
+
+   -- Destroy projectile
+   world.del(projectile)
+
+   -- Check if enemy died
+   if enemy.hp <= 0 then
+      -- Drop HP pickup (100% for MVP)
+      local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
+      Entities.spawn_pickup_projectile(world, enemy.x, enemy.y, recovery)
+
+      -- Delete enemy
+      world.del(enemy)
+   end
+end
+
+-- Registry for Player + Enemy interaction (contact damage)
+Systems.CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
+   -- Deal contact damage to player
+   player.hp = player.hp - (enemy.contact_damage or 10)
+
+   -- Reset regen timer (player took damage = in combat)
+   player.time_since_shot = 0
+
+   -- TODO (future): Add invulnerability frames, knockback
+end
+
 -- Initialize the extended palette (colors 32-63)
 -- Defines lighter/darker variants for base colors 0-15
 -- Uses the 50% formula from the user reference
@@ -181,11 +211,17 @@ function Systems.change_sprite(entity)
    local left = (dx == -1 and dy == 0)
    local sprite_index
    local flip = false
-   if neutral or down then sprite_index = GameConstants[entity.type].sprite_index_offsets.down end
-   if right or down_right or up_right then sprite_index = GameConstants[entity.type].sprite_index_offsets.right end
-   if up or up_left or down_left then sprite_index = GameConstants[entity.type].sprite_index_offsets.up end
+
+   -- Get sprite config (use enemy_type for enemies, type for everything else)
+   local lookup_type = entity.type == "Enemy" and entity.enemy_type or entity.type
+   local config = GameConstants[lookup_type] or GameConstants.Enemy[lookup_type]
+   if not config then return end -- No sprite config for this type
+
+   if neutral or down then sprite_index = config.sprite_index_offsets.down end
+   if right or down_right or up_right then sprite_index = config.sprite_index_offsets.right end
+   if up or up_left or down_left then sprite_index = config.sprite_index_offsets.up end
    if left or up_left or down_left then
-      sprite_index = GameConstants[entity.type].sprite_index_offsets.right
+      sprite_index = config.sprite_index_offsets.right
       flip = true
    end
 
@@ -358,10 +394,34 @@ function Systems.health_regen(entity)
    end
 end
 
+-- Enemy AI system: simple chase behavior
+function Systems.enemy_ai(entity)
+   -- Find player
+   local player = nil
+   world.sys("player", function(p) player = p end)()
+
+   if not player then return end
+
+   -- Calculate direction to player
+   local dx = player.x - entity.x
+   local dy = player.y - entity.y
+   local dist = sqrt(dx * dx + dy * dy)
+
+   if dist > 0 then
+      -- Normalize and apply speed
+      entity.vel_x = (dx / dist) * entity.speed
+      entity.vel_y = (dy / dist) * entity.speed
+
+      -- Store direction for sprite updates
+      entity.dir_x = dx > 0 and 1 or -1
+      entity.dir_y = dy > 0 and 1 or (dy < 0 and -1 or 0)
+   end
+end
+
 -- Health manager: check for death
 function Systems.health_manager(entity)
    if entity.hp and entity.hp <= 0 then
-      if world.has(entity, "player") then
+      if entity.type == "Player" then
          -- Handle player death
          Log.trace("Player died!")
          -- For now just reset HP for testing, or we could gotoState("GameOver")

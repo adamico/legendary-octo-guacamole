@@ -22,6 +22,7 @@ local GameConstants = {
       regen_delay = 3.0, -- Seconds without shooting before regen starts
    },
    Projectile = {
+      damage = 10, -- HP damage per projectile hit
       sprite_index_offsets = {
          down = 78,
          right = 77,
@@ -36,6 +37,21 @@ local GameConstants = {
          up = 78,
          left = 77,
       },
+   },
+   Enemy = {
+      Skulker = {
+         hp = 20,
+         speed = 0.5,
+         contact_damage = 10,
+         sprite_index_offsets = {
+            down = 254,
+            right = 255,
+            up = 256,
+         },
+         width = 16,
+         height = 16,
+      },
+      drop_chance = 1.0, -- 100% drop rate for MVP testing
    },
    title = "Pizak",
    score = {
