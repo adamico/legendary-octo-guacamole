@@ -4,6 +4,7 @@ local Physics = require("physics")
 local Combat = require("combat")
 local AI = require("ai")
 local Rendering = require("rendering")
+local Effects = require("effects")
 
 -- Merge all modules into a single Systems table for backward compatibility
 local Systems = {}
@@ -32,6 +33,7 @@ Systems.enemy_ai = AI.enemy_ai
 -- Rendering systems
 Systems.init_extended_palette = Rendering.init_extended_palette
 Systems.init_spotlight = Rendering.init_spotlight
+Systems.reset_spotlight = Rendering.reset_spotlight
 Systems.change_sprite = Rendering.change_sprite
 Systems.animatable = Rendering.animatable
 Systems.drawable = Rendering.drawable
@@ -40,5 +42,8 @@ Systems.draw_spotlight = Rendering.draw_spotlight
 Systems.draw_health_bar = Rendering.draw_health_bar
 Systems.SPOTLIGHT_COLOR = Rendering.SPOTLIGHT_COLOR
 Systems.SHADOW_COLOR = Rendering.SHADOW_COLOR
+
+-- Effects systems
+Systems.Effects = Effects
 
 return Systems

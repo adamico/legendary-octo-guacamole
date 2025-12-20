@@ -1,0 +1,118 @@
+-- Effects system: reusable visual, audio, and physical feedback
+local Effects = {}
+
+-- Screen shake state
+local shake_timer = 0
+local shake_intensity = 0
+
+-- Sprite flash state (per entity)
+-- entity.flash_timer and entity.flash_color set dynamically
+
+-- Screen shake effect
+function Effects.screen_shake(intensity, duration)
+    shake_intensity = max(shake_intensity, intensity or 2)
+    shake_timer = max(shake_timer, duration or 3)
+end
+
+-- Update shake (call from main game loop)
+function Effects.update_shake()
+    if shake_timer > 0 then
+        shake_timer -= 1
+        if shake_timer <= 0 then
+            shake_intensity = 0
+            camera() -- reset camera
+        else
+            -- Random shake offset
+            local ox = (rnd(2) - 1) * shake_intensity
+            local oy = (rnd(2) - 1) * shake_intensity
+            camera(ox, oy)
+        end
+    end
+end
+
+-- Flash sprite effect
+function Effects.flash_sprite(entity, frames, color)
+    entity.flash_timer = frames or 3
+    entity.flash_color = color or 7 -- white by default
+    Log.trace("Flash set: "..entity.type.." timer="..entity.flash_timer)
+end
+
+-- Update sprite flash (call from drawable system)
+function Effects.update_flash(entity)
+    if entity.flash_timer and entity.flash_timer > 0 then
+        Log.trace("Flashing: "..entity.type.." timer="..entity.flash_timer)
+        entity.flash_timer -= 1
+
+        -- Solid flash for entire duration
+        -- Swap all sprite colors to flash color using DRAW palette (Picotron has 64 colors)
+        for i = 1, 63 do -- Skip 0 (transparent)
+            pal(i, entity.flash_color or 7, 0)
+        end
+    end
+    -- Note: Palette reset happens after sprite draw in play.lua
+end
+
+-- Spawn particle effect (placeholder - needs particle system)
+function Effects.spawn_particles(x, y, ptype, count)
+    -- TODO: Implement particle system
+    -- For now, just a placeholder that could be expanded
+    -- ptype: "hit_spark", "explosion", "blood", "smoke", etc.
+    -- count: number of particles
+
+    -- Example implementation would create particle entities
+    -- that move, fade, and self-destruct
+end
+
+-- Generic hit impact effect (reusable)
+function Effects.hit_impact(source, target, intensity)
+    intensity = intensity or "normal"
+
+    -- Calculate impact point
+    local px = (source.x + target.x) / 2
+    local py = (source.y + target.y) / 2
+
+    -- Visual effects
+    Effects.spawn_particles(px, py, "hit_spark", 5)
+    Effects.flash_sprite(target, 10, 7) -- 10 frames = ~166ms at 60fps
+
+    -- Audio (context-based)
+    if target.type == "Player" then
+        -- sfx(2) -- pain sound (uncomment when SFX ready)
+    elseif target.type == "Enemy" then
+        -- sfx(5) -- hit sound (uncomment when SFX ready)
+    end
+
+    -- Screen shake (intensity-based)
+    if intensity == "light" then
+        Effects.screen_shake(1, 2)
+    elseif intensity == "normal" then
+        Effects.screen_shake(2, 3)
+    elseif intensity == "heavy" then
+        Effects.screen_shake(4, 5)
+    end
+end
+
+-- Death explosion effect (reusable for enemy/player death)
+function Effects.death_explosion(entity, ptype)
+    ptype = ptype or "explosion"
+
+    -- Bigger particle burst
+    Effects.spawn_particles(entity.x + entity.width / 2, entity.y + entity.height / 2, ptype, 15)
+
+    -- Flash before deletion
+    Effects.flash_sprite(entity, 5, 7)
+
+    -- Shake
+    Effects.screen_shake(3, 4)
+
+    -- Sound
+    -- sfx(10) -- explosion sound (uncomment when SFX ready)
+end
+
+-- Pickup/collect effect
+function Effects.pickup_collect(entity)
+    Effects.spawn_particles(entity.x, entity.y, "sparkle", 8)
+    -- sfx(6) -- pickup sound (uncomment when SFX ready)
+end
+
+return Effects

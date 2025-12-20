@@ -56,7 +56,12 @@ end
 -- Initialize the spotlight color table
 function Rendering.init_spotlight()
     if spotlight_initialized then return end
+    Rendering.reset_spotlight()
+    spotlight_initialized = true
+end
 
+-- Reset the spotlight color table (can be called each frame after palette changes)
+function Rendering.reset_spotlight()
     local spotlight_row_address = 0x8000 + Rendering.SPOTLIGHT_COLOR * 64
     local shadow_row_address = 0x8000 + Rendering.SHADOW_COLOR * 64
 
@@ -82,7 +87,6 @@ function Rendering.init_spotlight()
     end
 
     poke(0x550b, 0x3f)
-    spotlight_initialized = true
 end
 
 -- Sprite system: update sprite based on direction

@@ -46,17 +46,32 @@ function Play:update()
    world.sys("collidable", Systems.resolve_entity_collisions)()
    world.sys("health", Systems.health_regen)()
    world.sys("health", Systems.health_manager)()
+
+   -- Update effects (screenshake)
+   Systems.Effects.update_shake()
 end
 
 function Play:draw()
    cls(0)
    draw_room()
    map()
+   -- Reset spotlight color table (in case flash effects corrupted it)
+   Systems.reset_spotlight()
    -- Draw spotlight first (brightens background)
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, ROOM_CLIP) end)()
    -- Then shadow and player on top
    world.sys("shadow", function(entity) Systems.draw_shadow(entity, ROOM_CLIP) end)()
-   world.sys("drawable", Systems.drawable)()
+   -- Draw entities (with flash effects applied)
+   world.sys("drawable", function(entity)
+      local was_flashing = entity.flash_timer and entity.flash_timer > 0
+      Systems.Effects.update_flash(entity)
+      Systems.drawable(entity)
+      -- Reset draw palette after flash (reset_spotlight handles color table each frame)
+      if was_flashing then
+         pal(0)
+      end
+   end)()
+
    world.sys("health", Systems.draw_health_bar)()
 end
 

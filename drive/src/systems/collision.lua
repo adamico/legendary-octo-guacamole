@@ -1,6 +1,7 @@
 -- Collision detection and resolution systems
 local Entities = require("entities")
 local GameConstants = require("constants")
+local Effects = require("effects")
 
 local Collision = {}
 
@@ -20,6 +21,9 @@ Collision.CollisionHandlers.entity["Player,ProjectilePickup"] = function(player,
         player.hp = player.max_hp
     end
 
+    -- Visual/audio feedback
+    Effects.pickup_collect(pickup)
+
     world.del(pickup)
 end
 
@@ -36,6 +40,9 @@ end
 Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, enemy)
     -- Deal damage to enemy
     enemy.hp = enemy.hp - (projectile.damage or GameConstants.Projectile.damage or 10)
+
+    -- Visual/audio feedback (reusable effect)
+    Effects.hit_impact(projectile, enemy, "normal")
 
     -- Destroy projectile
     world.del(projectile)
@@ -55,6 +62,9 @@ end
 Collision.CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
     -- Deal contact damage to player
     player.hp = player.hp - (enemy.contact_damage or 10)
+
+    -- Visual/audio feedback (heavier for player damage)
+    Effects.hit_impact(enemy, player, "heavy")
 
     -- Reset regen timer (player took damage = in combat)
     player.time_since_shot = 0

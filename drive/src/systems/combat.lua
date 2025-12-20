@@ -65,6 +65,10 @@ end
 
 -- Default death handler for other entities
 Combat.DeathHandlers.default = function(entity)
+    -- Visual/audio feedback for death
+    local Effects = require("effects")
+    Effects.death_explosion(entity, "explosion")
+
     world.del(entity)
 end
 
