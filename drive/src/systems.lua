@@ -1,5 +1,6 @@
 -- Systems module: reusable ECS system functions
 local Systems = {}
+local Entities = require("entities")
 
 -- Spotlight color constants
 -- Color 32 = shadow effect (darkens underlying colors)
@@ -111,6 +112,31 @@ function Systems.controllable(entity)
    if down then entity.dir_y = 1 end
 end
 
+-- Shooter system: handle firing projectiles using second stick
+function Systems.shooter(entity)
+   if entity.shoot_cooldown > 0 then
+      entity.shoot_cooldown -= 1
+      return
+   end
+
+   local sx = 0
+   local sy = 0
+   if btn(GameConstants.controls.shoot_left) then sx -= 1 end
+   if btn(GameConstants.controls.shoot_right) then sx += 1 end
+   if btn(GameConstants.controls.shoot_up) then sy -= 1 end
+   if btn(GameConstants.controls.shoot_down) then sy += 1 end
+
+   if (sx ~= 0 or sy ~= 0) and entity.hp > entity.shot_cost then
+      -- Fire shot
+      entity.hp -= entity.shot_cost
+      local projectile = Entities.spawn_projectile(
+         world, entity.x + entity.width / 2 - 2,
+         entity.y + entity.height / 2 - 2, sx, sy
+      )
+      entity.shoot_cooldown = 15 -- Adjust as needed
+   end
+end
+
 function Systems.change_sprite(entity)
    local dx = entity.dir_x or 0
    local dy = entity.dir_y or 0
@@ -125,16 +151,20 @@ function Systems.change_sprite(entity)
    local left = (dx == -1 and dy == 0)
    local sprite_index
    local flip = false
-   if neutral or down then sprite_index = GameConstants.Player.sprite_index_offsets.down end
-   if right or down_right or up_right then sprite_index = GameConstants.Player.sprite_index_offsets.right end
-   if up or up_left or down_left then sprite_index = GameConstants.Player.sprite_index_offsets.up end
+   if neutral or down then sprite_index = GameConstants[entity.type].sprite_index_offsets.down end
+   if right or down_right or up_right then sprite_index = GameConstants[entity.type].sprite_index_offsets.right end
+   if up or up_left or down_left then sprite_index = GameConstants[entity.type].sprite_index_offsets.up end
    if left or up_left or down_left then
-      sprite_index = GameConstants.Player.sprite_index_offsets.right
+      sprite_index = GameConstants[entity.type].sprite_index_offsets.right
       flip = true
    end
 
    entity.sprite_index = sprite_index
    entity.flip = flip
+end
+
+function Systems.animatable(entity)
+   entity.sprite_index = t() * 30 % 30 < 15 and entity.sprite_index or entity.sprite_index + 1
 end
 
 -- Physics systems
@@ -247,10 +277,64 @@ function Systems.map_collision(entity)
    end
 end
 
+-- Projectile system: handle projectile-specific logic (wall impact)
+function Systems.projectile_system(entity)
+   -- Check if it hit a wall in the previous frame (velocity became 0)
+   -- Or check predicted collision
+   local hit_wall = false
+
+   -- Prediction for next frame
+   local sub_x = entity.sub_x or 0
+   local sub_y = entity.sub_y or 0
+   local move_x = flr(sub_x + entity.vel_x)
+   local move_y = flr(sub_y + entity.vel_y)
+
+   if is_solid(entity.x + move_x, entity.y, entity.width, entity.height) or
+      is_solid(entity.x, entity.y + move_y, entity.width, entity.height) then
+      hit_wall = true
+   end
+
+   if hit_wall then
+      -- Spawn pickup at wall impact point
+      Entities.spawn_pickup_projectile(world, entity.x, entity.y, 4) -- Default recovery amount
+      world.del(entity)
+   end
+end
+
+-- Entity collision system: generic overlap check
+function Systems.entity_collision(entity1, entity2)
+   return entity1.x < entity2.x + entity2.width and
+      entity1.x + entity1.width > entity2.x and
+      entity1.y < entity2.y + entity2.height and
+      entity1.y + entity1.height > entity2.y
+end
+
+-- Pickup manager: handle collecting pickups
+function Systems.pickup_manager(player, pickup)
+   if Systems.entity_collision(player, pickup) then
+      player.hp = min(player.max_hp, player.hp + (pickup.recovery_amount or 0))
+      world.del(pickup)
+   end
+end
+
+-- Health manager: check for death
+function Systems.health_manager(entity)
+   if entity.hp and entity.hp <= 0 then
+      if world.has(entity, "player") then
+         -- Handle player death
+         Log.trace("Player died!")
+         -- For now just reset HP for testing, or we could gotoState("GameOver")
+         -- entity.hp = entity.max_hp
+      else
+         world.del(entity)
+      end
+   end
+end
+
 -- Drawing systems
 -- Drawable system: render entity sprite with animation
 function Systems.drawable(entity)
-   spr(t() * 30 % 30 < 15 and entity.sprite_index or entity.sprite_index + 1, entity.x, entity.y, entity.flip)
+   spr(entity.sprite_index, entity.x, entity.y, entity.flip)
 end
 
 function Systems.draw_shadow(entity, clip_square)
@@ -276,6 +360,22 @@ function Systems.draw_spotlight(entity, clip_square)
    clip(clip_square.x, clip_square.y, clip_square.w, clip_square.h)
    circfill(center_x, center_y, radius, SPOTLIGHT_COLOR)
    clip()
+end
+
+-- UI system: Draw health bar above player
+function Systems.draw_ui(entity)
+   if not entity.hp then return end
+
+   local bar_w = 20
+   local bar_h = 3
+   local px = entity.x + entity.width / 2 - bar_w / 2
+   local py = entity.y - 6
+
+   -- Background (Red)
+   rectfill(px, py, px + bar_w, py + bar_h, 8)
+   -- Foreground (Green/Life)
+   local life_w = (entity.hp / entity.max_hp) * bar_w
+   rectfill(px, py, px + life_w, py + bar_h, 11)
 end
 
 return Systems

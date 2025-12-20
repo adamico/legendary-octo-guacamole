@@ -6,15 +6,34 @@ SOLID_FLAG = 0
 local GameConstants = {
    Player = {
       invulnerable_time = 120, -- frames
-      max_health = 4,
       move_speed = vec(1, 1),
       sprite_index_offsets = {
          down = 238,
          right = 246,
+         left = 246,
          up = 253,
       },
       width = 24,
       height = 32,
+      max_health = 100,
+      shot_cost = 5,
+      recovery_amount = 4,
+   },
+   Projectile = {
+      sprite_index_offsets = {
+         down = 78,
+         right = 77,
+         up = 78,
+         left = 77,
+      },
+   },
+   ProjectilePickup = {
+      sprite_index_offsets = {
+         down = 78,
+         right = 77,
+         up = 78,
+         left = 77,
+      },
    },
    title = "Pizak",
    score = {
@@ -54,7 +73,10 @@ GameConstants.controls = {
    move_down = GameConstants.buttons.down,
    move_left = GameConstants.buttons.left,
    move_right = GameConstants.buttons.right,
-   spawn_tree = GameConstants.buttons.o,
+   shoot_up = GameConstants.buttons.up2,
+   shoot_down = GameConstants.buttons.down2,
+   shoot_left = GameConstants.buttons.left2,
+   shoot_right = GameConstants.buttons.right2,
 }
 
 return GameConstants
