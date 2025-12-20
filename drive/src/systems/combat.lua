@@ -53,17 +53,26 @@ function Combat.health_regen(entity)
     end
 end
 
+-- Death Handlers Registry
+Combat.DeathHandlers = {}
+
+-- Player death handler
+Combat.DeathHandlers["Player"] = function(entity)
+    Log.trace("Player died!")
+    -- For now just trace, could gotoState("GameOver") later
+    -- entity.hp = entity.max_hp  -- Uncomment to respawn
+end
+
+-- Default death handler for other entities
+Combat.DeathHandlers.default = function(entity)
+    world.del(entity)
+end
+
 -- Health manager: check for death
 function Combat.health_manager(entity)
     if entity.hp and entity.hp <= 0 then
-        if entity.type == "Player" then
-            -- Handle player death
-            Log.trace("Player died!")
-            -- For now just reset HP for testing, or we could gotoState("GameOver")
-            -- entity.hp = entity.max_hp
-        else
-            world.del(entity)
-        end
+        local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
+        handler(entity)
     end
 end
 

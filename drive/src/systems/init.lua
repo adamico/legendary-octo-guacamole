@@ -24,6 +24,7 @@ Systems.velocity = Physics.velocity
 Systems.shooter = Combat.shooter
 Systems.health_manager = Combat.health_manager
 Systems.health_regen = Combat.health_regen
+Systems.DeathHandlers = Combat.DeathHandlers
 
 -- AI systems
 Systems.enemy_ai = AI.enemy_ai
