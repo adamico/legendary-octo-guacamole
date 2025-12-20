@@ -29,6 +29,7 @@ function Player.spawn(world, x, y)
         time_since_shot = 0,
         overflow_hp = 0,
         shoot_cooldown = 0,
+        invuln_timer = 0, -- Frames of invulnerability remaining after taking damage
     }
     return world.ent(
         "player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,shadow,spotlight,sprite",

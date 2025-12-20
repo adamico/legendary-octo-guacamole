@@ -63,6 +63,35 @@ function Effects.spawn_particles(x, y, ptype, count)
     -- that move, fade, and self-destruct
 end
 
+-- Apply knockback to target entity, pushing away from source
+function Effects.apply_knockback(source, target, strength)
+    strength = strength or 3
+
+    -- Calculate direction from source center to target center
+    local src_cx = source.x + (source.width or 0) / 2
+    local src_cy = source.y + (source.height or 0) / 2
+    local tgt_cx = target.x + (target.width or 0) / 2
+    local tgt_cy = target.y + (target.height or 0) / 2
+
+    local dx = tgt_cx - src_cx
+    local dy = tgt_cy - src_cy
+
+    -- Normalize direction
+    local len = sqrt(dx * dx + dy * dy)
+    if len > 0 then
+        dx = dx / len
+        dy = dy / len
+    else
+        -- Default push if overlapping exactly
+        dx = 0
+        dy = -1
+    end
+
+    -- Apply velocity impulse
+    target.vel_x = (target.vel_x or 0) + dx * strength
+    target.vel_y = (target.vel_y or 0) + dy * strength
+end
+
 -- Generic hit impact effect (reusable)
 function Effects.hit_impact(source, target, intensity)
     intensity = intensity or "normal"
@@ -83,13 +112,14 @@ function Effects.hit_impact(source, target, intensity)
     end
 
     -- Screen shake (intensity-based)
-    if intensity == "light" then
+    if intensity == "light_shake" then
         Effects.screen_shake(1, 2)
-    elseif intensity == "normal" then
+    elseif intensity == "normal_shake" then
         Effects.screen_shake(2, 3)
-    elseif intensity == "heavy" then
+    elseif intensity == "heavy_shake" then
         Effects.screen_shake(4, 5)
     end
+    -- "no_shake" or nil = no screen shake
 end
 
 -- Death explosion effect (reusable for enemy/player death)

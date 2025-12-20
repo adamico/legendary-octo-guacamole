@@ -4,6 +4,13 @@ local GameConstants = require("constants")
 
 local Combat = {}
 
+-- Invulnerability timer system: counts down invuln frames
+function Combat.invulnerability_tick(entity)
+    if entity.invuln_timer and entity.invuln_timer > 0 then
+        entity.invuln_timer = entity.invuln_timer - 1
+    end
+end
+
 -- Shooter system: handle projectile firing
 function Combat.shooter(entity)
     -- Reduce cooldown

@@ -42,7 +42,10 @@ Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, en
     enemy.hp = enemy.hp - (projectile.damage or GameConstants.Projectile.damage or 10)
 
     -- Visual/audio feedback (reusable effect)
-    Effects.hit_impact(projectile, enemy, "normal")
+    Effects.hit_impact(projectile, enemy)
+
+    -- Apply knockback to enemy (pushed away from projectile)
+    Effects.apply_knockback(projectile, enemy, 6)
 
     -- Destroy projectile
     world.del(projectile)
@@ -60,16 +63,25 @@ end
 
 -- Registry for Player + Enemy interaction (contact damage)
 Collision.CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
+    -- Skip if player is invulnerable
+    if player.invuln_timer and player.invuln_timer > 0 then
+        return
+    end
+
     -- Deal contact damage to player
     player.hp = player.hp - (enemy.contact_damage or 10)
 
     -- Visual/audio feedback (heavier for player damage)
-    Effects.hit_impact(enemy, player, "heavy")
+    Effects.hit_impact(enemy, player, "heavy_shake")
+
+    -- Apply knockback to player (pushed away from enemy)
+    Effects.apply_knockback(enemy, player, 16)
+
+    -- Set invulnerability frames (30 frames ≈ 0.5 seconds at 60fps)
+    player.invuln_timer = 30
 
     -- Reset regen timer (player took damage = in combat)
     player.time_since_shot = 0
-
-    -- TODO (future): Add invulnerability frames, knockback
 end
 
 -- Helper: Check if a rectangular area overlaps any solid map tiles

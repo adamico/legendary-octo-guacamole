@@ -45,6 +45,7 @@ function Play:update()
    world.sys("enemy", Systems.enemy_ai)()
    world.sys("collidable", Systems.resolve_entity_collisions)()
    world.sys("health", Systems.health_regen)()
+   world.sys("player", Systems.invulnerability_tick)()
    world.sys("health", Systems.health_manager)()
 
    -- Update effects (screenshake)
