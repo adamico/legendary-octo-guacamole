@@ -118,13 +118,16 @@ function Rendering.change_sprite(entity)
         flip = true
     end
 
-    entity.sprite_index = sprite_index
+    entity.base_sprite_index = sprite_index
+    entity.sprite_index = sprite_index -- Also set directly for non-animated entities
     entity.flip = flip
 end
 
--- Simple animation system
+-- Simple animation system: alternates between base sprite and base+1 every 30 frames
 function Rendering.animatable(entity)
-    entity.sprite_index = t() * 30 % 30 < 15 and entity.sprite_index or entity.sprite_index + 1
+    local base = entity.base_sprite_index or entity.sprite_index
+    local anim_offset = (flr(t() * 2) % 2) -- 0 or 1, switches every 0.5s (30 frames)
+    entity.sprite_index = base + anim_offset
 end
 
 -- Drawable system: render entity sprite

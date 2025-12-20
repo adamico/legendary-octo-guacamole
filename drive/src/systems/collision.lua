@@ -55,7 +55,8 @@ Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, en
     if enemy.hp <= 0 then
         -- Drop HP pickup (100% for MVP)
         local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
-        Entities.spawn_pickup_projectile(world, enemy.x, enemy.y, recovery, projectile.sprite_index)
+        Entities.spawn_pickup_projectile(world, enemy.x, enemy.y, projectile.dir_x, projectile.dir_y, recovery,
+            projectile.sprite_index)
 
         -- Delete enemy
         world.del(enemy)

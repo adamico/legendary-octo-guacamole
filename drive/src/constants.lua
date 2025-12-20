@@ -26,16 +26,16 @@ local GameConstants = {
       sprite_index_offsets = {
          down = 78,
          right = 77,
-         up = 78,
          left = 77,
+         up = 78,
       },
    },
    ProjectilePickup = {
       sprite_index_offsets = {
          down = 78,
          right = 77,
-         up = 78,
          left = 77,
+         up = 78,
       },
    },
    Enemy = {
@@ -44,9 +44,10 @@ local GameConstants = {
          speed = 0.5,
          contact_damage = 10,
          sprite_index_offsets = {
-            down = 254,
-            right = 255,
-            up = 256,
+            down = 231,
+            right = 231,
+            left = 231,
+            up = 231,
          },
          width = 16,
          height = 16,
