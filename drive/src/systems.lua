@@ -137,6 +137,7 @@ function Systems.change_sprite(entity)
    entity.flip = flip
 end
 
+-- Physics systems
 -- Acceleration system: apply acceleration, friction, and clamp velocity
 function Systems.acceleration(entity)
    local dx = entity.dir_x or 0
@@ -197,15 +198,67 @@ function Systems.velocity(entity)
    entity.sub_y -= move_y
 end
 
+-- Helper: Check if a rectangular area overlaps any solid map tiles
+local function is_solid(x, y, w, h)
+   local x1 = flr(x / GRID_SIZE)
+   local y1 = flr(y / GRID_SIZE)
+   local x2 = flr((x + w - 0.001) / GRID_SIZE)
+   local y2 = flr((y + h - 0.001) / GRID_SIZE)
+
+   for tx = x1, x2 do
+      for ty = y1, y2 do
+         if fget(mget(tx, ty), SOLID_FLAG) then
+            return true
+         end
+      end
+   end
+   return false
+end
+
+-- Map collision system: check for collisions with the map tiles
+function Systems.map_collision(entity)
+   local x = entity.x
+   local y = entity.y
+   local w = entity.width or 16
+   local h = entity.height or 16
+   local sub_x = entity.sub_x or 0
+   local sub_y = entity.sub_y or 0
+
+   -- X collision: predict movement
+   local move_x = flr(sub_x + entity.vel_x)
+   if sub_x + entity.vel_x < 0 and sub_x + entity.vel_x ~= move_x then
+      move_x = ceil(sub_x + entity.vel_x) - 1
+   end
+
+   if is_solid(x + move_x, y, w, h) then
+      entity.vel_x = 0
+      entity.sub_x = 0
+   end
+
+   -- Y collision: predict movement (using potentially updated sub_x/vel_x)
+   local move_y = flr(sub_y + entity.vel_y)
+   if sub_y + entity.vel_y < 0 and sub_y + entity.vel_y ~= move_y then
+      move_y = ceil(sub_y + entity.vel_y) - 1
+   end
+
+   if is_solid(x + (entity.sub_x == 0 and 0 or move_x), y + move_y, w, h) then
+      entity.vel_y = 0
+      entity.sub_y = 0
+   end
+end
+
+-- Drawing systems
 -- Drawable system: render entity sprite with animation
 function Systems.drawable(entity)
    spr(t() * 30 % 30 < 15 and entity.sprite_index or entity.sprite_index + 1, entity.x, entity.y, entity.flip)
 end
 
-function Systems.draw_shadow(entity)
+function Systems.draw_shadow(entity, clip_square)
    local x1, y1 = entity.x + 1, entity.y + 11
    local x2, y2 = entity.x + entity.width - 2, y1 + 6
+   clip(clip_square.x, clip_square.y, clip_square.w, clip_square.h)
    ovalfill(x1, y1, x2, y2, SHADOW_COLOR)
+   clip()
 end
 
 -- Spotlight system: draws a circular spotlight around the entity

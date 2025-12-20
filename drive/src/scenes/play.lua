@@ -31,6 +31,7 @@ end
 function Play:update()
    world.sys("controllable", Systems.controllable)()
    world.sys("acceleration", Systems.acceleration)()
+   world.sys("collidable", Systems.map_collision)()
    world.sys("velocity", Systems.velocity)()
    world.sys("drawable,sprite", Systems.change_sprite)()
 end
@@ -42,7 +43,7 @@ function Play:draw()
    -- Draw spotlight first (brightens background)
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, ROOM_CLIP) end)()
    -- Then shadow and player on top
-   world.sys("shadow", Systems.draw_shadow)()
+   world.sys("shadow", function(entity) Systems.draw_shadow(entity, ROOM_CLIP) end)()
    world.sys("drawable", Systems.drawable)()
 end
 

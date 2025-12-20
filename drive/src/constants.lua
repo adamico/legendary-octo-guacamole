@@ -1,5 +1,7 @@
 SCREEN_WIDTH = 480
 SCREEN_HEIGHT = 270
+GRID_SIZE = 16
+SOLID_FLAG = 0
 
 local GameConstants = {
    Player = {
