@@ -14,11 +14,11 @@ local GameConstants = {
       recovery_percent = 0.8,
       regen_rate = 5,    -- HP per second (0 = disabled)
       regen_delay = 3.0, -- Seconds without shooting before regen starts
-      -- Per-direction, per-state animation config (Option A)
       animations = {
          down = {
             idle      = {base = 238, frames = 2, speed = 30},
-            walking   = {base = 240, frames = 2, speed = 8},
+            -- Composite: top from sprite 240, bottom alternates between 240 and 255
+            walking   = {top_indices = {240}, bottom_indices = {240, 255}, speed = 8},
             attacking = {base = 241, frames = 2, speed = 8},
             hurt      = {base = 243, frames = 1, speed = 8},
             death     = {base = 244, frames = 1, speed = 8}
@@ -32,7 +32,8 @@ local GameConstants = {
          },
          up = {
             idle      = {base = 253, frames = 2, speed = 30},
-            walking   = {base = 255, frames = 2, speed = 8},
+            -- Composite: top from sprite 255, bottom alternates between 255 and 240
+            walking   = {top_indices = {255}, bottom_indices = {255, 240}, speed = 8},
             attacking = {base = 253, frames = 1, speed = 8},
             hurt      = {base = 253, frames = 1, speed = 8},
             death     = {base = 244, frames = 1, speed = 8}

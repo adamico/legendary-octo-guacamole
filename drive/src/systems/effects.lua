@@ -34,13 +34,11 @@ end
 function Effects.flash_sprite(entity, frames, color)
     entity.flash_timer = frames or 3
     entity.flash_color = color or 7 -- white by default
-    Log.trace("Flash set: "..entity.type.." timer="..entity.flash_timer)
 end
 
 -- Update sprite flash (call from drawable system)
 function Effects.update_flash(entity)
     if entity.flash_timer and entity.flash_timer > 0 then
-        Log.trace("Flashing: "..entity.type.." timer="..entity.flash_timer)
         entity.flash_timer -= 1
 
         -- Solid flash for entire duration

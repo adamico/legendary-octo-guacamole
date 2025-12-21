@@ -131,8 +131,37 @@ function Rendering.animatable(entity)
 end
 
 -- Drawable system: render entity sprite
+-- Supports composite sprites where top and bottom halves are drawn separately
 function Rendering.drawable(entity)
-    spr(entity.sprite_index, entity.x, entity.y, entity.flip)
+    local flip = entity.flip or false
+
+    -- Check for composite sprite (top + bottom halves)
+    if entity.sprite_top ~= nil and entity.sprite_bottom ~= nil then
+        -- Picotron sspr: sspr(sprite_index, sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
+        -- sx, sy are coordinates WITHIN the sprite (not the spritesheet)
+
+        -- Draw top half (first 8 rows of top sprite)
+        sspr(
+            entity.sprite_top,  -- sprite index
+            0, 0,               -- source x, y within sprite
+            16, 8,              -- source width=16, height=8 (top half)
+            entity.x, entity.y, -- destination
+            16, 8,              -- destination width, height
+            flip                -- flip_x
+        )
+        -- Draw bottom half (last 8 rows of bottom sprite)
+        sspr(
+            entity.sprite_bottom,   -- sprite index
+            0, 9,                   -- source x, y within sprite (start at row 9)
+            16, 8,                  -- source width=16, height=8 (bottom half)
+            entity.x, entity.y + 8, -- destination (offset by 8)
+            16, 8,
+            flip
+        )
+    else
+        -- Standard single sprite
+        spr(entity.sprite_index, entity.x, entity.y, flip)
+    end
 end
 
 -- Shadow system
