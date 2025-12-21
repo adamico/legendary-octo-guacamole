@@ -1,5 +1,8 @@
 # Pizak - Codebase Architecture
 
+> [!TIP]
+> This project uses an AI-maintained [Memory](MEMORY.md) file to track ongoing state and goals.
+
 A Binding of Isaac-inspired game built with Lua on Picotron using an Entity-Component-System (ECS) architecture.
 
 ## High-Level Overview
