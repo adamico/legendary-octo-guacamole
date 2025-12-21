@@ -7,12 +7,14 @@ A **Binding of Isaac-style dungeon crawler** where **health is your ammunition**
 ## Current State (MVP)
 
 ### Core Loop
+
 1. **Shoot** → Lose HP (20 per shot)
 2. **Projectile hits wall** → Becomes pickup
 3. **Collect pickup** → Recover HP (16, or 80% of cost)
 4. **Passive regen** → Slow HP recovery when not shooting (5 HP/sec after 3s delay)
 
 ### Player Stats (Base Values)
+
 ```lua
 max_hp = 100          -- 5 shots at full health
 shot_cost = 20        -- HP per projectile fired
@@ -31,12 +33,14 @@ The health bar uses **color-coded segments** to clearly communicate available sh
 - 🔴 **RED**: Empty segment (0 HP) = No ammo
 
 **Key Properties:**
+
 - Dynamically scales with `shot_cost` and `max_hp` (supports any stat modification)
 - Each segment represents exactly one shot
 - Fractional HP shown as orange "charging" progress
 
 **Example:**
-```
+
+```text
 100 HP: [🟢🟢🟢🟢🟢] = 5 shots ready
  96 HP: [🟢🟢🟢🟢🟠] = 4 shots + 80% toward 5th (after collecting 1 pickup)
  80 HP: [🟢🟢🟢🟢🔴] = 4 shots (after firing once)
@@ -56,6 +60,7 @@ recovery = projectile.shot_cost * projectile.recovery_percent
 ```
 
 **This enables:**
+
 - Powerups that modify costs: `"Efficient Shot": shot_cost = 15`
 - Max HP increases: `"Heart Container": max_hp = 120` → Displays 6 segments
 - Recovery modifiers: `"Magnet Shard": recovery_percent = 1.0` → Full refund
@@ -72,6 +77,7 @@ end
 ```
 
 **Potential Uses:**
+
 - **Shields**: Convert overflow to temporary barrier
 - **Burst Heal**: Spend overflow to raise max_hp temporarily
 - **Power Shots**: Consume overflow for enhanced projectiles
@@ -89,6 +95,7 @@ projectile = {
 ```
 
 **This enables:**
+
 - Mid-flight stat changes (pickup a powerup while shots are active)
 - Different ammo types: `projectile.shot_cost = 30` for "Heavy Shot"
 - Per-shot modifiers: Critical hits, enchantments, curses
@@ -108,6 +115,7 @@ end
 ```
 
 **Powerup Examples:**
+
 - `"Meditation"`: `regen_delay = 0.5` (faster activation)
 - `"Troll Blood"`: `regen_rate = 10` (double speed)
 - `"Berserker"`: `regen_rate = 0` (disable regen, increase damage)
@@ -128,6 +136,7 @@ end
 ```
 
 **This supports:**
+
 - Multiple projectile types with different wall behaviors
 - Enemy-specific interactions
 - Environmental hazards (lava, ice, etc.)
@@ -138,18 +147,21 @@ end
 ### Powerup Categories
 
 **Stat Modifiers** (Passive)
+
 - Max HP changes
 - Shot cost reduction/increase
 - Recovery efficiency
 - Regen rate/delay
 
 **Proc/On-Hit Effects** (Active)
+
 - "Vampiric": Projectiles heal on enemy hit
 - "Explosive": Projectiles create AoE on wall impact
 - "Piercing": Projectiles pass through enemies (reduce recovery?)
 - "Boomerang": Projectiles return after hitting wall
 
 **Conditional Modifiers** (Situational)
+
 - "Glass Cannon": Lower max HP, higher damage
 - "Desperate": Bonus recovery when below 40 HP
 - "Combo": Increased recovery for consecutive pickups
@@ -158,18 +170,21 @@ end
 ### Class System Ideas
 
 **Berserker** (High Risk, High Reward)
+
 - `max_hp = 60` (3 shots)
 - `shot_cost = 20`, `recovery_percent = 1.2` (overheal on pickups)
 - `regen_rate = 0` (no passive regen)
 - Unique: Overflow HP increases damage
 
 **Medic** (Sustain Tank)
+
 - `max_hp = 140` (7 shots)
 - `shot_cost = 20`, `recovery_percent = 0.6`
 - `regen_rate = 8`, `regen_delay = 2.0`
 - Unique: Can sacrifice HP to heal allies
 
 **Efficient Marksman** (Precision)
+
 - `max_hp = 100` (6-7 shots)
 - `shot_cost = 15`, `recovery_percent = 0.8`
 - `regen_rate = 3`, `regen_delay = 4.0`
@@ -184,6 +199,7 @@ The current architecture supports room-based generation:
 - **Collision handlers**: Type-based for environment variations (spike tiles, hazards)
 
 **Room Types:**
+
 - Combat: Enemy-dense, guaranteed pickups
 - Treasure: Powerup pedestals, high pickup density
 - Challenge: Limited pickups, high enemy count
@@ -192,18 +208,23 @@ The current architecture supports room-based generation:
 ## Design Principles
 
 ### 1. **Clarity Over Complexity**
-The three-state health bar makes the economy immediately understandable. Players should never wonder "Can I shoot?"
+
+The three-state health bar makes the economy immediately understandable. Projectile spawning and rendering logic ensures that attacks clearly emerge from the player's center and travel "behind" them, maintaining visual depth and preventing occlusion of the character.
 
 ### 2. **Stat-Driven, Not Hardcoded**
+
 All mechanics scale with player stats to support infinite variation via powerups and classes.
 
 ### 3. **Overflow as a Resource**
+
 Rather than wasting excess HP, bank it for future mechanics. Creates secondary resource management.
 
 ### 4. **Snapshot, Don't Reference**
+
 Projectiles carry their creation context. Enables mid-flight modifications and varied ammo types.
 
 ### 5. **Composition Over Inheritance**
+
 Use additive systems (collision handlers, type-based behavior) rather than rigid class hierarchies.
 
 ## Open Questions

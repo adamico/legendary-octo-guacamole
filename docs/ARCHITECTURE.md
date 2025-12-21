@@ -50,7 +50,7 @@ graph TB
 
 ## Directory Structure
 
-```
+```text
 drive/src/
 ├── main.lua              # Entry point, game loop, scene initialization
 ├── scene_manager.lua     # State machine for scene transitions
@@ -82,6 +82,7 @@ Uses the **eggs** library for entity-component system management.
 ### World
 
 Global `world` object (eggs instance) manages all entities and systems:
+
 - `world.ent(tags, data)` - Create entity with comma-separated component tags
 - `world.sys(tags, callback)()` - Execute callback on entities matching tags
 - `world.del(entity)` - Delete entity
@@ -89,6 +90,7 @@ Global `world` object (eggs instance) manages all entities and systems:
 ### Entities
 
 Created via factory functions, each entity is a table with:
+
 - **type**: String identifier (e.g., "Player", "Enemy", "Projectile")
 - **Component data**: Properties like `x`, `y`, `vel_x`, `vel_y`, `hp`, `sub_x`, `sub_y` (sub-pixel accumulation), etc.
 - **Tags**: Comma-separated list defining which systems process this entity
@@ -130,6 +132,7 @@ FSM-based animation using [lua-state-machine](https://github.com/kyleconroy/lua-
 **States**: `idle` → `walking` → `attacking` → `hurt` → `death`
 
 **Animation Config** (in `constants.lua`):
+
 ```lua
 animations = {
    down = {
@@ -141,6 +144,7 @@ animations = {
 ```
 
 **Features**:
+
 - Per-frame `durations` array for variable timing
 - Composite sprites (`top_indices`/`bottom_indices`) with configurable `split_row`
 - Direction preserved when idle (velocity-based facing)
@@ -149,9 +153,11 @@ animations = {
 ## Visual Systems & Palette
 
 The game uses **palette-aware lighting**:
+
 - **Extended Palette**: Colors 32-63 are initialized as lighter/darker variants of 0-15.
 - **Spotlight System**: Uses a custom color table (`0x8000`) to remap background colors to their lighter variants within a radius.
 - **Flash Effect**: Replaces all colors with white (7) for a brief duration upon impact.
+- **Layered Rendering**: Entities are drawn in two passes: background objects (projectiles, pickups) first, then foreground objects (players, enemies) second. This ensures projectiles appear to emerge from behind the shooter.
 
 ## Collision System
 
@@ -205,10 +211,19 @@ function Play:draw()
     world.sys("spotlight", function(e) Systems.draw_spotlight(e, ROOM_CLIP) end)()
     world.sys("shadow", function(e) Systems.draw_shadow(e, ROOM_CLIP) end)()
     
+    -- Layered drawing: projectiles/pickups behind characters
     world.sys("drawable", function(entity)
-        Systems.Effects.update_flash(entity)
-        Systems.drawable(entity)
-        pal(0) -- Reset palette per-entity if used
+        if entity.type == "Projectile" or entity.type == "ProjectilePickup" then
+            Systems.drawable(entity)
+        end
+    end)()
+
+    world.sys("drawable", function(entity)
+        if entity.type ~= "Projectile" and entity.type ~= "ProjectilePickup" then
+            Systems.Effects.update_flash(entity)
+            Systems.drawable(entity)
+            pal(0) -- Reset palette per-entity if used
+        end
     end)()
     
     world.sys("health", Systems.draw_health_bar)()
@@ -228,6 +243,7 @@ end
 ## Configuration
 
 All game constants in [constants.lua](drive/src/constants.lua):
+
 - Player stats (health, speed, acceleration, friction)
 - Projectile damage and pickup values
 - Enemy configurations (Skulker, etc.)

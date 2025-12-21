@@ -23,3 +23,4 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - Refactored player movement to use ECS (controllable, acceleration, velocity systems).
 - Fixed map collision issues.
 - Established context workflow in `.agent/workflows/context.md`.
+- **Fixed projectile spawning** to always originate from the shooter's center and **implemented layered rendering** (projectiles and pickups are now rendered behind characters).
