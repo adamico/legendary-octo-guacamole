@@ -3,14 +3,11 @@ local GameConstants = require("constants")
 
 local Animation = {}
 
--- Default animation timing (frames count and speed in ticks per frame)
-Animation.DEFAULT_ANIM_PARAMS = {
-   idle = {frames = 2, speed = 30},
-   walking = {frames = 2, speed = 8},
-   attacking = {frames = 4, speed = 6},
-   hurt = {frames = 2, speed = 4},
-   death = {frames = 4, speed = 8}
-}
+-- Valid animation states
+local VALID_STATES = {idle = true, walking = true, attacking = true, hurt = true, death = true}
+
+-- Default speed fallback (ticks per frame)
+local DEFAULT_SPEED = 8
 
 -- Get the direction name from entity velocity (for animation facing)
 local function get_direction(entity)
@@ -24,7 +21,7 @@ local function get_direction(entity)
    if vy < -0.1 then return "up" end
 
    -- Return current direction if velocity is near zero (preserve last)
-   return entity.current_direction or "down"
+   return entity.current_direction
 end
 
 -- Get animation config for entity type
@@ -35,7 +32,56 @@ local function get_entity_config(entity)
    return GameConstants[entity.type]
 end
 
+-- Calculate frame index from durations array or single speed
+local function get_frame_from_durations(durations, speed, timer, frame_count)
+   if durations and #durations > 0 then
+      -- Per-frame durations: calculate total cycle time
+      local total_duration = 0
+      for _, d in ipairs(durations) do
+         total_duration = total_duration + d
+      end
+      local cycle_time = timer % total_duration
+      local accumulated = 0
+      for i, d in ipairs(durations) do
+         accumulated = accumulated + d
+         if cycle_time < accumulated then
+            return i - 1, total_duration -- 0-indexed frame
+         end
+      end
+      return #durations - 1, total_duration
+   else
+      -- Single speed for all frames
+      return flr(timer / speed) % frame_count, frame_count * speed
+   end
+end
+
+-- Clear composite sprite properties
+local function clear_composite_props(entity)
+   entity.sprite_top = nil
+   entity.sprite_bottom = nil
+   entity.split_row = nil
+end
+
+-- Handle animation-triggered state completion (death cleanup, attack finish)
+local function handle_state_completion(entity, state, timer, total_duration)
+   if state == "death" and timer >= total_duration then
+      local Combat = require("combat")
+      local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
+      if not entity.death_cleanup_called then
+         entity.death_cleanup_called = true
+         handler(entity)
+      end
+   elseif state == "attacking" and timer >= total_duration then
+      entity.fsm:finish()
+   end
+end
+
 function Animation.init_fsm(entity)
+   -- Timer reset function used by all state entry callbacks
+   local function reset_timer()
+      entity.anim_timer = 0
+   end
+
    entity.fsm = machine.create({
       initial = "idle",
       events = {
@@ -48,29 +94,11 @@ function Animation.init_fsm(entity)
          {name = "finish",  from = "attacking",                      to = "idle"}
       },
       callbacks = {
-         -- Reset timer on ANY state entry (use specific state callbacks)
-         onenteridle = function(self, name, from, to)
-            entity.anim_timer = 0
-         end,
-         onenterwalking = function(self, name, from, to)
-            entity.anim_timer = 0
-         end,
-         onenterattacking = function(self, name, from, to)
-            entity.anim_timer = 0
-         end,
-         onenterhurt = function(self, name, from, to)
-            entity.anim_timer = 0
-         end,
-         onenterdeath = function(self, name, from, to)
-            entity.anim_timer = 0
-         end,
-         onstatechange = function(self, name, from, to)
-            Log.trace("Animation state change for entity "..entity.type)
-            Log.trace("Event: "..name)
-            Log.trace("Current direction: "..entity.current_direction)
-            Log.trace("From: "..from)
-            Log.trace("To: "..to)
-         end
+         onenteridle = reset_timer,
+         onenterwalking = reset_timer,
+         onenterattacking = reset_timer,
+         onenterhurt = reset_timer,
+         onenterdeath = reset_timer
       }
    })
    entity.anim_timer = 0
@@ -92,53 +120,46 @@ function Animation.update_fsm(entity)
 
    -- Only update direction when actually moving (preserve last direction when idle)
    if is_moving then
-      local new_dir = get_direction(entity)
-      if new_dir ~= entity.current_direction then
-         Log.trace("Direction change: "..entity.current_direction.." -> "..new_dir)
-      end
-      entity.current_direction = new_dir
+      entity.current_direction = get_direction(entity)
    end
 
-
-   if fsm:is("idle") then
-      if is_moving then fsm:walk() end
-   elseif fsm:is("walking") then
-      if not is_moving then fsm:stop() end
+   -- Movement transitions (silently fail if not valid)
+   if is_moving then
+      fsm:walk()
+   else
+      fsm:stop()
    end
 
-   -- Hit transition
-   if entity.invuln_timer and entity.invuln_timer > 0 and not fsm:is("hurt") then
-      if fsm:can("hit") then fsm:hit() end
+   -- Hit transition (invuln timer indicates recent damage)
+   if entity.invuln_timer and entity.invuln_timer > 0 then
+      fsm:hit()
    end
 
    -- Recover from hurt
-   if fsm:is("hurt") and (entity.invuln_timer or 0) <= 0 then
-      if fsm:can("recover") then fsm:recover() end
+   if (entity.invuln_timer or 0) <= 0 then
+      fsm:recover()
    end
 
-   -- Death check (backup)
-   if entity.hp and entity.hp <= 0 and not fsm:is("death") then
-      if fsm:can("die") then fsm:die() end
+   -- Death check
+   if entity.hp and entity.hp <= 0 then
+      fsm:die()
    end
 end
 
 function Animation.animate(entity)
    if not entity.fsm then return end
 
-   entity.anim_timer = (entity.anim_timer or 0) + 1
+   entity.anim_timer += 1
 
    local state = entity.fsm.current
-   local direction = entity.current_direction or "down"
+   local direction = entity.current_direction
    local config = get_entity_config(entity)
 
-   -- Get default animation parameters
-   local anim_params = Animation.DEFAULT_ANIM_PARAMS[state]
-   if not anim_params then return end
-
-   local default_speed = anim_params.speed
+   -- Skip invalid states
+   if not VALID_STATES[state] then return end
 
    -- Get state-specific animation config
-   local state_anim = nil
+   local state_anim
    if config and config.animations then
       local dir_anims = config.animations[direction]
       if dir_anims and dir_anims[state] then
@@ -148,129 +169,63 @@ function Animation.animate(entity)
       end
    end
 
-   -- Helper: calculate frame index from durations array or single speed
-   local function get_frame_from_durations(durations, speed, timer, frame_count)
-      if durations and #durations > 0 then
-         -- Per-frame durations: calculate total cycle time
-         local total_duration = 0
-         for _, d in ipairs(durations) do
-            total_duration = total_duration + d
-         end
-         local cycle_time = timer % total_duration
-         local accumulated = 0
-         for i, d in ipairs(durations) do
-            accumulated = accumulated + d
-            if cycle_time < accumulated then
-               return i - 1, total_duration -- 0-indexed frame
-            end
-         end
-         return #durations - 1, total_duration
-      else
-         -- Single speed for all frames
-         return flr(timer / speed) % frame_count, frame_count * speed
-      end
-   end
-
-   -- Determine animation type and calculate sprite indices
-   local is_composite = false
-   local has_indices = false
-   local base_sprite = 0
-
    -- Default split_row based on entity height
    local default_split_row = flr((entity.height or 16) / 2)
 
    if state_anim then
-      -- Check for composite sprite (top_indices/bottom_indices)
-      if state_anim.top_indices ~= nil or state_anim.bottom_indices ~= nil then
-         is_composite = true
+      -- Composite sprite (top_indices/bottom_indices)
+      if state_anim.top_indices or state_anim.bottom_indices then
          local top_indices = state_anim.top_indices or {0}
          local bottom_indices = state_anim.bottom_indices or {0}
          local durations = state_anim.durations
-         local speed = state_anim.speed or default_speed
+         local speed = state_anim.speed or DEFAULT_SPEED
 
-         -- Calculate frame for top and bottom (may have different counts)
-         local top_frame, _ = get_frame_from_durations(durations, speed, entity.anim_timer, #top_indices)
-         local bottom_frame, _ = get_frame_from_durations(durations, speed, entity.anim_timer, #bottom_indices)
+         local top_frame = get_frame_from_durations(durations, speed, entity.anim_timer, #top_indices)
+         local bottom_frame = get_frame_from_durations(durations, speed, entity.anim_timer, #bottom_indices)
 
          entity.sprite_top = top_indices[(top_frame % #top_indices) + 1] or 0
          entity.sprite_bottom = bottom_indices[(bottom_frame % #bottom_indices) + 1] or 0
          entity.split_row = state_anim.split_row or default_split_row
          entity.sprite_index = nil
 
-         -- Check for explicit indices array (non-composite)
-      elseif state_anim.indices ~= nil then
-         has_indices = true
+         -- Explicit indices array (non-composite)
+      elseif state_anim.indices then
          local indices = state_anim.indices
          local durations = state_anim.durations
-         local speed = state_anim.speed or default_speed
+         local speed = state_anim.speed or DEFAULT_SPEED
 
          local frame_idx, total_duration = get_frame_from_durations(durations, speed, entity.anim_timer, #indices)
 
-         entity.sprite_top = nil
-         entity.sprite_bottom = nil
-         entity.split_row = nil
+         clear_composite_props(entity)
          entity.sprite_index = indices[(frame_idx % #indices) + 1] or 0
-
-         -- Handle death/attack completion
-         if state == "death" then
-            if entity.anim_timer >= total_duration then
-               local Combat = require("combat")
-               local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
-               if not entity.death_cleanup_called then
-                  entity.death_cleanup_called = true
-                  handler(entity)
-               end
-            end
-         elseif state == "attacking" then
-            if entity.anim_timer >= total_duration then
-               entity.fsm:finish()
-            end
-         end
+         handle_state_completion(entity, state, entity.anim_timer, total_duration)
 
          -- Standard base + frames
       elseif state_anim.base then
-         local frames = state_anim.frames or anim_params.frames
+         local frames = state_anim.frames or 2
          local durations = state_anim.durations
-         local speed = state_anim.speed or default_speed
+         local speed = state_anim.speed or DEFAULT_SPEED
 
          local frame_idx, total_duration = get_frame_from_durations(durations, speed, entity.anim_timer, frames)
 
-         entity.sprite_top = nil
-         entity.sprite_bottom = nil
-         entity.split_row = nil
+         clear_composite_props(entity)
          entity.sprite_index = state_anim.base + frame_idx
-
-         -- Handle death/attack completion
-         if state == "death" and entity.anim_timer >= total_duration then
-            local Combat = require("combat")
-            local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
-            if not entity.death_cleanup_called then
-               entity.death_cleanup_called = true
-               handler(entity)
-            end
-         elseif state == "attacking" and entity.anim_timer >= total_duration then
-            entity.fsm:finish()
-         end
+         handle_state_completion(entity, state, entity.anim_timer, total_duration)
       end
    else
       -- Fallback: use sprite_index_offsets
+      local base_sprite = 0
       if config and config.sprite_index_offsets then
          base_sprite = config.sprite_index_offsets[direction] or 0
       end
-      local frames = anim_params.frames
-      local frame_idx = flr(entity.anim_timer / default_speed) % frames
+      local frame_idx = flr(entity.anim_timer / DEFAULT_SPEED) % 2
 
-      entity.sprite_top = nil
-      entity.sprite_bottom = nil
-      entity.split_row = nil
+      clear_composite_props(entity)
       entity.sprite_index = base_sprite + frame_idx
    end
 
    -- Apply flip from animation config
-   entity.flip = false
-   if state_anim and state_anim.flip then
-      entity.flip = true
-   end
+   entity.flip = state_anim and state_anim.flip or false
 end
 
 return Animation
