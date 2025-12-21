@@ -75,6 +75,9 @@ function Play:draw()
    end)()
 
    world.sys("health", Systems.draw_health_bar)()
+   if key("f2") then
+      world.sys("collidable", Systems.draw_hitbox)()
+   end
 end
 
 function Play:exitedState()

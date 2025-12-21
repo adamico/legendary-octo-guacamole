@@ -1,5 +1,6 @@
 -- Rendering and visual effects systems
 local GameConstants = require("constants")
+local Collision = require("collision")
 
 local Rendering = {}
 
@@ -223,6 +224,12 @@ function Rendering.draw_health_bar(entity)
             rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
         end
     end
+end
+
+-- Debug hitboxes
+function Rendering.draw_hitbox(entity)
+    local hb = Collision.get_hitbox(entity)
+    rect(hb.x, hb.y, hb.x + hb.w, hb.y + hb.h, 8)
 end
 
 return Rendering

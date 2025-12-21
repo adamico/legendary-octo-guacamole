@@ -14,6 +14,11 @@ function Enemy.spawn(world, x, y, enemy_type)
         y = y,
         width = config.width,
         height = config.height,
+        -- Hitbox properties from config
+        hitbox_width = config.hitbox_width,
+        hitbox_height = config.hitbox_height,
+        hitbox_offset_x = config.hitbox_offset_x,
+        hitbox_offset_y = config.hitbox_offset_y,
         hp = config.hp,
         max_hp = config.hp,
         speed = config.speed,

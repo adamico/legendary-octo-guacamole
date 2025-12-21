@@ -10,6 +10,11 @@ function Player.spawn(world, x, y)
         y = y,
         width = 16,
         height = 16,
+        -- Hitbox properties (smaller than sprite for forgiving collisions)
+        hitbox_width = GameConstants.Player.hitbox_width,
+        hitbox_height = GameConstants.Player.hitbox_height,
+        hitbox_offset_x = GameConstants.Player.hitbox_offset_x,
+        hitbox_offset_y = GameConstants.Player.hitbox_offset_y,
         -- Movement properties (BoI-style: instant response, almost no slide)
         accel = 1.2,
         max_speed = 2,

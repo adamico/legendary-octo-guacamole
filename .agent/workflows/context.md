@@ -1,16 +1,35 @@
 ---
-description: Context & Memory management for Antigravity
+description: Context & Memory management for Antigravity - ALWAYS START HERE
 ---
 
 # Antigravity Context Maintenance
 
-To ensure optimal performance and long-term project alignment, Antigravity should always follow these steps at the beginning of a task and after significant changes:
+> [!IMPORTANT]
+> **MANDATORY FIRST STEPS**: Before ANY codebase_search or grep_search, you MUST complete steps 1-2. This is non-negotiable.
 
-1. **Read Memory**: At the start of a session or a major task, check `docs/MEMORY.md` to understand the current state, goals, and recent history.
-2. **Consult Docs**: Refer to `docs/ARCHITECTURE.md` and `docs/DESIGN.md` for technical and aesthetic constraints.
-3. **Update Memory**: Whenever a significant feature is implemented, a bug is fixed, or an architectural decision is made, update `docs/MEMORY.md` with the new information.
-4. **Follow Workflows**: Check `.agent/workflows/` for specific procedures relevant to the current task.
+## Startup Sequence (Do This First!)
+
+// turbo
+
+1. **Read Memory FIRST**: `view_file docs/MEMORY.md` - Understand current state, goals, recent history.
+
+// turbo
+2. **Consult Architecture**: `view_file docs/ARCHITECTURE.md` - Technical constraints and system design.
+
+// turbo
+3. **Check Design Goals** (if relevant): `view_file docs/DESIGN.md` - Aesthetic and gameplay constraints.
+
+**Only after completing the above** may you proceed with codebase searches or modifications.
+
+---
+
+## During Work
+
+1. **Update Memory**: After implementing significant features, fixing bugs, or making architectural decisions, update `docs/MEMORY.md`.
+2. **Follow Workflows**: Check `.agent/workflows/` for task-specific procedures.
 
 // turbo-all
+
 ## Usage
-This workflow is active by default for all "Pizak" project tasks.
+
+This workflow is active by default for all "Pizak" project tasks. The agent should treat this as an implicit `/context` call at the start of every session.

@@ -9,6 +9,11 @@ local GameConstants = {
       move_speed = vec(1, 1),
       width = 16,
       height = 16,
+      -- Hitbox: smaller than sprite for forgiving collisions
+      hitbox_width = 10,
+      hitbox_height = 12,
+      hitbox_offset_x = 3, -- (16-10)/2 = 3 centered horizontally
+      hitbox_offset_y = 4, -- offset down to ignore head
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
@@ -25,21 +30,21 @@ local GameConstants = {
          right = {
             idle      = {indices = {246, 247}, durations = {30, 30}},
             walking   = {indices = {248, 249}, durations = {8, 8}},
-            attacking = {indices = {250, 251}, durations = {8, 8}},
+            attacking = {indices = {250, 251}, durations = {15, 15}},
             hurt      = {indices = {252}, durations = {30}},
             death     = {indices = {244}, durations = {8}}
          },
          up = {
             idle      = {indices = {253, 254}, durations = {30, 30}},
             walking   = {top_indices = {255}, bottom_indices = {255, 240}, durations = {8, 8}, split_row = 9},
-            attacking = {indices = {253}, durations = {8}},
+            attacking = {indices = {253}, durations = {15, 15}},
             hurt      = {indices = {253}, durations = {30}},
             death     = {indices = {244}, durations = {8}}
          },
          left = {
             idle      = {indices = {246, 247}, durations = {30, 30}, flip = true},
             walking   = {indices = {248, 249}, durations = {8, 8}, flip = true},
-            attacking = {indices = {250, 251}, durations = {8, 8}, flip = true},
+            attacking = {indices = {250, 251}, durations = {15, 15}, flip = true},
             hurt      = {indices = {252}, durations = {30}, flip = true},
             death     = {indices = {244}, durations = {8}, flip = true}
          }
@@ -55,6 +60,13 @@ local GameConstants = {
    },
    Projectile = {
       damage = 10, -- HP damage per projectile hit
+      -- Per-direction hitboxes for asymmetric laser sprite
+      hitbox = {
+         down  = {w = 6, h = 14, ox = 5, oy = 1}, -- vertical laser (rotated)
+         up    = {w = 6, h = 14, ox = 5, oy = 1},
+         right = {w = 14, h = 6, ox = 1, oy = 5}, -- horizontal laser (natural shape)
+         left  = {w = 14, h = 6, ox = 1, oy = 5},
+      },
       sprite_index_offsets = {
          down = 78,
          right = 77,
@@ -83,6 +95,11 @@ local GameConstants = {
          },
          width = 16,
          height = 16,
+         -- Hitbox: full size for easier player hits
+         hitbox_width = 16,
+         hitbox_height = 16,
+         hitbox_offset_x = 0,
+         hitbox_offset_y = 0,
       },
       drop_chance = 1.0, -- 100% drop rate for MVP testing
    },

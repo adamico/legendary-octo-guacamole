@@ -4,12 +4,27 @@ local GameConstants = require("constants")
 local Projectile = {}
 
 function Projectile.spawn(world, x, y, dx, dy, recovery_percent, shot_cost)
+    -- Determine direction name from velocity
+    local direction
+    if dx > 0 then
+        direction = "right"
+    elseif dx < 0 then
+        direction = "left"
+    elseif dy < 0 then
+        direction = "up"
+    else
+        direction = "down"
+    end
+
     local projectile = {
         type = "Projectile",
         x = x,
         y = y,
-        width = 4,
-        height = 4,
+        width = 16, -- Sprite size
+        height = 16,
+        -- Direction-based hitbox (looked up by get_hitbox using direction)
+        hitbox = GameConstants.Projectile.hitbox,
+        direction = direction,
         dir_x = dx,
         dir_y = dy,
         vel_x = dx * 4,
@@ -20,7 +35,7 @@ function Projectile.spawn(world, x, y, dx, dy, recovery_percent, shot_cost)
         owner = "player",
         recovery_percent = recovery_percent,
         shot_cost = shot_cost,
-        sprite_index = GameConstants.Projectile.sprite_index_offsets.down,
+        sprite_index = GameConstants.Projectile.sprite_index_offsets[direction],
     }
     return world.ent("projectile,velocity,collidable,drawable,sprite", projectile)
 end

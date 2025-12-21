@@ -5,6 +5,40 @@ local Effects = require("effects")
 
 local Collision = {}
 
+-- Get hitbox bounds in world space
+-- Returns {x, y, w, h} for collision detection
+-- Supports per-direction hitboxes via entity.hitbox[direction] table
+-- Falls back to hitbox_* properties, then width/height
+local function get_hitbox(entity)
+    local w, h, ox, oy
+
+    -- Check for direction-based hitbox table
+    if entity.hitbox and entity.direction then
+        local dir_hb = entity.hitbox[entity.direction]
+        if dir_hb then
+            w = dir_hb.w
+            h = dir_hb.h
+            ox = dir_hb.ox or 0
+            oy = dir_hb.oy or 0
+        end
+    end
+
+    -- Fallback to simple hitbox properties
+    w = w or entity.hitbox_width or entity.width or 16
+    h = h or entity.hitbox_height or entity.height or 16
+    ox = ox or entity.hitbox_offset_x or 0
+    oy = oy or entity.hitbox_offset_y or 0
+
+    return {
+        x = entity.x + ox,
+        y = entity.y + oy,
+        w = w,
+        h = h
+    }
+end
+
+Collision.get_hitbox = get_hitbox
+
 -- Collision Handlers Registry
 Collision.CollisionHandlers = {
     entity = {},
@@ -127,10 +161,11 @@ end
 
 -- Entity-Map Collision Resolver (Abstracted)
 function Collision.resolve_map_collisions(entity)
-    local x = entity.x
-    local y = entity.y
-    local w = entity.width or 16
-    local h = entity.height or 16
+    local hb = get_hitbox(entity)
+    local x = hb.x
+    local y = hb.y
+    local w = hb.w
+    local h = hb.h
 
     local handler = Collision.CollisionHandlers.map[entity.type or ""]
 
@@ -158,12 +193,14 @@ function Collision.resolve_map_collisions(entity)
     check("y", entity.sub_x == 0 and 0 or mx, 0)
 end
 
--- Entity collision system: generic overlap check
+-- Entity collision system: generic overlap check using hitboxes
 function Collision.entity_collision(entity1, entity2)
-    return entity1.x < entity2.x + entity2.width and
-       entity1.x + entity1.width > entity2.x and
-       entity1.y < entity2.y + entity2.height and
-       entity1.y + entity1.height > entity2.y
+    local hb1 = get_hitbox(entity1)
+    local hb2 = get_hitbox(entity2)
+    return hb1.x < hb2.x + hb2.w and
+       hb1.x + hb1.w > hb2.x and
+       hb1.y < hb2.y + hb2.h and
+       hb1.y + hb1.h > hb2.y
 end
 
 return Collision
