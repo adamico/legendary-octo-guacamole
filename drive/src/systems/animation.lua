@@ -98,7 +98,17 @@ function Animation.init_fsm(entity)
          onenterwalking = reset_timer,
          onenterattacking = reset_timer,
          onenterhurt = reset_timer,
-         onenterdeath = reset_timer
+         onenterdeath = function()
+            reset_timer()
+            -- Deactivate active processing tags on death
+            -- Keep rendering tags (drawable, animatable, middleground/background, spotlight, sprite)
+            local tags_to_remove = "controllable,collidable,shooter,player,enemy,acceleration,velocity,health"
+            world.unt(entity, tags_to_remove)
+
+            -- Stop remaining movement
+            entity.vel_x = 0
+            entity.vel_y = 0
+         end
       }
    })
    entity.anim_timer = 0
@@ -142,7 +152,9 @@ function Animation.update_fsm(entity)
 
    -- Death check
    if entity.hp and entity.hp <= 0 then
-      fsm:die()
+      if not fsm:is("death") then
+         fsm:die()
+      end
    end
 end
 

@@ -58,7 +58,13 @@ function AI.enemy_ai(entity)
     local player = nil
     world.sys("player", function(p) player = p end)()
 
-    if not player then return end
+    if not player then
+        entity.vel_x = 0
+        entity.vel_y = 0
+        entity.dir_x = 0
+        entity.dir_y = 0
+        return
+    end
 
     if entity.enemy_type == "Skulker" then
         skulker_behavior(entity, player)
