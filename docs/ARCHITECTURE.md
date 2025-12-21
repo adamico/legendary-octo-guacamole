@@ -56,15 +56,15 @@ drive/src/
 │   ├── player.lua        # Player entity with movement, health, shooting
 │   ├── enemy.lua         # Enemy entities (Skulker type)
 │   ├── projectile.lua    # Player bullets
-│   └── pickup.lua        # Health recovery pickups
+│   └── pickup.lua        # Health recovery/ammo pickups
 ├── systems/              # ECS system modules
 │   ├── init.lua          # Aggregates all systems
-│   ├── physics.lua       # Movement: controllable, acceleration, velocity
+│   ├── physics.lua       # Movement: controllable, acceleration, velocity (sub-pixel)
 │   ├── collision.lua     # Entity-entity and entity-map collision resolution
-│   ├── combat.lua        # Shooter, health_regen, health_manager, death handlers
+│   ├── combat.lua        # Shooter, health_regen, invulnerability_tick, health_manager
 │   ├── ai.lua            # Enemy AI (chase player)
-│   ├── rendering.lua     # Sprite drawing, spotlight/shadow, animation, health bars
-│   └── effects.lua       # Screen shake, sprite flash, particles, hit/death effects
+│   ├── rendering.lua     # Sprite drawing, spotlight/shadow, palette lighting, health bars
+│   └── effects.lua       # Screen shake, sprite flash, particles, knockback
 └── scenes/               # Game scenes (states)
     ├── title.lua         # Title screen
     ├── play.lua          # Main gameplay loop
@@ -86,13 +86,13 @@ Global `world` object (eggs instance) manages all entities and systems:
 
 Created via factory functions, each entity is a table with:
 - **type**: String identifier (e.g., "Player", "Enemy", "Projectile")
-- **Component data**: Properties like `x`, `y`, `vel_x`, `vel_y`, `hp`, etc.
+- **Component data**: Properties like `x`, `y`, `vel_x`, `vel_y`, `hp`, `sub_x`, `sub_y` (sub-pixel accumulation), etc.
 - **Tags**: Comma-separated list defining which systems process this entity
 
 | Entity | Tags |
 |--------|------|
 | Player | `player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,shadow,spotlight,sprite` |
-| Enemy | `enemy,velocity,collidable,drawable,sprite,health` |
+| Enemy | `enemy,velocity,acceleration,collidable,drawable,sprite,health,shadow` |
 | Projectile | `projectile,velocity,collidable,drawable,sprite` |
 | Pickup | `collidable,drawable,sprite` |
 
@@ -103,18 +103,27 @@ Systems are functions called per-entity based on tag matching:
 | System | Tags | Purpose |
 |--------|------|---------|
 | `controllable` | controllable | Read input, set `dir_x/dir_y` |
-| `acceleration` | acceleration | Apply acceleration/friction to velocity |
-| `velocity` | velocity | Apply velocity to position with sub-pixel precision |
-| `resolve_map_collisions` | collidable,velocity | Stop entities at solid tiles |
+| `acceleration` | acceleration | Apply acceleration/friction to `vel_x/vel_y` |
+| `velocity` | velocity | Apply velocity to position with sub-pixel precision (`sub_x/sub_y`) |
+| `resolve_map_collisions` | collidable,velocity | Stop entities at solid tiles (flag 0) |
 | `resolve_entity_collisions` | collidable | Detect overlaps, dispatch to handlers |
-| `enemy_ai` | enemy | Move enemies toward player |
-| `shooter` | shooter | Handle projectile firing |
-| `health_regen` | health | Passive HP recovery |
-| `health_manager` | health | Check for death, dispatch to handlers |
-| `animatable` | animatable | Update sprite animation frames |
-| `drawable` | drawable | Render sprites |
-| `draw_spotlight` | spotlight | Render lighting effect |
-| `draw_shadow` | shadow | Render entity shadow |
+| `change_sprite` | sprite | Update `sprite_index` based on `dir_x/dir_y` |
+| `animatable` | animatable | Toggle sprite frames for walking animations |
+| `shooter` | shooter | Handle projectile firing and ammo cost |
+| `health_regen` | health | Passive HP recovery over time |
+| `invulnerability_tick` | player | Decrement `invuln_timer` after taking damage |
+| `health_manager` | health | Check for `hp <= 0`, handle death effects |
+| `draw_spotlight` | spotlight | Render localized lighting (uses extended palette) |
+| `draw_shadow` | shadow | Render oval shadow beneath entities |
+| `drawable` | drawable | Render the entity sprite (handles flashing) |
+| `draw_health_bar` | health | Render segmented 3-state health/ammo bar |
+
+## Visual Systems & Palette
+
+The game uses **palette-aware lighting**:
+- **Extended Palette**: Colors 32-63 are initialized as lighter/darker variants of 0-15.
+- **Spotlight System**: Uses a custom color table (`0x8000`) to remap background colors to their lighter variants within a radius.
+- **Flash Effect**: Replaces all colors with white (7) for a brief duration upon impact.
 
 ## Collision System
 
@@ -122,40 +131,59 @@ Uses handler registries for decoupled collision responses:
 
 ```lua
 -- Entity-Entity handlers (keyed by "Type1,Type2")
-CollisionHandlers.entity["Player,Enemy"] = function(player, enemy) ... end
-CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, enemy) ... end
+CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
+    -- Handle damage, knockback, invulnerability
+end
 
 -- Entity-Map handlers (keyed by entity type)
-CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_y) ... end
+CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_y)
+    -- Particles and deletion
+end
 ```
 
 ## Game Loop (Play Scene)
 
 ```lua
 function Play:update()
-    -- Input
+    -- Input & Physics
     world.sys("controllable", Systems.controllable)()
-    
-    -- Physics
     world.sys("acceleration", Systems.acceleration)()
     world.sys("collidable,velocity", Systems.resolve_map_collisions)()
     world.sys("velocity", Systems.velocity)()
     
-    -- Animation & Combat
+    -- Visuals & Combat
+    world.sys("sprite", Systems.change_sprite)()
     world.sys("animatable", Systems.animatable)()
     world.sys("shooter", Systems.shooter)()
-    world.sys("sprite", Systems.change_sprite)()
     
     -- AI & Collisions
     world.sys("enemy", Systems.enemy_ai)()
     world.sys("collidable", Systems.resolve_entity_collisions)()
     
-    -- Health
+    -- Health & Invulnerability
     world.sys("health", Systems.health_regen)()
+    world.sys("player", Systems.invulnerability_tick)()
     world.sys("health", Systems.health_manager)()
     
-    -- Effects
+    -- Global Effects
     Systems.Effects.update_shake()
+end
+
+function Play:draw()
+    cls(0)
+    Systems.reset_spotlight() -- Ensure color table is clean
+    
+    -- Layered Rendering
+    world.sys("spotlight", function(e) Systems.draw_spotlight(e, ROOM_CLIP) end)()
+    world.sys("shadow", function(e) Systems.draw_shadow(e, ROOM_CLIP) end)()
+    
+    world.sys("drawable", function(entity)
+        Systems.Effects.update_flash(entity)
+        Systems.drawable(entity)
+        pal(0) -- Reset palette per-entity if used
+    end)()
+    
+    world.sys("health", Systems.draw_health_bar)()
 end
 ```
 
@@ -171,9 +199,9 @@ end
 
 ## Configuration
 
-All game constants in [constants.lua](file:///home/kc00l/game_dev/legendary-octo-guacamole/drive/src/constants.lua):
-- Player stats (health, speed, regen)
-- Projectile damage
-- Enemy configs (per-type: hp, speed, damage)
+All game constants in [constants.lua](drive/src/constants.lua):
+- Player stats (health, speed, acceleration, friction)
+- Projectile damage and pickup values
+- Enemy configurations (Skulker, etc.)
 - Controls mapping
 - Debug/cheat flags
