@@ -7,12 +7,6 @@ local GameConstants = {
    Player = {
       invulnerable_time = 120, -- frames
       move_speed = vec(1, 1),
-      sprite_index_offsets = {
-         down = 238,
-         right = 246,
-         left = 246,
-         up = 253,
-      },
       width = 24,
       height = 32,
       max_health = 100,
@@ -20,6 +14,45 @@ local GameConstants = {
       recovery_percent = 0.8,
       regen_rate = 5,    -- HP per second (0 = disabled)
       regen_delay = 3.0, -- Seconds without shooting before regen starts
+      -- Per-direction, per-state animation config (Option A)
+      animations = {
+         down = {
+            idle      = {base = 238, frames = 2, speed = 30},
+            walking   = {base = 240, frames = 2, speed = 8},
+            attacking = {base = 241, frames = 2, speed = 8},
+            hurt      = {base = 243, frames = 1, speed = 8},
+            death     = {base = 244, frames = 1, speed = 8}
+         },
+         right = {
+            idle      = {base = 246, frames = 2, speed = 30},
+            walking   = {base = 248, frames = 2, speed = 8},
+            attacking = {base = 250, frames = 2, speed = 8},
+            hurt      = {base = 252, frames = 1, speed = 8},
+            death     = {base = 244, frames = 1, speed = 8}
+         },
+         up = {
+            idle      = {base = 253, frames = 2, speed = 30},
+            walking   = {base = 255, frames = 2, speed = 8},
+            attacking = {base = 253, frames = 1, speed = 8},
+            hurt      = {base = 253, frames = 1, speed = 8},
+            death     = {base = 244, frames = 1, speed = 8}
+         },
+         left = {
+            -- Uses right sprites with flip = true
+            idle      = {base = 246, frames = 2, speed = 30, flip = true},
+            walking   = {base = 248, frames = 2, speed = 8, flip = true},
+            attacking = {base = 250, frames = 2, speed = 8, flip = true},
+            hurt      = {base = 252, frames = 1, speed = 8, flip = true},
+            death     = {base = 244, frames = 1, speed = 8, flip = true}
+         }
+      },
+      -- Keep sprite_index_offsets for change_sprite compatibility
+      sprite_index_offsets = {
+         down = 238,
+         right = 246,
+         left = 246,
+         up = 253,
+      },
    },
    Projectile = {
       damage = 10, -- HP damage per projectile hit

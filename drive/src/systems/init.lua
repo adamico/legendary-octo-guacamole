@@ -5,6 +5,8 @@ local Combat = require("combat")
 local AI = require("ai")
 local Rendering = require("rendering")
 local Effects = require("effects")
+local Animation = require("animation")
+
 
 -- Merge all modules into a single Systems table for backward compatibility
 local Systems = {}
@@ -43,6 +45,10 @@ Systems.draw_spotlight = Rendering.draw_spotlight
 Systems.draw_health_bar = Rendering.draw_health_bar
 Systems.SPOTLIGHT_COLOR = Rendering.SPOTLIGHT_COLOR
 Systems.SHADOW_COLOR = Rendering.SHADOW_COLOR
+
+-- Animation FSM systems
+Systems.update_fsm = Animation.update_fsm
+Systems.animate = Animation.animate
 
 -- Effects systems
 Systems.Effects = Effects

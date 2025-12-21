@@ -30,6 +30,9 @@ function Combat.shooter(entity)
     local cooldown_ready = not entity.shoot_cooldown or entity.shoot_cooldown == 0
     if (sx ~= 0 or sy ~= 0) and entity.hp > entity.shot_cost and cooldown_ready then
         -- Fire shot
+        if entity.fsm and entity.fsm:can("attack") then
+            entity.fsm:attack()
+        end
         entity.hp -= entity.shot_cost
         entity.time_since_shot = 0 -- Reset regen timer
         Entities.spawn_projectile(
@@ -82,8 +85,16 @@ end
 -- Health manager: check for death
 function Combat.health_manager(entity)
     if entity.hp and entity.hp <= 0 then
-        local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
-        handler(entity)
+        -- If entity has an FSM, let the FSM handle the death sequence
+        if entity.fsm then
+            if not entity.fsm:is("death") and entity.fsm:can("die") then
+                entity.fsm:die()
+            end
+        else
+            -- No FSM, delete immediately
+            local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
+            handler(entity)
+        end
     end
 end
 
