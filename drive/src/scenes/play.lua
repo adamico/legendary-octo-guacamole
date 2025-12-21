@@ -37,10 +37,28 @@ function Play:enteredState()
    Systems.init_spotlight()
    player = Entities.spawn_player(world, 10 * 16, 2 * 16)
 
-   -- Spawn test enemies for MVP
-   Entities.spawn_enemy(world, 200, 100, "Skulker")
-   Entities.spawn_enemy(world, 150, 150, "Skulker")
-   Entities.spawn_enemy(world, 250, 120, "Skulker")
+   -- Spawn enemies at random positions far from the player
+   local num_enemies = 3
+   local min_dist = 80
+   local spawned = 0
+   for i = 1, 200 do
+      if spawned >= num_enemies then break end
+
+      local rx = ROOM_CLIP.x + rnd(ROOM_CLIP.w - 16)
+      local ry = ROOM_CLIP.y + rnd(ROOM_CLIP.h - 16)
+
+      local dx = rx - player.x
+      local dy = ry - player.y
+      if dx * dx + dy * dy > min_dist * min_dist then
+         -- Check if the position is not a solid tile
+         local tx, ty = flr((rx + 8) / 16), flr((ry + 8) / 16)
+         local tile = mget(tx, ty)
+         if tile and not fget(tile, SOLID_FLAG) then
+            Entities.spawn_enemy(world, rx, ry, "Skulker")
+            spawned = spawned + 1
+         end
+      end
+   end
 end
 
 function Play:update()
