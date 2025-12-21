@@ -29,6 +29,7 @@ graph TB
         Collision
         Combat
         AI
+        Animation
         Rendering
         Effects
     end
@@ -110,8 +111,9 @@ Systems are functions called per-entity based on tag matching:
 | `velocity` | velocity | Apply velocity to position with sub-pixel precision (`sub_x/sub_y`) |
 | `resolve_map_collisions` | collidable,velocity | Stop entities at solid tiles (flag 0) |
 | `resolve_entity_collisions` | collidable | Detect overlaps, dispatch to handlers |
-| `change_sprite` | sprite | Update `sprite_index` based on `dir_x/dir_y` |
-| `animatable` | animatable | Toggle sprite frames for walking animations |
+| `change_sprite` | sprite | Update `sprite_index` based on direction (skips FSM entities) |
+| `update_fsm` | animatable | FSM state transitions (idle/walking/attacking/hurt/death) |
+| `animate` | animatable | Calculate sprite from animation config (indices, durations, composite) |
 | `shooter` | shooter | Handle projectile firing and ammo cost |
 | `health_regen` | health | Passive HP recovery over time |
 | `invulnerability_tick` | player | Decrement `invuln_timer` after taking damage |
@@ -120,6 +122,29 @@ Systems are functions called per-entity based on tag matching:
 | `draw_shadow` | shadow | Render oval shadow beneath entities |
 | `drawable` | drawable | Render the entity sprite (handles flashing) |
 | `draw_health_bar` | health | Render segmented 3-state health/ammo bar |
+
+## Animation System
+
+FSM-based animation using [lua-state-machine](https://github.com/kyleconroy/lua-state-machine):
+
+**States**: `idle` → `walking` → `attacking` → `hurt` → `death`
+
+**Animation Config** (in `constants.lua`):
+```lua
+animations = {
+   down = {
+      idle = {indices = {238, 239}, durations = {30, 30}},
+      walking = {top_indices = {240}, bottom_indices = {240, 255}, durations = {8, 8}, split_row = 9},
+      attacking = {indices = {241, 242}, durations = {15, 15}}
+   }
+}
+```
+
+**Features**:
+- Per-frame `durations` array for variable timing
+- Composite sprites (`top_indices`/`bottom_indices`) with configurable `split_row`
+- Direction preserved when idle (velocity-based facing)
+- Shooting sets facing direction
 
 ## Visual Systems & Palette
 
