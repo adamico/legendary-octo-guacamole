@@ -102,7 +102,7 @@ function Animation.init_fsm(entity)
       }
    })
    entity.anim_timer = 0
-   entity.current_direction = "down"
+   entity.current_direction = entity.direction or entity.current_direction or "down"
 end
 
 function Animation.update_fsm(entity)
@@ -161,11 +161,24 @@ function Animation.animate(entity)
    -- Get state-specific animation config
    local state_anim
    if config and config.animations then
+      -- 1. Try directional state: animations.down.walking
       local dir_anims = config.animations[direction]
-      if dir_anims and dir_anims[state] then
+      if dir_anims and type(dir_anims) == "table" then
          state_anim = dir_anims[state]
-      elseif config.animations[state] then
+         -- 2. Try directional idle fallback: animations.down.idle
+         if not state_anim then
+            state_anim = dir_anims["idle"]
+         end
+      end
+
+      -- 3. Try global state fallback: animations.walking
+      if not state_anim then
          state_anim = config.animations[state]
+      end
+
+      -- 4. Try global idle fallback: animations.idle
+      if not state_anim then
+         state_anim = config.animations["idle"]
       end
    end
 

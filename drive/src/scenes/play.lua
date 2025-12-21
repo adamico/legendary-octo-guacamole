@@ -44,7 +44,7 @@ function Play:enteredState()
    Systems.init_spotlight()
    player = Entities.spawn_player(world, 10 * 16, 4 * 16)
 
-   Systems.Spawner.init_room(player, ROOM_CLIP)
+   Systems.Spawner.init_room(player, ROOM_CLIP, 5, 80, {"Skulker", "Shooter"})
 end
 
 function Play:update()
@@ -65,6 +65,7 @@ function Play:update()
    world.sys("health", Systems.health_regen)()
    world.sys("player", Systems.invulnerability_tick)()
    world.sys("health", Systems.health_manager)()
+   world.sys("shadow_entity", Systems.sync_shadows)()
 
    -- Update effects (screenshake)
    Systems.Effects.update_shake()
@@ -79,17 +80,17 @@ function Play:draw()
    -- Draw spotlight first (brightens background)
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, ROOM_PIXELS) end)()
    -- Then shadow and player on top
-   world.sys("shadow", function(entity) Systems.draw_shadow(entity, ROOM_PIXELS) end)()
+   world.sys("drawable_shadow", function(entity) Systems.draw_shadow_entity(entity, ROOM_PIXELS) end)()
    -- Draw background entities (projectiles, pickups) behind characters
    world.sys("drawable", function(entity)
-      if entity.type == "Projectile" or entity.type == "ProjectilePickup" then
+      if entity.type == "Projectile" or entity.type == "ProjectilePickup" or entity.type == "EnemyProjectile" then
          draw_entity(entity)
       end
    end)()
    world.sys("palette_swappable", Systems.palette_swappable)()
    -- Draw characters (Player, Enemy) and everything else in front
    world.sys("drawable", function(entity)
-      if entity.type ~= "Projectile" and entity.type ~= "ProjectilePickup" then
+      if entity.type ~= "Projectile" and entity.type ~= "ProjectilePickup" and entity.type ~= "EnemyProjectile" then
          draw_entity(entity)
       end
    end)()

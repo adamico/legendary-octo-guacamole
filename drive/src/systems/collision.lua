@@ -13,8 +13,9 @@ local function get_hitbox(entity)
     local w, h, ox, oy
 
     -- Check for direction-based hitbox table
-    if entity.hitbox and entity.direction then
-        local dir_hb = entity.hitbox[entity.direction]
+    if entity.hitbox then
+        local dir = entity.direction or entity.current_direction
+        local dir_hb = dir and entity.hitbox[dir]
         if dir_hb then
             w = dir_hb.w
             h = dir_hb.h
@@ -30,8 +31,8 @@ local function get_hitbox(entity)
     oy = oy or entity.hitbox_offset_y or 0
 
     return {
-        x = entity.x + ox,
-        y = entity.y + oy,
+        x = entity.x + ox + (entity.sprite_offset_x or 0),
+        y = entity.y + oy + (entity.sprite_offset_y or 0),
         w = w,
         h = h
     }
@@ -70,6 +71,14 @@ Collision.CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_
         projectile.sprite_index)
     world.del(projectile)
 end
+
+-- Registry for EnemyProjectile + Map interaction
+Collision.CollisionHandlers.map["EnemyProjectile"] = function(projectile, map_x, map_y)
+    -- Visual feedback (optional particles)
+    -- Destroy projectile
+    world.del(projectile)
+end
+
 
 -- Registry for Projectile + Enemy interaction
 Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, enemy)
@@ -120,6 +129,33 @@ Collision.CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
     player.time_since_shot = 0
 end
 
+-- Registry for EnemyProjectile + Player interaction
+Collision.CollisionHandlers.entity["EnemyProjectile,Player"] = function(projectile, player)
+    -- Skip if player is invulnerable
+    if player.invuln_timer and player.invuln_timer > 0 then
+        return
+    end
+
+    -- Deal damage to player
+    player.hp = player.hp - (projectile.damage or 10)
+
+    -- Visual/audio feedback
+    Effects.hit_impact(projectile, player, "heavy_shake")
+
+    -- Apply knockback to player
+    Effects.apply_knockback(projectile, player, 8)
+
+    -- Set invulnerability frames
+    player.invuln_timer = 30
+
+    -- Reset regen timer
+    player.time_since_shot = 0
+
+    -- Destroy projectile
+    world.del(projectile)
+end
+
+
 -- Helper: Check if a rectangular area overlaps any solid map tiles
 local function is_solid(x, y, w, h)
     local GRID_SIZE = 16
@@ -132,7 +168,8 @@ local function is_solid(x, y, w, h)
 
     for tx = x1, x2 do
         for ty = y1, y2 do
-            if fget(mget(tx, ty), SOLID_FLAG) then
+            local tile = mget(tx, ty)
+            if tile and fget(tile, SOLID_FLAG) then
                 return true
             end
         end

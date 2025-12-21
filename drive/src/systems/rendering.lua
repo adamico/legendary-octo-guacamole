@@ -136,8 +136,11 @@ end
 
 -- Drawable system: render entity sprite
 -- Supports composite sprites where top and bottom halves are drawn separately
+-- Supports sprite_offset_x/y for visual adjustments (elevation, etc.)
 function Rendering.drawable(entity)
     local flipped = entity.flip or false
+    local sx = entity.x + (entity.sprite_offset_x or 0)
+    local sy = entity.y + (entity.sprite_offset_y or 0)
 
     -- Check for composite sprite (top + bottom halves)
     if entity.sprite_top ~= nil and entity.sprite_bottom ~= nil then
@@ -152,32 +155,98 @@ function Rendering.drawable(entity)
 
         -- Draw top half (first split_row rows of top sprite)
         sspr(
-            entity.sprite_top,  -- sprite index
-            0, 0,               -- source x, y within sprite
-            width, split_row,   -- source width, height (top portion)
-            entity.x, entity.y, -- destination
-            width, split_row,   -- destination width, height
-            flipped             -- flip_x
+            entity.sprite_top, -- sprite index
+            0, 0,              -- source x, y within sprite
+            width, split_row,  -- source width, height (top portion)
+            sx, sy,            -- destination
+            width, split_row,  -- destination width, height
+            flipped            -- flip_x
         )
         -- Draw bottom half (remaining rows of bottom sprite)
         sspr(
-            entity.sprite_bottom,           -- sprite index
-            0, split_row,                   -- source x, y within sprite (start at split_row)
-            width, bottom_height,           -- source width, height (bottom portion)
-            entity.x, entity.y + split_row, -- destination (offset by split_row)
+            entity.sprite_bottom, -- sprite index
+            0, split_row,         -- source x, y within sprite (start at split_row)
+            width, bottom_height, -- source width, height (bottom portion)
+            sx, sy + split_row,   -- destination (offset by split_row)
             width, bottom_height,
             flipped
         )
     else
         -- Standard single sprite
-        spr(entity.sprite_index, entity.x, entity.y, flipped)
+        spr(entity.sprite_index, sx, sy, flipped)
     end
 end
 
--- Shadow system
-function Rendering.draw_shadow(entity, clip_square)
-    local x1, y1 = entity.x + 1, entity.y + 11
-    local x2, y2 = entity.x + entity.width - 2, y1 + 6
+-- Shadow System: Sync shadow entity position to parent
+function Rendering.sync_shadows(shadow)
+    local parent = shadow.parent
+
+    -- Cleanup if parent is gone
+    if not parent or not world.msk(parent) then
+        world.del(shadow)
+        return
+    end
+
+    -- Sync base position (ground footprint)
+    shadow.x = parent.x
+    shadow.y = parent.y
+
+    -- Sync visual/centering properties
+    shadow.w = parent.width or 16
+    shadow.h = parent.height or 16
+    shadow.shadow_offset = parent.shadow_offset or 0
+    shadow.shadow_offsets = parent.shadow_offsets
+    shadow.shadow_width = parent.shadow_width
+    shadow.shadow_height = parent.shadow_height
+    shadow.shadow_widths = parent.shadow_widths
+    shadow.shadow_heights = parent.shadow_heights
+    shadow.direction = parent.direction or parent.current_direction
+end
+
+function Rendering.draw_shadow_entity(shadow, clip_square)
+    local parent = shadow.parent
+    if not parent or not world.msk(parent) then return end
+
+    -- Current orientation
+    local dir = parent.direction or parent.current_direction
+    local hb = Collision.get_hitbox(parent)
+
+    -- Determine width/height
+    local sw = shadow.shadow_width
+    if shadow.shadow_widths and dir and shadow.shadow_widths[dir] then
+        sw = shadow.shadow_widths[dir]
+    end
+    if not sw then
+        local w_scale = 0.8
+        if hb.w < 8 then w_scale = 1.0 end
+        sw = hb.w * w_scale
+    end
+    sw = max(8, sw)
+
+    local sh = shadow.shadow_height
+    if shadow.shadow_heights and dir and shadow.shadow_heights[dir] then
+        sh = shadow.shadow_heights[dir]
+    end
+    sh = sh or 3
+
+    -- Vertical offset override
+    local offset_y = shadow.shadow_offset or 0
+    if shadow.shadow_offsets and dir and shadow.shadow_offsets[dir] then
+        offset_y = shadow.shadow_offsets[dir]
+    end
+
+    -- UNIFIED ALIGNMENT:
+    -- 1. Center horizontally on the HITBOX (physical center)
+    -- 2. Anchor vertically to the HITBOX bottom minus visual elevation (physical footprint)
+    local cx = flr(hb.x + hb.w / 2)
+    local ground_y = flr((hb.y + hb.h) - (parent.sprite_offset_y or 0))
+    local cy = ground_y + offset_y
+
+    local x1 = cx - flr(sw / 2)
+    local x2 = cx + flr(sw / 2)
+    local y1 = cy - flr(sh / 2)
+    local y2 = cy + flr(sh / 2)
+
     clip(clip_square.x, clip_square.y, clip_square.w, clip_square.h)
     ovalfill(x1, y1, x2, y2, Rendering.SHADOW_COLOR)
     clip()

@@ -23,9 +23,10 @@ local function is_free_space(x, y)
     return true
 end
 
-function Spawner.init_room(player, room_clip, num_enemies, min_dist)
+function Spawner.init_room(player, room_clip, num_enemies, min_dist, types)
     num_enemies = num_enemies or 5
     min_dist = min_dist or 80
+    types = types or {"Skulker"}
     Spawner.timer = 60
     Spawner.spawned = false
     Spawner.positions = {}
@@ -42,7 +43,8 @@ function Spawner.init_room(player, room_clip, num_enemies, min_dist)
             local tx, ty = flr((rx + 8) / 16), flr((ry + 8) / 16)
             local tile = mget(tx, ty)
             if is_not_solid(tile) and is_free_space(rx, ry) then
-                table.insert(Spawner.positions, {x = rx, y = ry})
+                local etype = types[flr(rnd(#types)) + 1]
+                table.insert(Spawner.positions, {x = rx, y = ry, type = etype})
             end
         end
     end
@@ -53,7 +55,7 @@ function Spawner.update(world)
         Spawner.timer -= 1
         if Spawner.timer <= 0 then
             for _, pos in ipairs(Spawner.positions) do
-                Entities.spawn_enemy(world, pos.x, pos.y, "Skulker")
+                Entities.spawn_enemy(world, pos.x, pos.y, pos.type)
             end
             Spawner.spawned = true
         end

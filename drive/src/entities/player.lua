@@ -15,6 +15,12 @@ function Player.spawn(world, x, y)
         hitbox_height = GameConstants.Player.hitbox_height,
         hitbox_offset_x = GameConstants.Player.hitbox_offset_x,
         hitbox_offset_y = GameConstants.Player.hitbox_offset_y,
+        shadow_offset = GameConstants.Player.shadow_offset or 0,
+        shadow_offsets = GameConstants.Player.shadow_offsets,
+        shadow_width = GameConstants.Player.shadow_width,
+        shadow_height = GameConstants.Player.shadow_height,
+        shadow_widths = GameConstants.Player.shadow_widths,
+        shadow_heights = GameConstants.Player.shadow_heights,
         -- Movement properties (BoI-style: instant response, almost no slide)
         accel = 1.2,
         max_speed = 2,
@@ -38,9 +44,14 @@ function Player.spawn(world, x, y)
         shoot_cooldown = 0,
         invuln_timer = 0, -- Frames of invulnerability remaining after taking damage
     }
-    return world.ent(
-        "player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,shadow,spotlight,sprite",
+    local ent = world.ent(
+        "player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite",
         player)
+
+    local Shadow = require("shadow")
+    Shadow.spawn(world, ent)
+
+    return ent
 end
 
 return Player

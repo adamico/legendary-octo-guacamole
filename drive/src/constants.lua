@@ -57,14 +57,15 @@ local GameConstants = {
          left = 246,
          up = 253,
       },
+      shadow_offset = 0,
    },
    Projectile = {
       damage = 10, -- HP damage per projectile hit
       -- Per-direction hitboxes for asymmetric laser sprite
       hitbox = {
-         down  = {w = 6, h = 12, ox = 5, oy = 4}, -- vertical laser (rotated)
-         up    = {w = 6, h = 12, ox = 5, oy = 4},
-         right = {w = 10, h = 6, ox = 3, oy = 5}, -- horizontal laser (natural shape)
+         down  = {w = 6, h = 12, ox = 4, oy = 4}, -- perfectly centered
+         up    = {w = 6, h = 12, ox = 4, oy = 2},
+         right = {w = 10, h = 6, ox = 3, oy = 5},
          left  = {w = 10, h = 6, ox = 3, oy = 5},
       },
       sprite_index_offsets = {
@@ -72,6 +73,19 @@ local GameConstants = {
          right = 77,
          left = 77,
          up = 78,
+      },
+      sprite_offset_y = 0,
+      shadow_offsets = {
+         down = 8,
+         up = 8,
+         right = 2,
+         left = 2,
+      },
+      shadow_widths = {
+         down = 6,
+         up = 6,
+         right = 10,
+         left = 10,
       },
    },
    ProjectilePickup = {
@@ -81,6 +95,20 @@ local GameConstants = {
          left = 77,
          up = 78,
       },
+   },
+   EnemyProjectile = {
+      damage = 10,
+      speed = 1.5,
+      hitbox_width = 8,
+      hitbox_height = 8,
+      hitbox_offset_x = 4,
+      hitbox_offset_y = 4,
+      animations = {
+         idle = {indices = {71, 72}, durations = {8, 8}}
+      },
+      sprite_offset_y = -5,
+      shadow_offset = 3,
+      shadow_width = 4,
    },
    Enemy = {
       Skulker = {
@@ -95,13 +123,37 @@ local GameConstants = {
          },
          width = 16,
          height = 16,
-         -- Hitbox: full size for easier player hits
-         hitbox_width = 16,
-         hitbox_height = 16,
-         hitbox_offset_x = 0,
-         hitbox_offset_y = 0,
+         hitbox_width = 12,
+         hitbox_height = 10,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 3,
+         shadow_offset = 2,
+         shadow_width = 12,
       },
-      drop_chance = 1.0, -- 100% drop rate for MVP testing
+      Shooter = {
+         hp = 30,
+         speed = 0.3,
+         contact_damage = 10,
+         shoot_delay = 120,
+         sprite_index_offsets = {
+            down = 225,
+            right = 225,
+            left = 225,
+            up = 225,
+         },
+         width = 16,
+         height = 16,
+         hitbox_width = 12,
+         hitbox_height = 10,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 3,
+         animations = {
+            idle = {indices = {225, 226}, durations = {30, 30}}
+         },
+         shadow_offset = 3,
+         shadow_width = 12,
+      },
+      drop_chance = 1.0,
    },
    title = "Pizak",
    score = {
