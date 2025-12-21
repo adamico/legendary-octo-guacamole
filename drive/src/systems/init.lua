@@ -24,7 +24,8 @@ Systems.acceleration = Physics.acceleration
 Systems.velocity = Physics.velocity
 
 -- Combat systems
-Systems.shooter = Combat.shooter
+Systems.shoot_input = Combat.shoot_input
+Systems.projectile_fire = Combat.projectile_fire
 Systems.health_manager = Combat.health_manager
 Systems.health_regen = Combat.health_regen
 Systems.invulnerability_tick = Combat.invulnerability_tick

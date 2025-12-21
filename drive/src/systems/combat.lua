@@ -11,14 +11,23 @@ function Combat.invulnerability_tick(entity)
     end
 end
 
--- Shooter system: handle projectile firing
-function Combat.shooter(entity)
-    -- Reduce cooldown
-    if entity.shoot_cooldown then
-        entity.shoot_cooldown = max(0, entity.shoot_cooldown - 1)
+-- Helper: convert shoot direction to facing direction name
+local function direction_from_shoot(sx, sy)
+    if sx > 0 then
+        return "right"
+    elseif sx < 0 then
+        return "left"
+    elseif sy > 0 then
+        return "down"
+    elseif sy < 0 then
+        return "up"
     end
+    return nil
+end
 
-    -- Read directional shooting buttons (8-11)
+-- Shoot input system: reads buttons, sets shoot direction on entity
+function Combat.shoot_input(entity)
+    -- Read directional shooting buttons
     local sx = 0
     local sy = 0
     if btn(GameConstants.controls.shoot_left) then sx = -1 end
@@ -26,37 +35,45 @@ function Combat.shooter(entity)
     if btn(GameConstants.controls.shoot_up) then sy = -1 end
     if btn(GameConstants.controls.shoot_down) then sy = 1 end
 
-    -- Fire if cooldown ready and HP sufficient
-    local cooldown_ready = not entity.shoot_cooldown or entity.shoot_cooldown == 0
-    if (sx ~= 0 or sy ~= 0) and entity.hp > entity.shot_cost and cooldown_ready then
-        -- Trigger or extend attack animation
-        if entity.fsm then
-            -- Set facing direction based on shoot direction
-            if sx > 0 then
-                entity.current_direction = "right"
-            elseif sx < 0 then
-                entity.current_direction = "left"
-            elseif sy > 0 then
-                entity.current_direction = "down"
-            elseif sy < 0 then
-                entity.current_direction = "up"
-            end
+    entity.shoot_dir_x = sx
+    entity.shoot_dir_y = sy
+end
 
-            if entity.fsm:can("attack") then
-                entity.fsm:attack()
-            elseif entity.fsm:is("attacking") then
-                -- Already attacking - reset timer to extend animation
-                entity.anim_timer = 0
+-- Projectile fire system: checks conditions, spawns projectile, handles FSM
+function Combat.projectile_fire(entity)
+    -- Reduce cooldown
+    if entity.shoot_cooldown then
+        entity.shoot_cooldown = max(0, entity.shoot_cooldown - 1)
+    end
+
+    local sx = entity.shoot_dir_x or 0
+    local sy = entity.shoot_dir_y or 0
+
+    -- Fire if cooldown ready and HP sufficient
+    local cooldown_ready = (entity.shoot_cooldown or 0) == 0
+    local wants_to_shoot = sx ~= 0 or sy ~= 0
+    local has_enough_hp = entity.hp > entity.shot_cost
+
+    if wants_to_shoot and has_enough_hp and cooldown_ready then
+        -- Update facing direction
+        local dir = direction_from_shoot(sx, sy)
+        if dir and entity.fsm then
+            entity.current_direction = dir
+            -- Trigger or extend attack animation
+            if not entity.fsm:attack() and entity.fsm:is("attacking") then
+                entity.anim_timer = 0 -- Extend animation
             end
         end
+
+        -- Consume HP and spawn projectile
         entity.hp -= entity.shot_cost
-        entity.time_since_shot = 0 -- Reset regen timer
+        entity.time_since_shot = 0
         Entities.spawn_projectile(
             world, entity.x + entity.width / 2 - 2,
             entity.y + entity.height / 2 - 2, sx, sy,
             entity.recovery_percent, entity.shot_cost
         )
-        entity.shoot_cooldown = 15 -- Adjust as needed
+        entity.shoot_cooldown = 15
     end
 end
 
@@ -103,7 +120,7 @@ function Combat.health_manager(entity)
     if entity.hp and entity.hp <= 0 then
         -- If entity has an FSM, let the FSM handle the death sequence
         if entity.fsm then
-            if not entity.fsm:is("death") and entity.fsm:can("die") then
+            if not entity.fsm:is("death") then
                 entity.fsm:die()
             end
         else
