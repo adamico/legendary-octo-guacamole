@@ -124,7 +124,8 @@ function Rendering.change_sprite(entity)
 
     entity.base_sprite_index = sprite_index
     entity.sprite_index = sprite_index -- Also set directly for non-animated entities
-    entity.flip = flip
+    entity.flip_x = flip
+    entity.flip_y = false
 end
 
 -- Simple animation system: alternates between base sprite and base+1 every 30 frames
@@ -138,7 +139,8 @@ end
 -- Supports composite sprites where top and bottom halves are drawn separately
 -- Supports sprite_offset_x/y for visual adjustments (elevation, etc.)
 function Rendering.drawable(entity)
-    local flipped = entity.flip or false
+    local flip_x = entity.flip_x or entity.flip or false
+    local flip_y = entity.flip_y or false
     local sx = entity.x + (entity.sprite_offset_x or 0)
     local sy = entity.y + (entity.sprite_offset_y or 0)
 
@@ -160,7 +162,7 @@ function Rendering.drawable(entity)
             width, split_row,  -- source width, height (top portion)
             sx, sy,            -- destination
             width, split_row,  -- destination width, height
-            flipped            -- flip_x
+            flip_x, flip_y
         )
         -- Draw bottom half (remaining rows of bottom sprite)
         sspr(
@@ -169,11 +171,11 @@ function Rendering.drawable(entity)
             width, bottom_height, -- source width, height (bottom portion)
             sx, sy + split_row,   -- destination (offset by split_row)
             width, bottom_height,
-            flipped
+            flip_x, flip_y
         )
     else
         -- Standard single sprite
-        spr(entity.sprite_index, sx, sy, flipped)
+        spr(entity.sprite_index, sx, sy, flip_x, flip_y)
     end
 end
 

@@ -47,7 +47,7 @@ function Projectile.spawn(world, x, y, dx, dy, recovery_percent, shot_cost)
         shadow_widths = GameConstants.Projectile.shadow_widths,
         shadow_heights = GameConstants.Projectile.shadow_heights,
     }
-    local ent = world.ent("projectile,velocity,collidable,drawable,sprite,palette_swappable", projectile)
+    local ent = world.ent("projectile,velocity,collidable,drawable,animatable,palette_swappable", projectile)
 
     local Shadow = require("shadow")
     Shadow.spawn(world, ent)

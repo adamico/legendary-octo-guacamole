@@ -75,6 +75,36 @@ local GameConstants = {
          up = 78,
       },
       sprite_offset_y = 0,
+      animations = {
+         down = {
+            indices = {78, 78},
+            durations = {8, 8},
+            flips = {
+               {x = false, y = false}, {x = true, y = false}
+            }
+         },
+         up = {
+            indices = {78, 78},
+            durations = {8, 8},
+            flips = {
+               {x = false, y = false}, {x = true, y = false}
+            }
+         },
+         right = {
+            indices = {77, 77},
+            durations = {8, 8},
+            flips = {
+               {x = false, y = false}, {x = false, y = true}
+            }
+         },
+         left = {
+            indices = {77, 77},
+            durations = {8, 8},
+            flips = {
+               {x = false, y = false}, {x = false, y = true}
+            }
+         },
+      },
       shadow_offsets = {
          down = 8,
          up = 8,

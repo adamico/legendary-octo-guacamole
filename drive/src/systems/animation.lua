@@ -169,6 +169,11 @@ function Animation.animate(entity)
          if not state_anim then
             state_anim = dir_anims["idle"]
          end
+
+         -- 2.5 Try using dir_anims directly if it's an animation object (no states)
+         if not state_anim and (dir_anims.indices or dir_anims.base or dir_anims.top_indices) then
+            state_anim = dir_anims
+         end
       end
 
       -- 3. Try global state fallback: animations.walking
@@ -185,6 +190,9 @@ function Animation.animate(entity)
    -- Default split_row based on entity height
    local default_split_row = flr((entity.height or 16) / 2)
 
+   -- Track the current frame for per-frame flip support
+   local current_frame_idx = 0
+
    if state_anim then
       -- Composite sprite (top_indices/bottom_indices)
       if state_anim.top_indices or state_anim.bottom_indices then
@@ -196,6 +204,7 @@ function Animation.animate(entity)
          local top_frame = get_frame_from_durations(durations, speed, entity.anim_timer, #top_indices)
          local bottom_frame = get_frame_from_durations(durations, speed, entity.anim_timer, #bottom_indices)
 
+         current_frame_idx = top_frame -- Use top frame for flip lookup
          entity.sprite_top = top_indices[(top_frame % #top_indices) + 1] or 0
          entity.sprite_bottom = bottom_indices[(bottom_frame % #bottom_indices) + 1] or 0
          entity.split_row = state_anim.split_row or default_split_row
@@ -208,6 +217,7 @@ function Animation.animate(entity)
          local speed = state_anim.speed or DEFAULT_SPEED
 
          local frame_idx, total_duration = get_frame_from_durations(durations, speed, entity.anim_timer, #indices)
+         current_frame_idx = frame_idx
 
          clear_composite_props(entity)
          entity.sprite_index = indices[(frame_idx % #indices) + 1] or 0
@@ -220,6 +230,7 @@ function Animation.animate(entity)
          local speed = state_anim.speed or DEFAULT_SPEED
 
          local frame_idx, total_duration = get_frame_from_durations(durations, speed, entity.anim_timer, frames)
+         current_frame_idx = frame_idx
 
          clear_composite_props(entity)
          entity.sprite_index = state_anim.base + frame_idx
@@ -231,14 +242,25 @@ function Animation.animate(entity)
       if config and config.sprite_index_offsets then
          base_sprite = config.sprite_index_offsets[direction] or 0
       end
-      local frame_idx = flr(entity.anim_timer / DEFAULT_SPEED) % 2
+      current_frame_idx = flr(entity.anim_timer / DEFAULT_SPEED) % 2
 
       clear_composite_props(entity)
-      entity.sprite_index = base_sprite + frame_idx
+      entity.sprite_index = base_sprite + current_frame_idx
    end
 
    -- Apply flip from animation config
-   entity.flip = state_anim and state_anim.flip or false
+   local fx = state_anim and (state_anim.flip_x or state_anim.flip) or false
+   local fy = state_anim and state_anim.flip_y or false
+
+   -- Support per-frame flips
+   if state_anim and state_anim.flips and state_anim.flips[current_frame_idx + 1] then
+      local f = state_anim.flips[current_frame_idx + 1]
+      fx = f.x ~= nil and f.x or fx
+      fy = f.y ~= nil and f.y or fy
+   end
+
+   entity.flip_x = fx
+   entity.flip_y = fy
 end
 
 return Animation
