@@ -97,10 +97,11 @@ Created via factory functions, each entity is a table with:
 
 | Entity | Tags |
 |--------|------|
-| Player | `player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,shadow,spotlight,sprite` |
-| Enemy | `enemy,velocity,acceleration,collidable,drawable,sprite,health,shadow` |
-| Projectile | `projectile,velocity,collidable,drawable,sprite` |
-| Pickup | `collidable,drawable,sprite` |
+| Player | `player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,middleground` |
+| Enemy | `enemy,velocity,acceleration,collidable,drawable,sprite,health,middleground` |
+| Projectile | `projectile,velocity,collidable,drawable,sprite,middleground` |
+| Pickup | `collidable,drawable,sprite,background` |
+| Shadow | `shadow_entity,drawable_shadow,background` |
 
 ### Systems
 
@@ -154,10 +155,14 @@ animations = {
 
 The game uses **palette-aware lighting**:
 
+- **Visual Layering**: Entities use ECS tags to define their rendering priority:
+  - `background`: Shadows, pickups. Drawn first.
+  - `middleground`: Characters and projectiles. Drawn second with **Y-sorting** (depth).
+  - `foreground`: UI and health bars. Drawn last.
+- **Y-Sorting**: The `middleground` layer uses a custom `qsort` library ([qsort.lua](file:///home/kc00l/game_dev/legendary-octo-guacamole/drive/lib/qsort.lua)) for Picotron-compatible depth sorting, ensuring correct visual overlap.
 - **Extended Palette**: Colors 32-63 are initialized as lighter/darker variants of 0-15.
 - **Spotlight System**: Uses a custom color table (`0x8000`) to remap background colors to their lighter variants within a radius.
 - **Flash Effect**: Replaces all colors with white (7) for a brief duration upon impact.
-- **Layered Rendering**: Entities are drawn in two passes: background objects (projectiles, pickups) first, then foreground objects (players, enemies) second. This ensures projectiles appear to emerge from behind the shooter.
 
 ## Collision System
 
@@ -205,27 +210,26 @@ end
 
 function Play:draw()
     cls(0)
-    Systems.reset_spotlight() -- Ensure color table is clean
+    draw_room()
+    map()
+    Systems.reset_spotlight()
     
-    -- Layered Rendering
-    world.sys("spotlight", function(e) Systems.draw_spotlight(e, ROOM_CLIP) end)()
-    world.sys("shadow", function(e) Systems.draw_shadow(e, ROOM_CLIP) end)()
+    -- Spotlight pass
+    world.sys("spotlight", function(e) Systems.draw_spotlight(e, ROOM_PIXELS) end)()
     
-    -- Layered drawing: projectiles/pickups behind characters
-    world.sys("drawable", function(entity)
-        if entity.type == "Projectile" or entity.type == "ProjectilePickup" then
-            Systems.drawable(entity)
-        end
-    end)()
+    -- 1. Background Pass: Shadows and Pickups
+    world.sys("background,drawable_shadow", function(e) Systems.draw_shadow_entity(e, ROOM_PIXELS) end)()
+    world.sys("background,drawable", draw_entity)()
+    
+    -- 2. Middleground Pass: Characters and Projectiles (Y-Sorted)
+    Systems.draw_ysorted(world, "middleground,drawable", draw_entity)
+    
+    -- Global Effects
+    world.sys("palette_swappable", Systems.palette_swappable)()
+    Systems.Spawner.draw(ROOM_PIXELS)
+    pal()
 
-    world.sys("drawable", function(entity)
-        if entity.type ~= "Projectile" and entity.type ~= "ProjectilePickup" then
-            Systems.Effects.update_flash(entity)
-            Systems.drawable(entity)
-            pal(0) -- Reset palette per-entity if used
-        end
-    end)()
-    
+    -- 3. Foreground Pass: UI
     world.sys("health", Systems.draw_health_bar)()
 end
 ```

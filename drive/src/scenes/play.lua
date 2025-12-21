@@ -59,7 +59,6 @@ function Play:update()
    world.sys("animatable", Systems.animate)()
    world.sys("shooter", Systems.shoot_input)()
    world.sys("shooter", Systems.projectile_fire)()
-   -- Check entity-entity collisions for specific combinations
    world.sys("enemy", Systems.enemy_ai)()
    world.sys("collidable", Systems.resolve_entity_collisions)()
    world.sys("health", Systems.health_regen)()
@@ -67,7 +66,6 @@ function Play:update()
    world.sys("health", Systems.health_manager)()
    world.sys("shadow_entity", Systems.sync_shadows)()
 
-   -- Update effects (screenshake)
    Systems.Effects.update_shake()
 end
 
@@ -75,31 +73,27 @@ function Play:draw()
    cls(0)
    draw_room()
    map()
-   -- Reset spotlight color table (in case flash effects corrupted it)
    Systems.reset_spotlight()
-   -- Draw spotlight first (brightens background)
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, ROOM_PIXELS) end)()
-   -- Then shadow and player on top
-   world.sys("drawable_shadow", function(entity) Systems.draw_shadow_entity(entity, ROOM_PIXELS) end)()
-   -- Draw background entities (projectiles, pickups) behind characters
-   world.sys("drawable", function(entity)
-      if entity.type == "Projectile" or entity.type == "ProjectilePickup" or entity.type == "EnemyProjectile" then
-         draw_entity(entity)
-      end
-   end)()
-   world.sys("palette_swappable", Systems.palette_swappable)()
-   -- Draw characters (Player, Enemy) and everything else in front
-   world.sys("drawable", function(entity)
-      if entity.type ~= "Projectile" and entity.type ~= "ProjectilePickup" and entity.type ~= "EnemyProjectile" then
-         draw_entity(entity)
-      end
+
+   -- 1. Background Layer: Shadows, Projectiles, Pickups
+   world.sys("background,drawable_shadow", function(entity) Systems.draw_shadow_entity(entity, ROOM_PIXELS) end)()
+   world.sys("background,drawable", function(entity)
+      draw_entity(entity)
    end)()
 
-   -- Draw spawn indicators if timer is still active
+   -- 2. Middleground Layer: Characters (Y-Sorted)
+   Systems.draw_ysorted(world, "middleground,drawable", function(entity)
+      draw_entity(entity)
+   end)
+
+   -- 3. Global Effects & Debug
+   world.sys("palette_swappable", Systems.palette_swappable)()
    Systems.Spawner.draw(ROOM_PIXELS)
 
    pal()
 
+   -- 4. Foreground Layer: UI/Health Bars
    world.sys("health", Systems.draw_health_bar)()
    if key("f2") then
       world.sys("collidable", Systems.draw_hitbox)()

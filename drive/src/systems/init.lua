@@ -47,6 +47,7 @@ Systems.draw_shadow_entity = Rendering.draw_shadow_entity
 Systems.draw_spotlight = Rendering.draw_spotlight
 Systems.draw_health_bar = Rendering.draw_health_bar
 Systems.draw_hitbox = Rendering.draw_hitbox
+Systems.draw_ysorted = Rendering.draw_ysorted
 Systems.palette_swappable = Rendering.palette_swappable
 Systems.SPOTLIGHT_COLOR = Rendering.SPOTLIGHT_COLOR
 Systems.SHADOW_COLOR = Rendering.SHADOW_COLOR

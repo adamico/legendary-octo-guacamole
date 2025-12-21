@@ -45,7 +45,7 @@ function Player.spawn(world, x, y)
         invuln_timer = 0, -- Frames of invulnerability remaining after taking damage
     }
     local ent = world.ent(
-        "player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite",
+        "player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,middleground",
         player)
 
     local Shadow = require("shadow")

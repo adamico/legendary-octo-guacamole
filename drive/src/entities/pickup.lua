@@ -34,7 +34,7 @@ function Pickup.spawn(world, x, y, dir_x, dir_y, amount, sprite_index)
         recovery_amount = amount,
         sprite_index = sprite_index,
     }
-    return world.ent("pickup,collidable,drawable,sprite", pickup)
+    return world.ent("pickup,collidable,drawable,sprite,background", pickup)
 end
 
 return Pickup

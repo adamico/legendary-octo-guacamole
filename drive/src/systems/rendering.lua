@@ -1,6 +1,7 @@
 -- Rendering and visual effects systems
 local GameConstants = require("constants")
 local Collision = require("collision")
+local qsort = require("qsort")
 
 local Rendering = {}
 
@@ -307,6 +308,26 @@ function Rendering.palette_swappable(entity)
     if not entity.palette_swaps then return end
     for _, swap in ipairs(entity.palette_swaps) do
         pal(swap.from, swap.to)
+    end
+end
+
+-- Y-Sorted Rendering: Gathers, sorts, and draws entities
+function Rendering.draw_ysorted(world, tags, draw_fn)
+    local entities = {}
+    world.sys(tags, function(e)
+        add(entities, e)
+    end)()
+
+    -- Sort by Y position (bottom of sprite)
+    -- Using entity.y + entity.height for sorting baseline
+    qsort(entities, function(a, b)
+        local ay = a.y + (a.height or 16)
+        local by = b.y + (b.height or 16)
+        return ay < by
+    end)
+
+    for i = 1, #entities do
+        draw_fn(entities[i])
     end
 end
 

@@ -43,7 +43,7 @@ function Enemy.spawn(world, x, y, enemy_type)
         enemy.is_shooter = true
     end
 
-    local ent = world.ent("enemy,velocity,collidable,health,drawable,animatable,sprite", enemy)
+    local ent = world.ent("enemy,velocity,collidable,health,drawable,animatable,sprite,middleground", enemy)
 
     local Shadow = require("shadow")
     Shadow.spawn(world, ent)
