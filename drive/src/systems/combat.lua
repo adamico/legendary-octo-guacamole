@@ -29,9 +29,14 @@ function Combat.shooter(entity)
     -- Fire if cooldown ready and HP sufficient
     local cooldown_ready = not entity.shoot_cooldown or entity.shoot_cooldown == 0
     if (sx ~= 0 or sy ~= 0) and entity.hp > entity.shot_cost and cooldown_ready then
-        -- Fire shot
-        if entity.fsm and entity.fsm:can("attack") then
-            entity.fsm:attack()
+        -- Trigger or extend attack animation
+        if entity.fsm then
+            if entity.fsm:can("attack") then
+                entity.fsm:attack()
+            elseif entity.fsm:is("attacking") then
+                -- Already attacking - reset timer to extend animation
+                entity.anim_timer = 0
+            end
         end
         entity.hp -= entity.shot_cost
         entity.time_since_shot = 0 -- Reset regen timer

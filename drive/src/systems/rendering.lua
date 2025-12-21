@@ -140,22 +140,28 @@ function Rendering.drawable(entity)
         -- Picotron sspr: sspr(sprite_index, sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
         -- sx, sy are coordinates WITHIN the sprite (not the spritesheet)
 
-        -- Draw top half (first 8 rows of top sprite)
+        -- Use dynamic split_row (defaults to height/2)
+        local width = entity.width or 16
+        local height = entity.height or 16
+        local split_row = entity.split_row or flr(height / 2)
+        local bottom_height = height - split_row
+
+        -- Draw top half (first split_row rows of top sprite)
         sspr(
             entity.sprite_top,  -- sprite index
             0, 0,               -- source x, y within sprite
-            16, 8,              -- source width=16, height=8 (top half)
+            width, split_row,   -- source width, height (top portion)
             entity.x, entity.y, -- destination
-            16, 8,              -- destination width, height
+            width, split_row,   -- destination width, height
             flip                -- flip_x
         )
-        -- Draw bottom half (last 8 rows of bottom sprite)
+        -- Draw bottom half (remaining rows of bottom sprite)
         sspr(
-            entity.sprite_bottom,   -- sprite index
-            0, 9,                   -- source x, y within sprite (start at row 9)
-            16, 8,                  -- source width=16, height=8 (bottom half)
-            entity.x, entity.y + 8, -- destination (offset by 8)
-            16, 8,
+            entity.sprite_bottom,           -- sprite index
+            0, split_row,                   -- source x, y within sprite (start at split_row)
+            width, bottom_height,           -- source width, height (bottom portion)
+            entity.x, entity.y + split_row, -- destination (offset by split_row)
+            width, bottom_height,
             flip
         )
     else

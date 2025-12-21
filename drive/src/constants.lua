@@ -7,8 +7,8 @@ local GameConstants = {
    Player = {
       invulnerable_time = 120, -- frames
       move_speed = vec(1, 1),
-      width = 24,
-      height = 32,
+      width = 16,
+      height = 16,
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
@@ -16,36 +16,34 @@ local GameConstants = {
       regen_delay = 3.0, -- Seconds without shooting before regen starts
       animations = {
          down = {
-            idle      = {base = 238, frames = 2, speed = 30},
-            -- Composite: top from sprite 240, bottom alternates between 240 and 255
-            walking   = {top_indices = {240}, bottom_indices = {240, 255}, speed = 8},
-            attacking = {base = 241, frames = 2, speed = 8},
-            hurt      = {base = 243, frames = 1, speed = 8},
-            death     = {base = 244, frames = 1, speed = 8}
+            idle      = {indices = {238, 239}, durations = {30, 30}},
+            walking   = {top_indices = {240}, bottom_indices = {240, 255}, durations = {8, 8}},
+            attacking = {indices = {241, 242}, durations = {15, 15}},
+            hurt      = {indices = {243}, durations = {30}},
+            death     = {indices = {244}, durations = {8}}
          },
          right = {
-            idle      = {base = 246, frames = 2, speed = 30},
-            walking   = {base = 248, frames = 2, speed = 8},
-            attacking = {base = 250, frames = 2, speed = 8},
-            hurt      = {base = 252, frames = 1, speed = 8},
-            death     = {base = 244, frames = 1, speed = 8}
+            idle      = {indices = {246, 247}, durations = {30, 30}},
+            walking   = {indices = {248, 249}, durations = {8, 8}},
+            attacking = {indices = {250, 251}, durations = {8, 8}},
+            hurt      = {indices = {252}, durations = {30}},
+            death     = {indices = {244}, durations = {8}}
          },
          up = {
-            idle      = {base = 253, frames = 2, speed = 30},
-            -- Composite: top from sprite 255, bottom alternates between 255 and 240
-            walking   = {top_indices = {255}, bottom_indices = {255, 240}, speed = 8},
-            attacking = {base = 253, frames = 1, speed = 8},
-            hurt      = {base = 253, frames = 1, speed = 8},
-            death     = {base = 244, frames = 1, speed = 8}
+            idle      = {indices = {253, 254}, durations = {30, 30}},
+            walking   = {top_indices = {255}, bottom_indices = {255, 240}, durations = {8, 8}},
+            attacking = {indices = {253}, durations = {8}},
+            hurt      = {indices = {253}, durations = {30}},
+            death     = {indices = {244}, durations = {8}}
          },
          left = {
-            -- Uses right sprites with flip = true
-            idle      = {base = 246, frames = 2, speed = 30, flip = true},
-            walking   = {base = 248, frames = 2, speed = 8, flip = true},
-            attacking = {base = 250, frames = 2, speed = 8, flip = true},
-            hurt      = {base = 252, frames = 1, speed = 8, flip = true},
-            death     = {base = 244, frames = 1, speed = 8, flip = true}
+            idle      = {indices = {246, 247}, durations = {30, 30}, flip = true},
+            walking   = {indices = {248, 249}, durations = {8, 8}, flip = true},
+            attacking = {indices = {250, 251}, durations = {8, 8}, flip = true},
+            hurt      = {indices = {252}, durations = {30}, flip = true},
+            death     = {indices = {244}, durations = {8}, flip = true}
          }
+
       },
       -- Keep sprite_index_offsets for change_sprite compatibility
       sprite_index_offsets = {
