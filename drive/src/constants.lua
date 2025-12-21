@@ -62,10 +62,10 @@ local GameConstants = {
       damage = 10, -- HP damage per projectile hit
       -- Per-direction hitboxes for asymmetric laser sprite
       hitbox = {
-         down  = {w = 6, h = 14, ox = 5, oy = 1}, -- vertical laser (rotated)
-         up    = {w = 6, h = 14, ox = 5, oy = 1},
-         right = {w = 14, h = 6, ox = 1, oy = 5}, -- horizontal laser (natural shape)
-         left  = {w = 14, h = 6, ox = 1, oy = 5},
+         down  = {w = 6, h = 12, ox = 5, oy = 4}, -- vertical laser (rotated)
+         up    = {w = 6, h = 12, ox = 5, oy = 4},
+         right = {w = 10, h = 6, ox = 3, oy = 5}, -- horizontal laser (natural shape)
+         left  = {w = 10, h = 6, ox = 3, oy = 5},
       },
       sprite_index_offsets = {
          down = 78,

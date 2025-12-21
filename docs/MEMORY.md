@@ -24,3 +24,4 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - Fixed map collision issues.
 - Established context workflow in `.agent/workflows/context.md`.
 - **Fixed projectile spawning** to always originate from the shooter's center and **implemented layered rendering** (projectiles and pickups are now rendered behind characters).
+- **Fixed projectile-map immediate collision bug** by aligning projectile hitboxes with the player's core collision footprint [3, 13] x [4, 16], preventing "protrusion" hits against walls the player is currently touching.
