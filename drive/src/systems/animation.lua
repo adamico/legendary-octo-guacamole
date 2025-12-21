@@ -12,19 +12,19 @@ Animation.DEFAULT_ANIM_PARAMS = {
    death = {frames = 4, speed = 8}
 }
 
--- Get the direction name from entity dir_x/dir_y
+-- Get the direction name from entity velocity (for animation facing)
 local function get_direction(entity)
-   local dx = entity.dir_x or 0
-   local dy = entity.dir_y or 0
+   local vx = entity.vel_x or 0
+   local vy = entity.vel_y or 0
 
    -- Priority: horizontal over vertical for diagonals
-   if dx > 0 then return "right" end
-   if dx < 0 then return "left" end
-   if dy > 0 then return "down" end
-   if dy < 0 then return "up" end
+   if vx > 0.1 then return "right" end
+   if vx < -0.1 then return "left" end
+   if vy > 0.1 then return "down" end
+   if vy < -0.1 then return "up" end
 
-   -- Default to down if no direction
-   return "down"
+   -- Return current direction if velocity is near zero (preserve last)
+   return entity.current_direction or "down"
 end
 
 -- Get animation config for entity type
@@ -87,11 +87,18 @@ function Animation.update_fsm(entity)
    -- Can't transition out of death
    if fsm:is("death") then return end
 
-   -- Update current direction for animation lookup
-   entity.current_direction = get_direction(entity)
-
    -- Handle movement states
    local is_moving = (abs(entity.vel_x or 0) > 0.1 or abs(entity.vel_y or 0) > 0.1)
+
+   -- Only update direction when actually moving (preserve last direction when idle)
+   if is_moving then
+      local new_dir = get_direction(entity)
+      if new_dir ~= entity.current_direction then
+         Log.trace("Direction change: "..entity.current_direction.." -> "..new_dir)
+      end
+      entity.current_direction = new_dir
+   end
+
 
    if fsm:is("idle") then
       if is_moving then fsm:walk() end
@@ -215,11 +222,6 @@ function Animation.animate(entity)
                end
             end
          elseif state == "attacking" then
-            -- Debug: trace attack animation timing
-            if entity.anim_timer <= 3 then
-               Log.trace("Attack anim: timer="..
-                  entity.anim_timer.." total_duration="..total_duration.." sprite="..entity.sprite_index)
-            end
             if entity.anim_timer >= total_duration then
                entity.fsm:finish()
             end

@@ -18,6 +18,8 @@ function Player.spawn(world, x, y)
         vel_y = 0,
         sub_x = 0,
         sub_y = 0,
+        dir_x = 0,
+        dir_y = 1, -- Default facing down
         sprite_index = GameConstants.Player.sprite_index_offsets.down,
         -- Health components
         hp = GameConstants.Player.max_health,

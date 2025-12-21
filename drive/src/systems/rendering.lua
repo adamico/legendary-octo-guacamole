@@ -90,7 +90,10 @@ function Rendering.reset_spotlight()
 end
 
 -- Sprite system: update sprite based on direction
+-- Skip entities with FSM - they use the animation system
 function Rendering.change_sprite(entity)
+    if entity.fsm then return end -- Animation system handles sprites
+
     local dx = entity.dir_x or 0
     local dy = entity.dir_y or 0
     local neutral = (dx == 0 and dy == 0)

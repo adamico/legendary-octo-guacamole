@@ -31,6 +31,17 @@ function Combat.shooter(entity)
     if (sx ~= 0 or sy ~= 0) and entity.hp > entity.shot_cost and cooldown_ready then
         -- Trigger or extend attack animation
         if entity.fsm then
+            -- Set facing direction based on shoot direction
+            if sx > 0 then
+                entity.current_direction = "right"
+            elseif sx < 0 then
+                entity.current_direction = "left"
+            elseif sy > 0 then
+                entity.current_direction = "down"
+            elseif sy < 0 then
+                entity.current_direction = "up"
+            end
+
             if entity.fsm:can("attack") then
                 entity.fsm:attack()
             elseif entity.fsm:is("attacking") then
