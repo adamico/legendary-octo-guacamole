@@ -6,6 +6,7 @@ local AI = require("ai")
 local Rendering = require("rendering")
 local Effects = require("effects")
 local Animation = require("animation")
+local Spawner = require("spawner")
 
 
 -- Merge all modules into a single Systems table for backward compatibility
@@ -55,5 +56,8 @@ Systems.animate = Animation.animate
 
 -- Effects systems
 Systems.Effects = Effects
+
+-- Spawner system
+Systems.Spawner = Spawner
 
 return Systems

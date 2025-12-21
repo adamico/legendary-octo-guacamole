@@ -19,9 +19,6 @@ local ROOM_PIXELS = {
 
 world = eggs()
 player = {}
-local spawn_timer = 60 -- 1 second delay
-local enemies_spawned = false
-local spawn_positions = {}
 
 local function draw_entity(entity)
    local was_flashing = entity.flash_timer and entity.flash_timer > 0
@@ -39,48 +36,6 @@ local function draw_room()
    clip()
 end
 
-local function calculate_spawn_positions()
-   local is_not_solid = function(tile)
-      return tile and not fget(tile, SOLID_FLAG)
-   end
-   local is_free_space = function(x, y)
-      for _, pos in ipairs(spawn_positions) do
-         local dx = x - pos.x
-         local dy = y - pos.y
-         if dx * dx + dy * dy < 16 * 16 then
-            return false
-         end
-      end
-      return true
-   end
-   spawn_positions = {}
-   local num_enemies = 5
-   local min_dist = 80
-   local attempts = 0
-   while #spawn_positions < num_enemies and attempts < 200 do
-      attempts = attempts + 1
-      local rx = ROOM_CLIP.x * GRID_SIZE + rnd(ROOM_CLIP.w * GRID_SIZE - 16)
-      local ry = ROOM_CLIP.y * GRID_SIZE + rnd(ROOM_CLIP.h * GRID_SIZE - 16)
-
-      local dx = rx - player.x
-      local dy = ry - player.y
-      if dx * dx + dy * dy > min_dist * min_dist then
-         -- Check if the position is not a solid tile
-         local tx, ty = flr((rx + 8) / 16), flr((ry + 8) / 16)
-         local tile = mget(tx, ty)
-         if is_not_solid(tile) and is_free_space(rx, ry) then
-            table.insert(spawn_positions, {x = rx, y = ry})
-         end
-      end
-   end
-end
-
-local function spawn_enemies()
-   for _, pos in ipairs(spawn_positions) do
-      Entities.spawn_enemy(world, pos.x, pos.y, "Skulker")
-   end
-end
-
 function Play:enteredState()
    Log.trace("Entered Play scene")
    -- Initialize extended palette colors 32-63 for variants
@@ -89,19 +44,11 @@ function Play:enteredState()
    Systems.init_spotlight()
    player = Entities.spawn_player(world, 10 * 16, 4 * 16)
 
-   calculate_spawn_positions()
-   spawn_timer = 60
-   enemies_spawned = false
+   Systems.Spawner.init_room(player, ROOM_CLIP)
 end
 
 function Play:update()
-   if not enemies_spawned then
-      spawn_timer -= 1
-      if spawn_timer <= 0 then
-         spawn_enemies()
-         enemies_spawned = true
-      end
-   end
+   Systems.Spawner.update(world)
 
    world.sys("controllable", Systems.controllable)()
    world.sys("acceleration", Systems.acceleration)()
@@ -148,16 +95,7 @@ function Play:draw()
    end)()
 
    -- Draw spawn indicators if timer is still active
-   if not enemies_spawned then
-      -- Blinking effect: toggle visibility every 8 frames
-      if spawn_timer % 15 < 8 then
-         clip(ROOM_PIXELS.x, ROOM_PIXELS.y, ROOM_PIXELS.w, ROOM_PIXELS.h)
-         for _, pos in ipairs(spawn_positions) do
-            spr(207, pos.x, pos.y)
-         end
-         clip()
-      end
-   end
+   Systems.Spawner.draw(ROOM_PIXELS)
 
    pal()
 
