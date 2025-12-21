@@ -31,7 +31,7 @@ function Enemy.spawn(world, x, y, enemy_type)
         dir_y = 1, -- Default facing down
         sprite_index = config.sprite_index_offsets.down,
     }
-    return world.ent("enemy,velocity,collidable,health,drawable,animatable,sprite", enemy)
+    return world.ent("enemy,velocity,collidable,health,drawable,animatable,shadow,sprite", enemy)
 end
 
 return Enemy

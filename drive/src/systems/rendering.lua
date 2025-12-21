@@ -137,7 +137,7 @@ end
 -- Drawable system: render entity sprite
 -- Supports composite sprites where top and bottom halves are drawn separately
 function Rendering.drawable(entity)
-    local flip = entity.flip or false
+    local flipped = entity.flip or false
 
     -- Check for composite sprite (top + bottom halves)
     if entity.sprite_top ~= nil and entity.sprite_bottom ~= nil then
@@ -157,7 +157,7 @@ function Rendering.drawable(entity)
             width, split_row,   -- source width, height (top portion)
             entity.x, entity.y, -- destination
             width, split_row,   -- destination width, height
-            flip                -- flip_x
+            flipped             -- flip_x
         )
         -- Draw bottom half (remaining rows of bottom sprite)
         sspr(
@@ -166,11 +166,11 @@ function Rendering.drawable(entity)
             width, bottom_height,           -- source width, height (bottom portion)
             entity.x, entity.y + split_row, -- destination (offset by split_row)
             width, bottom_height,
-            flip
+            flipped
         )
     else
         -- Standard single sprite
-        spr(entity.sprite_index, entity.x, entity.y, flip)
+        spr(entity.sprite_index, entity.x, entity.y, flipped)
     end
 end
 
@@ -230,6 +230,13 @@ end
 function Rendering.draw_hitbox(entity)
     local hb = Collision.get_hitbox(entity)
     rect(hb.x, hb.y, hb.x + hb.w, hb.y + hb.h, 8)
+end
+
+function Rendering.palette_swappable(entity)
+    if not entity.palette_swaps then return end
+    for _, swap in ipairs(entity.palette_swaps) do
+        pal(swap.from, swap.to)
+    end
 end
 
 return Rendering

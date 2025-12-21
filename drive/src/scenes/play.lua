@@ -80,13 +80,14 @@ function Play:draw()
          draw_entity(entity)
       end
    end)()
-
+   world.sys("palette_swappable", Systems.palette_swappable)()
    -- Draw characters (Player, Enemy) and everything else in front
    world.sys("drawable", function(entity)
       if entity.type ~= "Projectile" and entity.type ~= "ProjectilePickup" then
          draw_entity(entity)
       end
    end)()
+   pal()
 
    world.sys("health", Systems.draw_health_bar)()
    if key("f2") then

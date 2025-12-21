@@ -23,28 +23,28 @@ local GameConstants = {
          down = {
             idle      = {indices = {238, 239}, durations = {30, 30}},
             walking   = {top_indices = {240}, bottom_indices = {240, 255}, durations = {8, 8}, split_row = 9},
-            attacking = {indices = {241, 242}, durations = {15, 15}},
+            attacking = {indices = {241, 242}, durations = {4, 22}},
             hurt      = {indices = {243}, durations = {30}},
             death     = {indices = {244}, durations = {8}}
          },
          right = {
             idle      = {indices = {246, 247}, durations = {30, 30}},
             walking   = {indices = {248, 249}, durations = {8, 8}},
-            attacking = {indices = {250, 251}, durations = {15, 15}},
+            attacking = {indices = {250, 251}, durations = {4, 22}},
             hurt      = {indices = {252}, durations = {30}},
             death     = {indices = {244}, durations = {8}}
          },
          up = {
             idle      = {indices = {253, 254}, durations = {30, 30}},
             walking   = {top_indices = {255}, bottom_indices = {255, 240}, durations = {8, 8}, split_row = 9},
-            attacking = {indices = {253}, durations = {15, 15}},
+            attacking = {indices = {253}, durations = {8, 22}},
             hurt      = {indices = {253}, durations = {30}},
             death     = {indices = {244}, durations = {8}}
          },
          left = {
             idle      = {indices = {246, 247}, durations = {30, 30}, flip = true},
             walking   = {indices = {248, 249}, durations = {8, 8}, flip = true},
-            attacking = {indices = {250, 251}, durations = {15, 15}, flip = true},
+            attacking = {indices = {250, 251}, durations = {4, 22}, flip = true},
             hurt      = {indices = {252}, durations = {30}, flip = true},
             death     = {indices = {244}, durations = {8}, flip = true}
          }

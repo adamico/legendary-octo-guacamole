@@ -35,9 +35,12 @@ function Projectile.spawn(world, x, y, dx, dy, recovery_percent, shot_cost)
         owner = "player",
         recovery_percent = recovery_percent,
         shot_cost = shot_cost,
+        palette_swaps = {
+            {from = 5, to = 12},
+        },
         sprite_index = GameConstants.Projectile.sprite_index_offsets[direction],
     }
-    return world.ent("projectile,velocity,collidable,drawable,sprite", projectile)
+    return world.ent("projectile,velocity,collidable,drawable,sprite,palette_swappable", projectile)
 end
 
 return Projectile
