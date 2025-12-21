@@ -27,3 +27,5 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Fixed projectile-map immediate collision bug** by aligning projectile hitboxes with the player's core collision footprint [3, 13] x [4, 16], preventing "protrusion" hits against walls the player is currently touching.
 - **Implemented random enemy spawning**: Enemies are now spawned at random positions within the room area, ensuring a minimum distance from the player and avoiding solid tiles.
 - **Added room entry timer and blinking visualization**: Enemies now spawn after a 1-second delay upon entering the Play scene. During this delay, sprite 207 is displayed with a blinking effect at the pre-calculated spawn positions to indicate where enemies will appear.
+- **Fixed room clipping and unit normalization**: Introduced `ROOM_PIXELS` to handle tile-to-pixel conversion for `ROOM_CLIP`, fixing an issue where spawn indicators and lighting effects were being incorrectly clipped.
+- **Fixed enemy spawn overlap logic**: Resolved a crash in `is_free_space` by correcting argument passing and implementing a distance-based check to prevent enemies from spawning on the same pixel.

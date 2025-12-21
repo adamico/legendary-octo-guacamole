@@ -4,10 +4,17 @@ local Entities = require("entities")
 local Play = SceneManager:addState("Play")
 
 local ROOM_CLIP = {
-   x = 7 * 16,
-   y = 16,
-   w = 12 * 16,
-   h = 11 * 16
+   x = 7,
+   y = 3,
+   w = 12,
+   h = 11
+}
+
+local ROOM_PIXELS = {
+   x = ROOM_CLIP.x * GRID_SIZE,
+   y = ROOM_CLIP.y * GRID_SIZE,
+   w = ROOM_CLIP.w * GRID_SIZE,
+   h = ROOM_CLIP.h * GRID_SIZE
 }
 
 world = eggs()
@@ -27,20 +34,33 @@ local function draw_entity(entity)
 end
 
 local function draw_room()
-   clip(ROOM_CLIP.x, ROOM_CLIP.y, ROOM_CLIP.w, ROOM_CLIP.h)
+   clip(ROOM_PIXELS.x, ROOM_PIXELS.y, ROOM_PIXELS.w, ROOM_PIXELS.h)
    rectfill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 5)
    clip()
 end
 
 local function calculate_spawn_positions()
+   local is_not_solid = function(tile)
+      return tile and not fget(tile, SOLID_FLAG)
+   end
+   local is_free_space = function(x, y)
+      for _, pos in ipairs(spawn_positions) do
+         local dx = x - pos.x
+         local dy = y - pos.y
+         if dx * dx + dy * dy < 16 * 16 then
+            return false
+         end
+      end
+      return true
+   end
    spawn_positions = {}
-   local num_enemies = 3
+   local num_enemies = 5
    local min_dist = 80
    local attempts = 0
    while #spawn_positions < num_enemies and attempts < 200 do
       attempts = attempts + 1
-      local rx = ROOM_CLIP.x + rnd(ROOM_CLIP.w - 16)
-      local ry = ROOM_CLIP.y + rnd(ROOM_CLIP.h - 16)
+      local rx = ROOM_CLIP.x * GRID_SIZE + rnd(ROOM_CLIP.w * GRID_SIZE - 16)
+      local ry = ROOM_CLIP.y * GRID_SIZE + rnd(ROOM_CLIP.h * GRID_SIZE - 16)
 
       local dx = rx - player.x
       local dy = ry - player.y
@@ -48,7 +68,7 @@ local function calculate_spawn_positions()
          -- Check if the position is not a solid tile
          local tx, ty = flr((rx + 8) / 16), flr((ry + 8) / 16)
          local tile = mget(tx, ty)
-         if tile and not fget(tile, SOLID_FLAG) then
+         if is_not_solid(tile) and is_free_space(rx, ry) then
             table.insert(spawn_positions, {x = rx, y = ry})
          end
       end
@@ -67,7 +87,7 @@ function Play:enteredState()
    Systems.init_extended_palette()
    -- Initialize spotlight color table for lighting effects
    Systems.init_spotlight()
-   player = Entities.spawn_player(world, 10 * 16, 2 * 16)
+   player = Entities.spawn_player(world, 10 * 16, 4 * 16)
 
    calculate_spawn_positions()
    spawn_timer = 60
@@ -76,7 +96,7 @@ end
 
 function Play:update()
    if not enemies_spawned then
-      spawn_timer = spawn_timer - 1
+      spawn_timer -= 1
       if spawn_timer <= 0 then
          spawn_enemies()
          enemies_spawned = true
@@ -110,9 +130,9 @@ function Play:draw()
    -- Reset spotlight color table (in case flash effects corrupted it)
    Systems.reset_spotlight()
    -- Draw spotlight first (brightens background)
-   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, ROOM_CLIP) end)()
+   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, ROOM_PIXELS) end)()
    -- Then shadow and player on top
-   world.sys("shadow", function(entity) Systems.draw_shadow(entity, ROOM_CLIP) end)()
+   world.sys("shadow", function(entity) Systems.draw_shadow(entity, ROOM_PIXELS) end)()
    -- Draw background entities (projectiles, pickups) behind characters
    world.sys("drawable", function(entity)
       if entity.type == "Projectile" or entity.type == "ProjectilePickup" then
@@ -131,7 +151,7 @@ function Play:draw()
    if not enemies_spawned then
       -- Blinking effect: toggle visibility every 8 frames
       if spawn_timer % 15 < 8 then
-         clip(ROOM_CLIP.x, ROOM_CLIP.y, ROOM_CLIP.w, ROOM_CLIP.h)
+         clip(ROOM_PIXELS.x, ROOM_PIXELS.y, ROOM_PIXELS.w, ROOM_PIXELS.h)
          for _, pos in ipairs(spawn_positions) do
             spr(207, pos.x, pos.y)
          end
