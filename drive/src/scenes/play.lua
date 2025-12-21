@@ -13,6 +13,16 @@ local ROOM_CLIP = {
 world = eggs()
 player = {}
 
+local function draw_entity(entity)
+   local was_flashing = entity.flash_timer and entity.flash_timer > 0
+   Systems.Effects.update_flash(entity)
+   Systems.drawable(entity)
+   -- Reset draw palette after flash (reset_spotlight handles color table each frame)
+   if was_flashing then
+      pal(0)
+   end
+end
+
 local function draw_room()
    clip(ROOM_CLIP.x, ROOM_CLIP.y, ROOM_CLIP.w, ROOM_CLIP.h)
    rectfill(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 5)
@@ -64,14 +74,17 @@ function Play:draw()
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, ROOM_CLIP) end)()
    -- Then shadow and player on top
    world.sys("shadow", function(entity) Systems.draw_shadow(entity, ROOM_CLIP) end)()
-   -- Draw entities (with flash effects applied)
+   -- Draw background entities (projectiles, pickups) behind characters
    world.sys("drawable", function(entity)
-      local was_flashing = entity.flash_timer and entity.flash_timer > 0
-      Systems.Effects.update_flash(entity)
-      Systems.drawable(entity)
-      -- Reset draw palette after flash (reset_spotlight handles color table each frame)
-      if was_flashing then
-         pal(0)
+      if entity.type == "Projectile" or entity.type == "ProjectilePickup" then
+         draw_entity(entity)
+      end
+   end)()
+
+   -- Draw characters (Player, Enemy) and everything else in front
+   world.sys("drawable", function(entity)
+      if entity.type ~= "Projectile" and entity.type ~= "ProjectilePickup" then
+         draw_entity(entity)
       end
    end)()
 

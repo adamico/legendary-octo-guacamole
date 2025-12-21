@@ -68,9 +68,14 @@ function Combat.projectile_fire(entity)
         -- Consume HP and spawn projectile
         entity.hp -= entity.shot_cost
         entity.time_since_shot = 0
+
+        -- Projectile is 16x16, center it on shooter
+        local proj_size = 16
+        local spawn_x = entity.x + (entity.width / 2) - (proj_size / 2)
+        local spawn_y = entity.y + (entity.height / 2) - (proj_size / 2)
+
         Entities.spawn_projectile(
-            world, entity.x + entity.width / 2 - 2,
-            entity.y + entity.height / 2 - 2, sx, sy,
+            world, spawn_x, spawn_y, sx, sy,
             entity.recovery_percent, entity.shot_cost
         )
         entity.shoot_cooldown = 15
