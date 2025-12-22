@@ -59,7 +59,7 @@ function RoomManager.populate_enemies(room, player, num_enemies, min_dist, types
       -- area ranges from ~80 to ~300.
       -- flr(area / 100) + 2 results in 2-5 enemies.
       num_enemies = flr(area / 100) + 1
-      num_enemies = mid(3, num_enemies, 5) -- Hard limit for the first room: 2-4 enemies
+      num_enemies = mid(3, num_enemies, 5) -- Hard limit for the first room: 3-5 enemies
    end
 
    min_dist = min_dist or 96 -- Slightly increased from 80 for better breathing room
