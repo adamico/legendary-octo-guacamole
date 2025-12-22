@@ -34,11 +34,11 @@ function DungeonManager.generate()
    -- 3. Connect them (Place Doors)
    -- East door for Start Room
    start_room.doors = start_room.doors or {}
-   start_room.doors.east = {sprite = 3, target_gx = 1, target_gy = 0}
+   start_room.doors.east = {sprite = SPRITE_DOOR_OPEN, target_gx = 1, target_gy = 0}
 
    -- West door for Enemy Room
    enemy_room.doors = enemy_room.doors or {}
-   enemy_room.doors.west = {sprite = 3, target_gx = 0, target_gy = 0}
+   enemy_room.doors.west = {sprite = SPRITE_DOOR_OPEN, target_gx = 0, target_gy = 0}
 
    -- Set initial state
    DungeonManager.current_grid_x = 0
@@ -73,6 +73,8 @@ function DungeonManager.create_room(gx, gy, is_safe)
    room.is_safe = is_safe
    room.grid_x = gx
    room.grid_y = gy
+   room.is_locked = false
+   room.cleared = false
 
    return room
 end
@@ -120,13 +122,11 @@ function DungeonManager.carve_room(room, wall_options)
 end
 
 function DungeonManager.populate_enemies(room, player, num_enemies, min_dist, types)
-   if room.is_safe then return end
+   if room.is_safe or room.cleared then return end
 
    -- Scale enemies by room area if not explicitly provided
-   -- Drastically reduced density for the first monster room based on research/balancing
    if not num_enemies then
       local area = room.tiles.w * room.tiles.h
-      -- flr(area / 100) + 2 results in 2-5 enemies.
       num_enemies = flr(area / 100) + 1
       num_enemies = mid(2, num_enemies, 4)
    end
@@ -150,6 +150,48 @@ function DungeonManager.populate_enemies(room, player, num_enemies, min_dist, ty
          end
       end
    end
+
+   if #room.enemy_positions > 0 then
+      Log.trace("Locking room "..room.grid_x..","..room.grid_y.." with "..#room.enemy_positions.." enemies")
+      DungeonManager.lock_room(room)
+   end
+end
+
+function DungeonManager.lock_room(room)
+   room.is_locked = true
+   if room.doors then
+      local cx, cy = room.tiles.x + flr(room.tiles.w / 2), room.tiles.y + flr(room.tiles.h / 2)
+      for _, door in pairs(room.doors) do
+         door.sprite = SPRITE_DOOR_BLOCKED
+      end
+
+      if room.doors.north then mset(cx, room.tiles.y - 1, SPRITE_DOOR_BLOCKED) end
+      if room.doors.south then mset(cx, room.tiles.y + room.tiles.h, SPRITE_DOOR_BLOCKED) end
+      if room.doors.west then mset(room.tiles.x - 1, cy, SPRITE_DOOR_BLOCKED) end
+      if room.doors.east then mset(room.tiles.x + room.tiles.w, cy, SPRITE_DOOR_BLOCKED) end
+   end
+end
+
+function DungeonManager.unlock_room(room)
+   room.is_locked = false
+   room.cleared = true
+   if room.doors then
+      local cx, cy = room.tiles.x + flr(room.tiles.w / 2), room.tiles.y + flr(room.tiles.h / 2)
+      for _, door in pairs(room.doors) do
+         door.sprite = SPRITE_DOOR_OPEN
+      end
+
+      if room.doors.north then mset(cx, room.tiles.y - 1, SPRITE_DOOR_OPEN) end
+      if room.doors.south then mset(cx, room.tiles.y + room.tiles.h, SPRITE_DOOR_OPEN) end
+      if room.doors.west then mset(room.tiles.x - 1, cy, SPRITE_DOOR_OPEN) end
+      if room.doors.east then mset(room.tiles.x + room.tiles.w, cy, SPRITE_DOOR_OPEN) end
+   end
+end
+
+function DungeonManager.check_room_clear(room)
+   if room.is_locked and #room.enemy_positions == 0 then
+      DungeonManager.unlock_room(room)
+   end
 end
 
 function DungeonManager.is_free_space(room, x, y)
@@ -165,17 +207,30 @@ function DungeonManager.check_door_collision(px, py)
    local room = DungeonManager.current_room
    if not room or not room.doors then return nil end
 
-   local tx = flr(px / GRID_SIZE)
-   local ty = flr(py / GRID_SIZE)
+   if room.is_locked then return nil end
 
-   -- Check if we are ON a door tile (sprite 3)
-   if mget(tx, ty) == 3 then
-      -- Identify which door based on relative position/bounds
-      if tx < room.tiles.x then return "west" end
-      if tx >= room.tiles.x + room.tiles.w then return "east" end
-      if ty < room.tiles.y then return "north" end
-      if ty >= room.tiles.y + room.tiles.h then return "south" end
+   -- Check multiple points on the player to ensure door trigger hits
+   local hit_points = {
+      {x = px + 8,  y = py + 4},  -- Top center
+      {x = px + 8,  y = py + 12}, -- Bottom center
+      {x = px + 4,  y = py + 8},  -- Left center
+      {x = px + 12, y = py + 8},  -- Right center
+      {x = px + 8,  y = py + 8}   -- Absolute center
+   }
+
+   for _, pt in ipairs(hit_points) do
+      local tx = flr(pt.x / GRID_SIZE)
+      local ty = flr(pt.y / GRID_SIZE)
+
+      if mget(tx, ty) == SPRITE_DOOR_OPEN then
+         -- Identify which door based on relative position
+         if tx < room.tiles.x then return "west" end
+         if tx >= room.tiles.x + room.tiles.w then return "east" end
+         if ty < room.tiles.y then return "north" end
+         if ty >= room.tiles.y + room.tiles.h then return "south" end
+      end
    end
+
    return nil
 end
 

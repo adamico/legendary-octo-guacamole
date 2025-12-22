@@ -42,5 +42,8 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Enabled Projectile Animations**: Updated the animation system to handle simplified directional configs (no state nesting) and added the `animatable` tag to player projectiles, enabling effects like spinning lasers.
 - **Implemented Dead Player Deactivation**: Added logic to the animation system to remove active ECS tags (`controllable`, `collidable`, `shooter`, `player`, etc.) from entities upon entering the `death` state. This ensures dead entities are ignored by AI and collisions, and cannot be controlled, while remaining rendered on screen.
 - **Implemented Enemy Freeze on Player Death**: Updated the AI system to zero out enemy velocity and direction when no player entity is found, causing enemies to stop in place upon player death.
-- **Refactored Room Management**: Extracted room logic from `play.lua` into a dedicated `RoomManager` (`src/room_manager.lua`) and a `Room` class module (`src/room.lua`) using `middleclass`. This decouples room state and behavior from the main gameplay scene.
-- **Refined Enemy Spawning**: Updated `RoomManager` to use density-based spawning with a hard cap (2-4 enemies) for the first room. Implemented weighted types (60% weak, 40% standard) and improved spawn safety via insets and increased player distance.
+- **Refactored Dungeon Management**: Renamed `RoomManager` to `DungeonManager` and implemented grid-based dungeon generation with safe starts and enemy rooms.
+- **Implemented Single-Screen Rendering**: Switched to a model where rooms are carved into the (0,0) map area on each transition, simplifying camera and coordinate management.
+- **Implemented Room Locking Mechanics**: Doors now lock (sprite 4) upon room entry and unlock (sprite 3) only after all enemies are defeated. Improved robustness by checking spawner completion state.
+- **Enhanced Door Transitions**: Improved door collision detection with multi-point hit checks and reliable player teleportation between rooms.
+- **Cleaned Up Logic**: Removed manual solid flag setting in favor of Picotron sprite editor flags and optimized entity cleanup during transitions.

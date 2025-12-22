@@ -37,6 +37,11 @@ function Play:update()
    -- Door Collision Check
    local door_dir = DungeonManager.check_door_collision(player.x, player.y)
    if door_dir then
+      -- Cleanup current room entities (enemies, projectiles) before transition
+      -- This is crucial for single-screen spawning where rooms overlap in world-space
+      world.sys("projectile", function(e) world.del(e) end)()
+      world.sys("pickup", function(e) world.del(e) end)()
+
       local next_room = DungeonManager.enter_door(door_dir)
       if next_room then
          -- Teleport player to opposite side
@@ -60,8 +65,22 @@ function Play:update()
          player.x = target_x
          player.y = target_y
 
-         -- Populate if needed (though spawner handles update, we might want to ensure enemies are spawned)
          DungeonManager.populate_enemies(next_room, player, nil, 80, {"Skulker", "Shooter"})
+      end
+   end
+
+   -- Check for Room Clear (Unlock)
+   if DungeonManager.current_room and DungeonManager.current_room.is_locked then
+      if DungeonManager.current_room.spawned then
+         local enemy_count = 0
+         -- specific query for active enemies
+         world.sys("enemy", function(e)
+            if not e.dead then enemy_count = enemy_count + 1 end
+         end)()
+
+         if enemy_count == 0 then
+            DungeonManager.unlock_room(DungeonManager.current_room)
+         end
       end
    end
 
