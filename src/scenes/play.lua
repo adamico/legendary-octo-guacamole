@@ -27,7 +27,7 @@ function Play:enteredState()
    local py = RoomManager.current_room.pixels.y + RoomManager.current_room.pixels.h / 2
    player = Entities.spawn_player(world, px, py)
 
-   RoomManager.current_room:populate_enemies(player, 5, 80, {"Skulker", "Shooter"})
+   RoomManager.populate_enemies(RoomManager.current_room, player, 5, 80, {"Skulker", "Shooter"})
 end
 
 function Play:update()
