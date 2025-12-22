@@ -58,12 +58,7 @@ Collision.CollisionHandlers.tile["Player,Door"] = function(player, tx, ty, tile,
     if not room or room.is_locked then return nil end
 
     -- Identify which door based on tile position relative to room bounds
-    if tx < room.tiles.x + 1 then return "west" end
-    if tx >= room.tiles.x + room.tiles.w then return "east" end
-    if ty < room.tiles.y + 1 then return "north" end
-    if ty >= room.tiles.y + room.tiles.h then return "south" end
-
-    return nil
+    return room:identify_door(tx, ty)
 end
 
 -- Registry for Player + ProjectilePickup interaction

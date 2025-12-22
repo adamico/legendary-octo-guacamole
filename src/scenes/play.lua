@@ -1,8 +1,7 @@
-local Systems = require("systems")
-local Entities = require("entities")
 local DungeonManager = require("dungeon_manager")
-local Rendering = require("rendering")
+local Entities = require("entities")
 local RoomManager = require("room_manager")
+local Systems = require("systems")
 
 local Play = SceneManager:addState("Play")
 
@@ -26,8 +25,10 @@ function Play:enteredState()
    Systems.init_spotlight()
    DungeonManager.init()
 
-   local px = DungeonManager.current_room.pixels.x + DungeonManager.current_room.pixels.w / 2
-   local py = DungeonManager.current_room.pixels.y + DungeonManager.current_room.pixels.h / 2
+   -- Spawn player at center of start room (World Pixels)
+   local room = DungeonManager.current_room
+   local px = room.pixels.x + room.pixels.w / 2
+   local py = room.pixels.y + room.pixels.h / 2
    player = Entities.spawn_player(world, px, py)
 
    camera()
@@ -71,12 +72,14 @@ end
 function Play:draw()
    cls(0)
 
-   -- Apply camera scroll offset during transition
-   local offset = room_manager:getCameraOffset()
-   camera(offset.x, offset.y)
+   -- Apply camera offset:
+   -- 1. Scroll offset during transitions (relative to screen origin)
+   -- 2. -7px vertical to center 256px map in 270px screen
+   local scroll = room_manager:getCameraOffset()
+   camera(scroll.x, scroll.y - 7)
 
    Systems.reset_spotlight()
-   DungeonManager.draw()
+   room_manager:drawRooms()
    map()
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, DungeonManager.current_room.pixels) end)()
 
@@ -98,14 +101,15 @@ function Play:draw()
 
    pal()
 
-   -- Reset camera for UI (always at screen position)
-   camera()
-
-   -- 4. Foreground Layer: UI/Health Bars
+   -- 4. Foreground Layer: Entity UI (Health Bars, Hitboxes)
+   -- These must be drawn while world camera is active to track entities correctly
    world.sys("health", Systems.draw_health_bar)()
    if key("f2") then
       world.sys("collidable", Systems.draw_hitbox)()
    end
+
+   -- Reset camera for global UI (HUD, etc.)
+   camera()
 end
 
 function Play:exitedState()

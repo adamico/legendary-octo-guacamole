@@ -55,6 +55,10 @@ drive/src/
 ├── main.lua              # Entry point, game loop, scene initialization
 ├── scene_manager.lua     # State machine for scene transitions
 ├── constants.lua         # Game configuration (sprites, player stats, controls)
+├── dungeon/              # World management module
+│   ├── dungeon_manager.lua # World generation, map carving, room grid management
+│   ├── room_manager.lua    # Room state machine (Exploring, Scrolling, Settling)
+│   └── room.lua            # Room class (stores bounds, types, and logic)
 ├── entities/             # Entity factory modules
 │   ├── init.lua          # Aggregates all entity factories
 │   ├── player.lua        # Player entity with movement, health, shooting
@@ -253,3 +257,34 @@ All game constants in [constants.lua](drive/src/constants.lua):
 - Enemy configurations (Skulker, etc.)
 - Controls mapping
 - Debug/cheat flags
+
+## Dungeon & Room Management
+
+The game uses a dual-manager system for handling its world:
+
+### DungeonManager
+
+- **Grid-based Layout**: Manages a logical "grid" of rooms (e.g., `0,0`, `-1,0`).
+- **Map Carving**: Writes tiles directly to a custom Picotron `userdata` map.
+- **World Positioning**: Calculates where rooms sit on the absolute 80x48 map.
+- **Spawn Logic**: Calculates precise world coordinates for player teleportation between doors.
+
+### RoomManager (State Machine)
+
+- **Exploring**: Normal gameplay state.
+- **Scrolling**: Interpolates the camera between rooms and handles temporary visual offsets.
+- **Settling**: Briefly cleans up and prepares the next room for gameplay.
+
+### Single Source of Truth: World Coordinates
+
+To prevent rendering and collision bugs, the game uses **Absolute World Coordinates**:
+
+- `Room.tiles.x/y` refers to the absolute tile on the 80x48 map.
+- `Entity.x/y` refers to the absolute pixel in the world.
+- Camera `(0,0)` corresponds to the top-left of the world.
+- Transitions work by moving the camera to the target room's absolute position.
+
+## Technical Details
+
+- **Extended Map**: A `userdata("i16", 80, 48)` is used as the map memory, providing a larger canvas than the screen (30x16) to allow for layout flexibility and room "peek" effects during transitions.
+- **Zelda-style Transitions**: When the player touches a door, the `RoomManager` enters the `Scrolling` state, freezes the player, and pans the camera relative to the absolute world coordinates.

@@ -13,9 +13,26 @@ local MIN_ROOM_W = 10
 local MAX_ROOM_W = 22
 local MIN_ROOM_H = 8
 local MAX_ROOM_H = 14
-local UI_SAFE_ZONE = 4 -- tiles on the left for UI
-local MAP_W = 30       -- SCREEN_WIDTH / GRID_SIZE
-local MAP_H = 17       -- SCREEN_HEIGHT / GRID_SIZE (effectively)
+
+-- Screen dimensions in tiles (visible area)
+local SCREEN_TILES_W = 30 -- SCREEN_WIDTH / GRID_SIZE
+local SCREEN_TILES_H = 16 -- Playable area height in tiles
+
+-- Extended map dimensions (supports two max rooms in any direction)
+local EXT_MAP_W = 80 -- MAX_ROOM_W * 2 + SCREEN_TILES_W + buffer
+local EXT_MAP_H = 48 -- MAX_ROOM_H * 2 + SCREEN_TILES_H + buffer
+
+-- Base offset for the "active view" - rooms carved relative to this
+-- This gives us margin on all sides for previous room peek
+local BASE_OFFSET_X = MAX_ROOM_W -- 22 tiles left margin
+local BASE_OFFSET_Y = MAX_ROOM_H -- 14 tiles top margin
+
+-- Legacy compatibility (used by create_room for centering)
+local MAP_W = SCREEN_TILES_W
+local MAP_H = SCREEN_TILES_H
+
+-- The custom map userdata (initialized in init())
+DungeonManager.map_data = nil
 
 -- Door Sprites
 local SPRITE_DOOR_OPEN = 3
@@ -35,9 +52,9 @@ function DungeonManager.generate()
    local start_room = DungeonManager.create_room(0, 0, true)
    DungeonManager.rooms["0,0"] = start_room
 
-   -- 2. Create Adjacent Room at 1,0 (Enemy Room)
-   local next_room_x = 1
-   local next_room_y = 0
+   -- 2. Create Adjacent Room
+   local next_room_x = 0
+   local next_room_y = -1
    local next_room_xy = next_room_x..","..next_room_y
    local next_door_xy = -next_room_x..","..-next_room_y
    local enemy_room = DungeonManager.create_room(next_room_x, next_room_y, false)
@@ -71,18 +88,21 @@ function DungeonManager.create_room(gx, gy, is_safe)
    local w = flr(rnd(MAX_ROOM_W - MIN_ROOM_W + 1)) + MIN_ROOM_W
    local h = flr(rnd(MAX_ROOM_H - MIN_ROOM_H + 1)) + MIN_ROOM_H
 
-   -- Local position within the grid cell
-   local area_w = MAP_W - UI_SAFE_ZONE
-   local local_x = UI_SAFE_ZONE + flr((area_w - w) / 2)
-   local local_y = flr((MAP_H - h) / 2)
+   -- Force parity to match screen (Even Width 30, Even Height 16)
+   w = w - (w % 2)
+   h = h - (h % 2)
 
-   -- Global position (Grid Offset + Local) - REMOVED for Single Screen Mode
-   local x = local_x
-   local y = local_y
+   -- Local position within a "virtual" screen cell
+   local local_tx = flr((MAP_W - w) / 2)
+   local local_ty = flr((MAP_H - h) / 2)
 
-   local room = Room:new(x, y, w, h)
+   -- Absolute World Position (Base Offset + Local)
+   local world_tx = BASE_OFFSET_X + local_tx
+   local world_ty = BASE_OFFSET_Y + local_ty
 
-   -- Initialize spawner state
+   local room = Room:new(world_tx, world_ty, w, h)
+
+   -- Initialize state
    room.enemy_positions = {}
    room.spawn_timer = 60
    room.spawned = false
@@ -95,41 +115,46 @@ function DungeonManager.create_room(gx, gy, is_safe)
    return room
 end
 
-function DungeonManager.apply_door_sprites(room)
+function DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
    if not room.doors then return end
-   local cx, cy = room.tiles.x + flr(room.tiles.w / 2), room.tiles.y + flr(room.tiles.h / 2)
+   tx_offset = tx_offset or 0
+   ty_offset = ty_offset or 0
 
-   if room.doors.north then mset(cx, room.tiles.y - 1, room.doors.north.sprite) end
-   if room.doors.south then mset(cx, room.tiles.y + room.tiles.h, room.doors.south.sprite) end
-   if room.doors.west then mset(room.tiles.x, cy, room.doors.west.sprite) end
-   if room.doors.east then mset(room.tiles.x + room.tiles.w, cy, room.doors.east.sprite) end
+   for dir, door in pairs(room.doors) do
+      local pos = room:get_door_tile(dir)
+      if pos then
+         mset(pos.tx + tx_offset, pos.ty + ty_offset, door.sprite)
+      end
+   end
 end
 
-function DungeonManager.carve_room(room, wall_options)
+function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
    wall_options = wall_options or {1, 2}
-   local map_w = flr(SCREEN_WIDTH / GRID_SIZE)
-   local map_h = flr(SCREEN_HEIGHT / GRID_SIZE)
+   tx_offset = tx_offset or 0
+   ty_offset = ty_offset or 0
 
-   -- Fill room with walls
-   for ty = room.tiles.y, room.tiles.y + room.tiles.h do
-      for tx = room.tiles.x, room.tiles.x + room.tiles.w do
+   -- Fill room with walls (using absolute room tile coords + optional temp offset)
+   local bounds = room:get_bounds()
+   for ty = bounds.y1, bounds.y2 do
+      for tx = bounds.x1, bounds.x2 do
          local sprite = wall_options[1]
          if #wall_options > 1 and rnd() < 0.1 then
             sprite = wall_options[flr(rnd(#wall_options - 1)) + 2]
          end
-         mset(tx, ty, sprite)
+         mset(tx + tx_offset, ty + ty_offset, sprite)
       end
    end
 
    -- Carve floor
-   for ty = room.tiles.y + 1, room.tiles.y + room.tiles.h - 1 do
-      for tx = room.tiles.x + 1, room.tiles.x + room.tiles.w - 1 do
-         mset(tx, ty, 0)
+   local floor = room:get_inner_bounds()
+   for ty = floor.y1, floor.y2 do
+      for tx = floor.x1, floor.x2 do
+         mset(tx + tx_offset, ty + ty_offset, 0)
       end
    end
 
    -- Place Doors
-   DungeonManager.apply_door_sprites(room)
+   DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
 end
 
 function DungeonManager.populate_enemies(room, player, num_enemies, min_dist, types)
@@ -145,11 +170,14 @@ function DungeonManager.populate_enemies(room, player, num_enemies, min_dist, ty
    min_dist = min_dist or 96
    room.enemy_positions = {}
 
+   local floor = room:get_inner_bounds()
    local attempts = 0
    while #room.enemy_positions < num_enemies and attempts < 200 do
       attempts = attempts + 1
-      local rx = (room.tiles.x + 1 + rnd(room.tiles.w - 2)) * GRID_SIZE
-      local ry = (room.tiles.y + 1 + rnd(room.tiles.h - 2)) * GRID_SIZE
+      local tx = floor.x1 + flr(rnd(floor.x2 - floor.x1 + 1))
+      local ty = floor.y1 + flr(rnd(floor.y2 - floor.y1 + 1))
+      local rx = tx * GRID_SIZE
+      local ry = ty * GRID_SIZE
 
       local dx = rx - player.x
       local dy = ry - player.y
@@ -200,10 +228,9 @@ function DungeonManager.is_free_space(room, x, y)
 end
 
 function DungeonManager.clear_map()
-   local map_w = flr(SCREEN_WIDTH / GRID_SIZE)
-   local map_h = flr(SCREEN_HEIGHT / GRID_SIZE)
-   for ty = 0, map_h - 1 do
-      for tx = 0, map_w - 1 do
+   -- Clear the entire extended map
+   for ty = 0, EXT_MAP_H - 1 do
+      for tx = 0, EXT_MAP_W - 1 do
          mset(tx, ty, 0)
       end
    end
@@ -237,7 +264,25 @@ function DungeonManager.enter_door(direction)
 end
 
 function DungeonManager.init()
+   -- Create extended map userdata (80x48 tiles)
+   DungeonManager.map_data = userdata("i16", EXT_MAP_W, EXT_MAP_H)
+
+   -- Set as the current working map so mset/mget/map() work on it
+   memmap(DungeonManager.map_data, 0x100000)
+
+   Log.trace("Created extended map: "..EXT_MAP_W.."x"..EXT_MAP_H.." tiles")
+   Log.trace("Base offset: ("..BASE_OFFSET_X..","..BASE_OFFSET_Y..") tiles")
+
+   -- Generate dungeon
    DungeonManager.generate()
+end
+
+-- Get the base camera offset in pixels (for centering the view on the active area)
+function DungeonManager.get_base_camera_offset()
+   return {
+      x = BASE_OFFSET_X * GRID_SIZE,
+      y = BASE_OFFSET_Y * GRID_SIZE
+   }
 end
 
 -- Peek at next room without committing transition (for RoomManager scroll animation)
@@ -257,21 +302,34 @@ end
 
 -- Calculate player spawn position for given door direction
 -- Preserves Y for horizontal (east/west) and X for vertical (north/south) doors
+-- Returns WORLD coordinates (absolute pixels)
 function DungeonManager.calculate_spawn_position(direction, room, current_x, current_y)
    local x, y = 0, 0
+   local p_w = GameConstants.Player.width
+   local p_h = GameConstants.Player.height
 
    if direction == "east" then
-      x = room.pixels.x + 24
-      y = current_y -- Preserve Y coordinate
+      -- Moving East, entering next room from West
+      -- Wall at x, Floor at x + GRID_SIZE. Player at x + GRID_SIZE (flush against wall)
+      x = room.pixels.x + GRID_SIZE
+      y = current_y
    elseif direction == "west" then
-      x = room.pixels.x + room.pixels.w - 24
-      y = current_y -- Preserve Y coordinate
+      -- Moving West, entering next room from East
+      -- Wall starts at x+w-GRID_SIZE. Player right edge at x+w-GRID_SIZE.
+      -- Player left edge at x+w-GRID_SIZE-p_w (flush against wall)
+      x = room.pixels.x + room.pixels.w - GRID_SIZE - p_w
+      y = current_y
    elseif direction == "north" then
-      x = current_x -- Preserve X coordinate
-      y = room.pixels.y + room.pixels.h - 24
+      x = current_x
+      -- Moving North, entering next room from South
+      -- Wall at y+h-GRID_SIZE. Player bottom edge at y+h-GRID_SIZE.
+      -- Player top edge at y+h-GRID_SIZE-p_h (flush against wall)
+      y = room.pixels.y + room.pixels.h - GRID_SIZE - p_h
    elseif direction == "south" then
-      x = current_x -- Preserve X coordinate
-      y = room.pixels.y + 24
+      -- Moving South, entering next room from North
+      -- Wall at y, Floor at y+GRID_SIZE. Player at y+GRID_SIZE (flush against wall)
+      x = current_x
+      y = room.pixels.y + GRID_SIZE
    end
 
    return {x = x, y = y}

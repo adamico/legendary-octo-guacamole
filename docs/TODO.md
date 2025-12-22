@@ -1,4 +1,4 @@
 # TODO
 
-- player sprite animation for the 3 directions (+ flip for left)
-- dungeon procgen
+- dungeon procgen (Phase 1: Grid-based room transitions [DONE])
+- dungeon procgen (Phase 2: Complex layout generation [PENDING])

@@ -48,3 +48,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Enhanced Door Transitions**: Improved door collision detection with multi-point hit checks and reliable player teleportation between rooms.
 - **Cleaned Up Logic**: Removed manual solid flag setting in favor of Picotron sprite editor flags and optimized entity cleanup during transitions.
 - **Fixed RoomManager Stateful Integration**: Added a top-level `update()` method to `RoomManager` that delegates to the current state's update method, resolving "Undefined field `update`" error when using the Stateful library.
+- **Implemented Zelda-style Room Transitions**: Added a `Scrolling` state to `RoomManager` that handles smooth transitions between rooms with camera interpolation.
+- **Single Source of Truth (Absolute World Coordinates)**: Refactored the entire coordinate system so that `Room` objects store absolute tile and pixel positions on an extended 80x48 map. This eliminates the need for constant "base offset" additions and guarantees visual consistency across all systems (collision, spawning, rendering).
+- **Extended Map System**: Implemented a custom map userdata (`80x48`) that provides margin on all sides of the visible screen area, allowing the previous room's walls to remain visible during transitions (the "peek" effect).
+- **Refactored Dungeon and Room Management**:
+  - `DungeonManager`: Handles world-level generation, room placement on the grid, map carving, and player spawn calculations.
+  - `RoomManager`: Handles the visual state machine (Exploring, Scrolling, Settling) and manages camera offsets and floor rendering.
+- **Fixed South Door Collision**: Resolved a coordinate mismatch in `identify_door` by aligning it with the new absolute world coordinate system.
+- **Accurate Player/Enemy Positioning**: Ensured that the player and enemies spawn correctly within the world coordinate space of each room, fixing rendering bugs after transitions.
