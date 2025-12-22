@@ -43,50 +43,100 @@ DungeonManager.map_data = nil
 local SPRITE_DOOR_OPEN = 3
 local SPRITE_DOOR_BLOCKED = 4
 
+-- Procedural Generation Constants
+local TARGET_ROOM_COUNT = 8
+local DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+
+-- Helper: Count neighbors at a grid position
+function DungeonManager.count_neighbors(gx, gy)
+   local count = 0
+   for _, d in ipairs(DIRECTIONS) do
+      if DungeonManager.rooms[(gx + d[1])..","..(gy + d[2])] then
+         count += 1
+      end
+   end
+   return count
+end
+
+-- Helper: Check if a room has no valid expansion directions
+function DungeonManager.is_surrounded(gx, gy)
+   return DungeonManager.count_neighbors(gx, gy) >= 4
+      or DungeonManager.count_valid_expansion_dirs(gx, gy) == 0
+end
+
+-- Helper: Count directions where a new room could be placed (Rule of One)
+function DungeonManager.count_valid_expansion_dirs(gx, gy)
+   local count = 0
+   for _, d in ipairs(DIRECTIONS) do
+      local nx, ny = gx + d[1], gy + d[2]
+      local key = nx..","..ny
+      if not DungeonManager.rooms[key] and DungeonManager.count_neighbors(nx, ny) == 1 then
+         count += 1
+      end
+   end
+   return count
+end
+
+-- Helper: Get all rooms as a list
+function DungeonManager.get_all_rooms()
+   local list = {}
+   for _, r in pairs(DungeonManager.rooms) do add(list, r) end
+   return list
+end
+
 function DungeonManager.generate()
    DungeonManager.rooms = {}
+   local active_list = {}
 
-   -- 1. Create Start Room at 0,0 (Safe Zone)
+   -- Phase 1: Create Start Room at 0,0 (Safe Zone)
    local start_room = DungeonManager.create_room(0, 0, true)
+   start_room.room_type = "start"
    DungeonManager.rooms["0,0"] = start_room
+   add(active_list, start_room)
 
-   -- 2. Create Adjacent Room
-   local next_room_x = 0
-   local next_room_y = -1
-   local next_room_xy = next_room_x..","..next_room_y
-   local enemy_room = DungeonManager.create_room(next_room_x, next_room_y, false)
-   DungeonManager.rooms[next_room_xy] = enemy_room
+   -- Phase 2: Expansion Loop (Random Walk with Rule of One)
+   while #DungeonManager.get_all_rooms() < TARGET_ROOM_COUNT and #active_list > 0 do
+      -- Pick random room from active list
+      local parent = active_list[flr(rnd(#active_list)) + 1]
 
-   -- 3. Connect them (Place Doors)
-   -- East door for Start Room (Direction from Start to Next)
-   local dir_to_next = DungeonManager.get_direction_name(next_room_x, next_room_y)
-   assert(dir_to_next, "Failed to resolve direction to next room")
+      -- Shuffle directions for variety
+      local dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+      local dir = dirs[flr(rnd(4)) + 1]
+      local nx, ny = parent.grid_x + dir[1], parent.grid_y + dir[2]
+      local key = nx..","..ny
 
-   start_room.doors = start_room.doors or {}
-   start_room.doors[dir_to_next] = {
-      sprite = SPRITE_DOOR_OPEN,
-      target_gx = next_room_x,
-      target_gy = next_room_y
-   }
+      -- Check: empty AND only 1 neighbor (Rule of One prevents 2x2 clusters)
+      if not DungeonManager.rooms[key] then
+         local neighbors = DungeonManager.count_neighbors(nx, ny)
+         if neighbors == 1 then
+            local new_room = DungeonManager.create_room(nx, ny, false)
+            DungeonManager.rooms[key] = new_room
+            add(active_list, new_room)
+         end
+      end
 
-   -- West door for Enemy Room (Direction from Next to Start)
-   local dir_to_start = DungeonManager.get_direction_name(-next_room_x, -next_room_y)
-   assert(dir_to_start, "Failed to resolve direction to start room")
+      -- Remove exhausted rooms (no valid expansion directions left)
+      if DungeonManager.is_surrounded(parent.grid_x, parent.grid_y) then
+         del(active_list, parent)
+      end
+   end
 
-   enemy_room.doors = enemy_room.doors or {}
-   enemy_room.doors[dir_to_start] = {sprite = SPRITE_DOOR_OPEN, target_gx = 0, target_gy = 0}
+   -- Phase 3: Specialization (assign room types based on distance/topology)
+   DungeonManager.assign_room_types()
 
-   -- Assign content to Enemy Room
-   DungeonManager.assign_enemies(enemy_room, nil, 80)
+   -- Phase 4: Connection (auto-generate doors based on neighbors)
+   DungeonManager.connect_doors()
 
    -- Set initial state
    DungeonManager.current_grid_x = 0
    DungeonManager.current_grid_y = 0
    DungeonManager.current_room = start_room
 
-   -- Carve all rooms initially (or at least the current one)
+   -- Carve initial room
    DungeonManager.clear_map()
    DungeonManager.carve_room(start_room)
+
+   Log.info("Generated dungeon with "..#DungeonManager.get_all_rooms().." rooms")
 end
 
 function DungeonManager.create_room(gx, gy, is_safe)
@@ -173,6 +223,81 @@ function DungeonManager.assign_enemies(room, num_enemies, min_dist, types)
       min_dist = min_dist or DEFAULT_ENEMY_MIN_DIST,
       types = types
    }
+end
+
+-- Phase 3: Assign room types based on distance and topology
+function DungeonManager.assign_room_types()
+   -- Calculate Manhattan distance from origin for each room
+   for _, room in pairs(DungeonManager.rooms) do
+      room.distance = abs(room.grid_x) + abs(room.grid_y)
+   end
+
+   -- Find leaf nodes (1 neighbor only, excluding start)
+   local leaves = {}
+   for _, room in pairs(DungeonManager.rooms) do
+      if room.room_type ~= "start" then
+         local neighbors = DungeonManager.count_neighbors(room.grid_x, room.grid_y)
+         if neighbors == 1 then
+            add(leaves, room)
+         end
+      end
+   end
+
+   -- Sort leaves by distance (descending) - farthest first
+   for i = 1, #leaves - 1 do
+      for j = i + 1, #leaves do
+         if leaves[j].distance > leaves[i].distance then
+            leaves[i], leaves[j] = leaves[j], leaves[i]
+         end
+      end
+   end
+
+   -- Assign special types: farthest = boss, next = treasure, next = shop
+   if #leaves >= 1 then
+      leaves[1].room_type = "boss"
+      leaves[1].floor_color = 8 -- Red tint
+   end
+   if #leaves >= 2 then
+      leaves[2].room_type = "treasure"
+      leaves[2].floor_color = 12 -- Cyan
+   end
+   if #leaves >= 3 then
+      leaves[3].room_type = "shop"
+      leaves[3].floor_color = 10 -- Yellow
+   end
+
+   -- Remaining rooms are combat rooms with enemies
+   for _, room in pairs(DungeonManager.rooms) do
+      if not room.room_type then
+         room.room_type = "combat"
+         room.floor_color = 5 -- Default gray
+         DungeonManager.assign_enemies(room)
+      end
+   end
+end
+
+-- Phase 4: Auto-generate doors based on neighbor lookup
+function DungeonManager.connect_doors()
+   local door_dirs = {
+      {dx = 1,  dy = 0,  from = "east",  to = "west"},
+      {dx = -1, dy = 0,  from = "west",  to = "east"},
+      {dx = 0,  dy = -1, from = "north", to = "south"},
+      {dx = 0,  dy = 1,  from = "south", to = "north"}
+   }
+
+   for _, room in pairs(DungeonManager.rooms) do
+      room.doors = room.doors or {}
+      for _, d in ipairs(door_dirs) do
+         local neighbor_key = (room.grid_x + d.dx)..","..(room.grid_y + d.dy)
+         if DungeonManager.rooms[neighbor_key] then
+            room.doors[d.from] = {
+               sprite = SPRITE_DOOR_OPEN,
+               target_gx = room.grid_x + d.dx,
+               target_gy = room.grid_y + d.dy
+            }
+         end
+      end
+   end
 end
 
 function DungeonManager.update_door_sprites(room, tx_offset, ty_offset)

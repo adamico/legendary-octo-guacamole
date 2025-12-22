@@ -15,6 +15,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Isaac-Style Procedural Dungeon Generation**: Full implementation of PROCGEN.md phases:
+  - **Expansion Loop**: Random walk algorithm with "Rule of One" constraint to prevent 2×2 room clusters. Configurable `TARGET_ROOM_COUNT = 8`.
+  - **Specialization**: Distance-based room type assignment. Leaf nodes (1 neighbor) are assigned as BOSS (farthest), TREASURE, and SHOP. Remaining rooms become COMBAT with auto-assigned enemies.
+  - **Door Connection**: Automatic bidirectional door creation via neighbor lookup.
+  - Floor colors now reflect room type (red=boss, cyan=treasure, yellow=shop).
 - **Implemented configurable hitboxes** with per-direction support for asymmetric sprites (e.g., laser 14x6 vertical, 6x14 horizontal). Uses `entity.hitbox[direction]` or falls back to `hitbox_*` properties.
 - **Implemented FSM-based animation system** with per-frame durations, composite sprites, and velocity-based direction.
 - Updated architecture documentation.
