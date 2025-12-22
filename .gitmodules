@@ -1,6 +1,6 @@
 [submodule "picotron-definitions"]
 	path = picotron-definitions
 	url = https://github.com/ahai64/picotron-definitions.git
-[submodule "lib\\lua-state-machine"]
-	path = lib\\lua-state-machine
+[submodule "lib/lua-state-machine"]
+	path = lib/lua-state-machine
 	url = https://github.com/kyleconroy/lua-state-machine.git
