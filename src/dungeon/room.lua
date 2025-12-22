@@ -20,8 +20,6 @@ function Room:lock()
     self.is_locked = true
     if self.doors then
         for _, door in pairs(self.doors) do door.sprite = SPRITE_DOOR_BLOCKED end
-        -- We depend on DungeonManager to update the actual map tiles
-        DungeonManager.update_door_sprites(self)
     end
 end
 
@@ -30,7 +28,6 @@ function Room:unlock()
     self.cleared = true
     if self.doors then
         for _, door in pairs(self.doors) do door.sprite = SPRITE_DOOR_OPEN end
-        DungeonManager.update_door_sprites(self)
     end
 end
 
