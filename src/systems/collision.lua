@@ -43,8 +43,28 @@ Collision.get_hitbox = get_hitbox
 -- Collision Handlers Registry
 Collision.CollisionHandlers = {
     entity = {},
-    map = {}
+    map = {},
+    tile = {} -- Tile trigger handlers (non-blocking)
 }
+
+-- Tile Flags
+local SOLID_FLAG = 0
+local DOOR_FLAG = 1 -- Set this flag on door sprites in the GFX editor
+
+-- Registry for Player + Door tile trigger
+-- Handler receives: player, tx, ty, tile, room
+-- Returns: direction string ("north", "south", "east", "west") or nil
+Collision.CollisionHandlers.tile["Player,Door"] = function(player, tx, ty, tile, room)
+    if not room or room.is_locked then return nil end
+
+    -- Identify which door based on tile position relative to room bounds
+    if tx < room.tiles.x + 1 then return "west" end
+    if tx >= room.tiles.x + room.tiles.w then return "east" end
+    if ty < room.tiles.y + 1 then return "north" end
+    if ty >= room.tiles.y + room.tiles.h then return "south" end
+
+    return nil
+end
 
 -- Registry for Player + ProjectilePickup interaction
 Collision.CollisionHandlers.entity["Player,ProjectilePickup"] = function(player, pickup)
@@ -158,9 +178,6 @@ end
 
 -- Helper: Check if a rectangular area overlaps any solid map tiles
 local function is_solid(x, y, w, h)
-    local GRID_SIZE = 16
-    local SOLID_FLAG = 0
-
     local x1 = flr(x / GRID_SIZE)
     local y1 = flr(y / GRID_SIZE)
     local x2 = flr((x + w - 0.001) / GRID_SIZE)
@@ -178,6 +195,63 @@ local function is_solid(x, y, w, h)
 end
 
 Collision.is_solid = is_solid
+
+-- Helper: Check if a rectangular area overlaps any tile with a specific flag
+-- Returns tx, ty of first matching tile or nil
+local function get_flagged_tile(x, y, w, h, flag)
+    local x1 = flr(x / GRID_SIZE)
+    local y1 = flr(y / GRID_SIZE)
+    local x2 = flr((x + w - 0.001) / GRID_SIZE)
+    local y2 = flr((y + h - 0.001) / GRID_SIZE)
+
+    for tx = x1, x2 do
+        for ty = y1, y2 do
+            local tile = mget(tx, ty)
+            if tile and fget(tile, flag) then
+                return tx, ty, tile
+            end
+        end
+    end
+    return nil
+end
+
+Collision.get_flagged_tile = get_flagged_tile
+Collision.DOOR_FLAG = DOOR_FLAG
+
+-- Check if an entity overlaps a door tile and return direction
+-- Uses the Player,Door tile handler
+function Collision.check_door_trigger(entity, room)
+    local hb = get_hitbox(entity)
+    local tx, ty, tile = get_flagged_tile(hb.x, hb.y, hb.w, hb.h, DOOR_FLAG)
+
+    if tx then
+        local handler = Collision.CollisionHandlers.tile["Player,Door"]
+        if handler then
+            return handler(entity, tx, ty, tile, room)
+        end
+    end
+
+    return nil
+end
+
+-- Helper: Get the first tile in a rectangular area matching a specific sprite
+-- Returns tx, ty, sprite or nil if not found
+function Collision.get_overlapping_tile(x, y, w, h, target_sprite)
+    local x1 = flr(x / GRID_SIZE)
+    local y1 = flr(y / GRID_SIZE)
+    local x2 = flr((x + w - 0.001) / GRID_SIZE)
+    local y2 = flr((y + h - 0.001) / GRID_SIZE)
+
+    for tx = x1, x2 do
+        for ty = y1, y2 do
+            local tile = mget(tx, ty)
+            if tile == target_sprite then
+                return tx, ty, tile
+            end
+        end
+    end
+    return nil
+end
 
 -- Entity-Entity Collision Resolver
 function Collision.resolve_entity_collisions(entity1)
@@ -197,7 +271,8 @@ function Collision.resolve_entity_collisions(entity1)
 end
 
 -- Entity-Map Collision Resolver (Abstracted)
-function Collision.resolve_map_collisions(entity)
+-- Also checks for tile triggers (non-blocking tiles with flags)
+function Collision.resolve_map_collisions(entity, room)
     local hb = get_hitbox(entity)
     local x = hb.x
     local y = hb.y
@@ -228,6 +303,20 @@ function Collision.resolve_map_collisions(entity)
 
     local mx = check("x", 0, 0)
     check("y", entity.sub_x == 0 and 0 or mx, 0)
+
+    -- Check for tile triggers (doors, etc.) using current position
+    -- Result is stored on entity for game logic to process
+    if entity.type == "Player" and room then
+        local tx, ty, tile = get_flagged_tile(hb.x, hb.y, hb.w, hb.h, DOOR_FLAG)
+        if tx then
+            local tile_handler = Collision.CollisionHandlers.tile["Player,Door"]
+            if tile_handler then
+                entity.door_trigger = tile_handler(entity, tx, ty, tile, room)
+            end
+        else
+            entity.door_trigger = nil
+        end
+    end
 end
 
 -- Entity collision system: generic overlap check using hitboxes

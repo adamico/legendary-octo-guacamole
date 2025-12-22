@@ -47,3 +47,4 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Implemented Room Locking Mechanics**: Doors now lock (sprite 4) upon room entry and unlock (sprite 3) only after all enemies are defeated. Improved robustness by checking spawner completion state.
 - **Enhanced Door Transitions**: Improved door collision detection with multi-point hit checks and reliable player teleportation between rooms.
 - **Cleaned Up Logic**: Removed manual solid flag setting in favor of Picotron sprite editor flags and optimized entity cleanup during transitions.
+- **Fixed RoomManager Stateful Integration**: Added a top-level `update()` method to `RoomManager` that delegates to the current state's update method, resolving "Undefined field `update`" error when using the Stateful library.

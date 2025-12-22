@@ -240,6 +240,43 @@ function DungeonManager.init()
    DungeonManager.generate()
 end
 
+-- Peek at next room without committing transition (for RoomManager scroll animation)
+function DungeonManager.peek_next_room(direction)
+   local dx, dy = 0, 0
+   if direction == "east" then dx = 1 end
+   if direction == "west" then dx = -1 end
+   if direction == "north" then dy = -1 end
+   if direction == "south" then dy = 1 end
+
+   local target_gx = DungeonManager.current_grid_x + dx
+   local target_gy = DungeonManager.current_grid_y + dy
+   local key = target_gx..","..target_gy
+
+   return DungeonManager.rooms[key]
+end
+
+-- Calculate player spawn position for given door direction
+-- Preserves Y for horizontal (east/west) and X for vertical (north/south) doors
+function DungeonManager.calculate_spawn_position(direction, room, current_x, current_y)
+   local x, y = 0, 0
+
+   if direction == "east" then
+      x = room.pixels.x + 24
+      y = current_y -- Preserve Y coordinate
+   elseif direction == "west" then
+      x = room.pixels.x + room.pixels.w - 24
+      y = current_y -- Preserve Y coordinate
+   elseif direction == "north" then
+      x = current_x -- Preserve X coordinate
+      y = room.pixels.y + room.pixels.h - 24
+   elseif direction == "south" then
+      x = current_x -- Preserve X coordinate
+      y = room.pixels.y + 24
+   end
+
+   return {x = x, y = y}
+end
+
 function DungeonManager.draw()
    if DungeonManager.current_room then
       DungeonManager.current_room:draw()
