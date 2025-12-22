@@ -12,7 +12,6 @@ local function draw_entity(entity)
    local was_flashing = entity.flash_timer and entity.flash_timer > 0
    Systems.Effects.update_flash(entity)
    Systems.drawable(entity)
-   -- Reset draw palette after flash (reset_spotlight handles color table each frame)
    if was_flashing then
       pal(0)
    end
@@ -20,14 +19,12 @@ end
 
 function Play:enteredState()
    Log.trace("Entered Play scene")
-   -- Initialize extended palette colors 32-63 for variants
    Systems.init_extended_palette()
-   -- Initialize spotlight color table for lighting effects
    Systems.init_spotlight()
    RoomManager.init()
    player = Entities.spawn_player(world, 10 * 16, 4 * 16)
 
-   Systems.Spawner.init_room(player, RoomManager.clip, 5, 80, {"Skulker", "Shooter"})
+   Systems.Spawner.init_room(player, RoomManager.current_room.pixels, 5, 80, {"Skulker", "Shooter"})
 end
 
 function Play:update()
@@ -57,10 +54,11 @@ function Play:draw()
    RoomManager.draw()
    map()
    Systems.reset_spotlight()
-   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, RoomManager.pixels) end)()
+   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, RoomManager.current_room.pixels) end)()
 
    -- 1. Background Layer: Shadows, Projectiles, Pickups
-   world.sys("background,drawable_shadow", function(entity) Systems.draw_shadow_entity(entity, RoomManager.pixels) end)()
+   world.sys("background,drawable_shadow",
+      function(entity) Systems.draw_shadow_entity(entity, RoomManager.current_room.pixels) end)()
    world.sys("background,drawable", function(entity)
       draw_entity(entity)
    end)()
@@ -72,7 +70,7 @@ function Play:draw()
 
    -- 3. Global Effects & Debug
    world.sys("palette_swappable", Systems.palette_swappable)()
-   Systems.Spawner.draw(RoomManager.pixels)
+   Systems.Spawner.draw(RoomManager.current_room.pixels)
 
    pal()
 
