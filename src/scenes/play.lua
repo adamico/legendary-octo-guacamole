@@ -22,13 +22,16 @@ function Play:enteredState()
    Systems.init_extended_palette()
    Systems.init_spotlight()
    RoomManager.init()
-   player = Entities.spawn_player(world, 10 * 16, 4 * 16)
 
-   Systems.Spawner.init_room(player, RoomManager.current_room.pixels, 5, 80, {"Skulker", "Shooter"})
+   local px = RoomManager.current_room.pixels.x + RoomManager.current_room.pixels.w / 2
+   local py = RoomManager.current_room.pixels.y + RoomManager.current_room.pixels.h / 2
+   player = Entities.spawn_player(world, px, py)
+
+   RoomManager.current_room:populate_enemies(player, 5, 80, {"Skulker", "Shooter"})
 end
 
 function Play:update()
-   Systems.Spawner.update(world)
+   Systems.Spawner.update(world, RoomManager.current_room)
 
    world.sys("controllable", Systems.controllable)()
    world.sys("acceleration", Systems.acceleration)()
@@ -70,7 +73,7 @@ function Play:draw()
 
    -- 3. Global Effects & Debug
    world.sys("palette_swappable", Systems.palette_swappable)()
-   Systems.Spawner.draw(RoomManager.current_room.pixels)
+   Systems.Spawner.draw(RoomManager.current_room)
 
    pal()
 
