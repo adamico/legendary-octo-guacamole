@@ -52,25 +52,37 @@ function RoomManager.carve(room, wall_options)
 end
 
 function RoomManager.populate_enemies(room, player, num_enemies, min_dist, types)
-   num_enemies = num_enemies or 5
-   min_dist = min_dist or 80
-   types = types or {"Skulker", "Shooter"}
+   -- Scale enemies by room area if not explicitly provided
+   -- Drastically reduced density for the first monster room based on research/balancing
+   if not num_enemies then
+      local area = room.tiles.w * room.tiles.h
+      -- area ranges from ~80 to ~300.
+      -- flr(area / 100) + 2 results in 2-5 enemies.
+      num_enemies = flr(area / 100) + 1
+      num_enemies = mid(3, num_enemies, 5) -- Hard limit for the first room: 2-4 enemies
+   end
+
+   min_dist = min_dist or 96 -- Slightly increased from 80 for better breathing room
    room.enemy_positions = {}
 
    local attempts = 0
    while #room.enemy_positions < num_enemies and attempts < 200 do
       attempts = attempts + 1
-      -- Calculate random position within floor area
-      local rx = (room.tiles.x + rnd(room.tiles.w - 1)) * GRID_SIZE
-      local ry = (room.tiles.y + rnd(room.tiles.h - 1)) * GRID_SIZE
+      -- Calculate random position within floor area (inset by 1 tile to avoid spawning touching walls)
+      local rx = (room.tiles.x + 1 + rnd(room.tiles.w - 2)) * GRID_SIZE
+      local ry = (room.tiles.y + 1 + rnd(room.tiles.h - 2)) * GRID_SIZE
 
       -- Ensure distance from player
       local dx = rx - player.x
       local dy = ry - player.y
       if dx * dx + dy * dy > min_dist * min_dist then
-         -- Ensure it's not on a solid tile and far from other enemies
+         -- Ensure far from other enemies
          if RoomManager.is_free_space(room, rx, ry) then
-            local etype = types[flr(rnd(#types)) + 1]
+            -- Weighted enemy selection (60% Skulker, 40% Shooter)
+            local etype = "Skulker"
+            if rnd(1) < 0.4 then
+               etype = "Shooter"
+            end
             table.insert(room.enemy_positions, {x = rx, y = ry, type = etype})
          end
       end
