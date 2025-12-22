@@ -1,6 +1,6 @@
 local Systems = require("systems")
 local Entities = require("entities")
-local RoomManager = require("room_manager")
+local DungeonManager = require("dungeon_manager")
 
 local Play = SceneManager:addState("Play")
 
@@ -21,17 +21,51 @@ function Play:enteredState()
    Log.trace("Entered Play scene")
    Systems.init_extended_palette()
    Systems.init_spotlight()
-   RoomManager.init()
+   DungeonManager.init()
 
-   local px = RoomManager.current_room.pixels.x + RoomManager.current_room.pixels.w / 2
-   local py = RoomManager.current_room.pixels.y + RoomManager.current_room.pixels.h / 2
+   local px = DungeonManager.current_room.pixels.x + DungeonManager.current_room.pixels.w / 2
+   local py = DungeonManager.current_room.pixels.y + DungeonManager.current_room.pixels.h / 2
    player = Entities.spawn_player(world, px, py)
 
-   RoomManager.populate_enemies(RoomManager.current_room, player, nil, 80, {"Skulker", "Shooter"})
+   -- Initial Camera
+   camera(DungeonManager.current_room.grid_x * SCREEN_WIDTH, DungeonManager.current_room.grid_y * SCREEN_HEIGHT)
+
+   DungeonManager.populate_enemies(DungeonManager.current_room, player, nil, 80, {"Skulker", "Shooter"})
 end
 
 function Play:update()
-   Systems.Spawner.update(world, RoomManager.current_room)
+   -- Door Collision Check
+   local door_dir = DungeonManager.check_door_collision(player.x, player.y)
+   if door_dir then
+      local next_room = DungeonManager.enter_door(door_dir)
+      if next_room then
+         -- Teleport player to opposite side
+         local target_x, target_y = player.x, player.y
+         local inset = 16 -- 1 tile inside
+
+         if door_dir == "east" then
+            target_x = next_room.pixels.x + 4 -- Close to left wall
+            target_y = next_room.pixels.y + next_room.pixels.h / 2
+         elseif door_dir == "west" then
+            target_x = next_room.pixels.x + next_room.pixels.w - 20
+            target_y = next_room.pixels.y + next_room.pixels.h / 2
+         elseif door_dir == "north" then
+            target_x = next_room.pixels.x + next_room.pixels.w / 2
+            target_y = next_room.pixels.y + next_room.pixels.h - 20
+         elseif door_dir == "south" then
+            target_x = next_room.pixels.x + next_room.pixels.w / 2
+            target_y = next_room.pixels.y + 4
+         end
+
+         player.x = target_x
+         player.y = target_y
+
+         -- Populate if needed (though spawner handles update, we might want to ensure enemies are spawned)
+         DungeonManager.populate_enemies(next_room, player, nil, 80, {"Skulker", "Shooter"})
+      end
+   end
+
+   Systems.Spawner.update(world, DungeonManager.current_room)
 
    world.sys("controllable", Systems.controllable)()
    world.sys("acceleration", Systems.acceleration)()
@@ -54,14 +88,20 @@ end
 
 function Play:draw()
    cls(0)
-   RoomManager.draw()
+   -- Ensure camera is centered
+   camera(0, 0)
+
+   DungeonManager.draw()
+
+   -- Draw the map section for the current room
    map()
+
    Systems.reset_spotlight()
-   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, RoomManager.current_room.pixels) end)()
+   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, DungeonManager.current_room.pixels) end)()
 
    -- 1. Background Layer: Shadows, Projectiles, Pickups
    world.sys("background,drawable_shadow",
-      function(entity) Systems.draw_shadow_entity(entity, RoomManager.current_room.pixels) end)()
+      function(entity) Systems.draw_shadow_entity(entity, DungeonManager.current_room.pixels) end)()
    world.sys("background,drawable", function(entity)
       draw_entity(entity)
    end)()
@@ -73,7 +113,7 @@ function Play:draw()
 
    -- 3. Global Effects & Debug
    world.sys("palette_swappable", Systems.palette_swappable)()
-   Systems.Spawner.draw(RoomManager.current_room)
+   Systems.Spawner.draw(DungeonManager.current_room)
 
    pal()
 

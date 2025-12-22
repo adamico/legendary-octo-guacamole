@@ -22,11 +22,9 @@ function Spawner.draw(room)
 
     -- Blinking effect: toggle visibility every 15 frames, visible for 8
     if room.spawn_timer % 15 < 8 then
-        clip(room.pixels.x, room.pixels.y, room.pixels.w, room.pixels.h)
         for _, pos in ipairs(room.enemy_positions) do
             spr(Spawner.indicator_sprite, pos.x, pos.y)
         end
-        clip()
     end
 end
 
