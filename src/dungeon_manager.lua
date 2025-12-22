@@ -1,4 +1,5 @@
 local Room = require("room")
+local Collision = require("collision")
 
 local DungeonManager = {}
 
@@ -20,6 +21,13 @@ local MAP_H = 17       -- SCREEN_HEIGHT / GRID_SIZE (effectively)
 local SPRITE_DOOR_OPEN = 3
 local SPRITE_DOOR_BLOCKED = 4
 
+local ROOM_DIRECTIONS = {
+   ["1,0"] = "east",
+   ["-1,0"] = "west",
+   ["0,1"] = "south",
+   ["0,-1"] = "north"
+}
+
 function DungeonManager.generate()
    DungeonManager.rooms = {}
 
@@ -28,17 +36,25 @@ function DungeonManager.generate()
    DungeonManager.rooms["0,0"] = start_room
 
    -- 2. Create Adjacent Room at 1,0 (Enemy Room)
-   local enemy_room = DungeonManager.create_room(1, 0, false)
-   DungeonManager.rooms["1,0"] = enemy_room
+   local next_room_x = 1
+   local next_room_y = 0
+   local next_room_xy = next_room_x..","..next_room_y
+   local next_door_xy = -next_room_x..","..-next_room_y
+   local enemy_room = DungeonManager.create_room(next_room_x, next_room_y, false)
+   DungeonManager.rooms[next_room_xy] = enemy_room
 
    -- 3. Connect them (Place Doors)
    -- East door for Start Room
    start_room.doors = start_room.doors or {}
-   start_room.doors.east = {sprite = SPRITE_DOOR_OPEN, target_gx = 1, target_gy = 0}
+   start_room.doors[ROOM_DIRECTIONS[next_room_xy]] = {
+      sprite = SPRITE_DOOR_OPEN,
+      target_gx = next_room_x,
+      target_gy = next_room_y
+   }
 
    -- West door for Enemy Room
    enemy_room.doors = enemy_room.doors or {}
-   enemy_room.doors.west = {sprite = SPRITE_DOOR_OPEN, target_gx = 0, target_gy = 0}
+   enemy_room.doors[ROOM_DIRECTIONS[next_door_xy]] = {sprite = SPRITE_DOOR_OPEN, target_gx = 0, target_gy = 0}
 
    -- Set initial state
    DungeonManager.current_grid_x = 0
@@ -85,7 +101,7 @@ function DungeonManager.apply_door_sprites(room)
 
    if room.doors.north then mset(cx, room.tiles.y - 1, room.doors.north.sprite) end
    if room.doors.south then mset(cx, room.tiles.y + room.tiles.h, room.doors.south.sprite) end
-   if room.doors.west then mset(room.tiles.x - 1, cy, room.doors.west.sprite) end
+   if room.doors.west then mset(room.tiles.x, cy, room.doors.west.sprite) end
    if room.doors.east then mset(room.tiles.x + room.tiles.w, cy, room.doors.east.sprite) end
 end
 
@@ -94,9 +110,9 @@ function DungeonManager.carve_room(room, wall_options)
    local map_w = flr(SCREEN_WIDTH / GRID_SIZE)
    local map_h = flr(SCREEN_HEIGHT / GRID_SIZE)
 
-   -- Fill screen with walls
-   for ty = 0, map_h - 1 do
-      for tx = 0, map_w - 1 do
+   -- Fill room with walls
+   for ty = room.tiles.y, room.tiles.y + room.tiles.h do
+      for tx = room.tiles.x, room.tiles.x + room.tiles.w do
          local sprite = wall_options[1]
          if #wall_options > 1 and rnd() < 0.1 then
             sprite = wall_options[flr(rnd(#wall_options - 1)) + 2]
@@ -106,8 +122,8 @@ function DungeonManager.carve_room(room, wall_options)
    end
 
    -- Carve floor
-   for ty = room.tiles.y, room.tiles.y + room.tiles.h - 1 do
-      for tx = room.tiles.x, room.tiles.x + room.tiles.w - 1 do
+   for ty = room.tiles.y + 1, room.tiles.y + room.tiles.h - 1 do
+      for tx = room.tiles.x + 1, room.tiles.x + room.tiles.w - 1 do
          mset(tx, ty, 0)
       end
    end
@@ -181,37 +197,6 @@ function DungeonManager.is_free_space(room, x, y)
       if dx * dx + dy * dy < 16 * 16 then return false end
    end
    return true
-end
-
-function DungeonManager.check_door_collision(px, py)
-   local room = DungeonManager.current_room
-   if not room or not room.doors then return nil end
-
-   if room.is_locked then return nil end
-
-   -- Check multiple points on the player to ensure door trigger hits
-   local hit_points = {
-      {x = px + 8,  y = py + 4},  -- Top center
-      {x = px + 8,  y = py + 12}, -- Bottom center
-      {x = px + 4,  y = py + 8},  -- Left center
-      {x = px + 12, y = py + 8},  -- Right center
-      {x = px + 8,  y = py + 8}   -- Absolute center
-   }
-
-   for _, pt in ipairs(hit_points) do
-      local tx = flr(pt.x / GRID_SIZE)
-      local ty = flr(pt.y / GRID_SIZE)
-
-      if mget(tx, ty) == SPRITE_DOOR_OPEN then
-         -- Identify which door based on relative position
-         if tx < room.tiles.x then return "west" end
-         if tx >= room.tiles.x + room.tiles.w then return "east" end
-         if ty < room.tiles.y then return "north" end
-         if ty >= room.tiles.y + room.tiles.h then return "south" end
-      end
-   end
-
-   return nil
 end
 
 function DungeonManager.clear_map()
