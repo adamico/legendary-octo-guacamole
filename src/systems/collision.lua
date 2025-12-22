@@ -128,8 +128,10 @@ Collision.CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
         return
     end
 
-    -- Deal contact damage to player
-    player.hp = player.hp - (enemy.contact_damage or 10)
+    -- Deal contact damage to player (skip if godmode)
+    if not GameConstants.cheats.godmode then
+        player.hp = player.hp - (enemy.contact_damage or 10)
+    end
 
     -- Visual/audio feedback (heavier for player damage)
     Effects.hit_impact(enemy, player, "heavy_shake")
@@ -151,8 +153,10 @@ Collision.CollisionHandlers.entity["EnemyProjectile,Player"] = function(projecti
         return
     end
 
-    -- Deal damage to player
-    player.hp = player.hp - (projectile.damage or 10)
+    -- Deal damage to player (skip if godmode)
+    if not GameConstants.cheats.godmode then
+        player.hp = player.hp - (projectile.damage or 10)
+    end
 
     -- Visual/audio feedback
     Effects.hit_impact(projectile, player, "heavy_shake")

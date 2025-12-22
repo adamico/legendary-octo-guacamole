@@ -16,8 +16,8 @@ local GameConstants = {
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
-      regen_rate = 5,
-      regen_delay = 3.0,
+      regen_rate = 15,
+      regen_delay = 1.5,
       animations = {
          down = {
             idle      = {indices = {238, 239}, durations = {30, 30}},

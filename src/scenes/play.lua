@@ -49,13 +49,18 @@ function Play:update()
 
       Systems.Effects.update_shake()
    end
+
+   if keyp("f3") then
+      GameConstants.cheats.godmode = not GameConstants.cheats.godmode
+   end
 end
 
 function Play:draw()
    cls(0)
 
    local scroll = room_manager:getCameraOffset()
-   camera(scroll.x, scroll.y - 7)
+   local shake = Systems.Effects.get_shake_offset()
+   camera(scroll.x + shake.x, scroll.y - 7 + shake.y)
 
    -- Calculate screen-space clip square (clip() operates in screen coords, not world coords)
    local room_pixels = DungeonManager.current_room.pixels

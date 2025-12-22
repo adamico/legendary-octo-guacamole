@@ -20,14 +20,19 @@ function Effects.update_shake()
         shake_timer -= 1
         if shake_timer <= 0 then
             shake_intensity = 0
-            camera() -- reset camera
-        else
-            -- Random shake offset
-            local ox = (rnd(2) - 1) * shake_intensity
-            local oy = (rnd(2) - 1) * shake_intensity
-            camera(ox, oy)
         end
     end
+end
+
+-- Get shake offset (call from draw loop, add to camera scroll)
+function Effects.get_shake_offset()
+    if shake_timer > 0 and shake_intensity > 0 then
+        return {
+            x = (rnd(2) - 1) * shake_intensity,
+            y = (rnd(2) - 1) * shake_intensity
+        }
+    end
+    return {x = 0, y = 0}
 end
 
 -- Flash sprite effect
