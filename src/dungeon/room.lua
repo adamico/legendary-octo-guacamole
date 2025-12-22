@@ -12,6 +12,34 @@ function Room:initialize(tx, ty, w, h)
     self.floor_color = 5
 end
 
+-- Door Sprite Constants
+local SPRITE_DOOR_OPEN = 3
+local SPRITE_DOOR_BLOCKED = 4
+
+function Room:lock()
+    self.is_locked = true
+    if self.doors then
+        for _, door in pairs(self.doors) do door.sprite = SPRITE_DOOR_BLOCKED end
+        -- We depend on DungeonManager to update the actual map tiles
+        DungeonManager.update_door_sprites(self)
+    end
+end
+
+function Room:unlock()
+    self.is_locked = false
+    self.cleared = true
+    if self.doors then
+        for _, door in pairs(self.doors) do door.sprite = SPRITE_DOOR_OPEN end
+        DungeonManager.update_door_sprites(self)
+    end
+end
+
+function Room:check_clear()
+    if self.is_locked and #self.enemy_positions == 0 then
+        self:unlock()
+    end
+end
+
 -- Get outer boundaries in world tiles (inclusive)
 function Room:get_bounds()
     return {

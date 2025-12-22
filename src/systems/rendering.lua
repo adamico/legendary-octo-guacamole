@@ -2,6 +2,7 @@
 local GameConstants = require("constants")
 local Collision = require("collision")
 local qsort = require("qsort")
+local Effects = require("effects")
 
 local Rendering = {}
 
@@ -177,6 +178,16 @@ function Rendering.drawable(entity)
     else
         -- Standard single sprite
         spr(entity.sprite_index, sx, sy, flip_x, flip_y)
+    end
+end
+
+-- Draw entity with flash effect handling
+function Rendering.draw_entity_with_flash(entity)
+    local was_flashing = entity.flash_timer and entity.flash_timer > 0
+    Effects.update_flash(entity)
+    Rendering.drawable(entity)
+    if was_flashing then
+        pal(0) -- Reset palette
     end
 end
 

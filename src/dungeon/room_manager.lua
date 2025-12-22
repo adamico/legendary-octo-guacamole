@@ -66,7 +66,8 @@ function Exploring:update(world, player)
         end)()
 
         if enemy_count == 0 then
-            DungeonManager.unlock_room(room)
+            room:unlock()
+            DungeonManager.update_door_sprites(room)
         end
     end
 
@@ -278,7 +279,13 @@ function Settling:enteredState()
         self.player.y = spawn_pos.y
 
         -- Spawn enemies automatically for combat rooms
-        DungeonManager.populate_enemies(next_room, self.player, nil, 80)
+        local Systems = require("systems")
+        Systems.Spawner.populate(next_room, self.player)
+
+        if #next_room.enemy_positions > 0 then
+            next_room:lock()
+            DungeonManager.update_door_sprites(next_room)
+        end
     end
 
     -- Reset camera
@@ -300,9 +307,27 @@ function Settling:enteredState()
 end
 
 -- RoomManager instance methods
+function RoomManager:update(world, player)
+    -- Defined so that stateful can delegate to the active state
+end
+
 function RoomManager:initialize(world, player)
     self.world = world
     self.player = player
+
+    -- Populate initial room enemies
+    local room = DungeonManager.current_room
+    if room then
+        local Systems = require("systems")
+        Systems.Spawner.populate(room, player)
+
+        -- If enemies spawned, lock the room
+        if #room.enemy_positions > 0 then
+            room:lock()
+            DungeonManager.update_door_sprites(room)
+        end
+    end
+
     self:gotoState("Exploring")
 end
 

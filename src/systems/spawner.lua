@@ -28,4 +28,66 @@ function Spawner.draw(room)
     end
 end
 
+-- Check if space is free for spawning
+function Spawner.is_free_space(room, x, y)
+    for _, pos in ipairs(room.enemy_positions) do
+        local dx = x - pos.x
+        local dy = y - pos.y
+        if dx * dx + dy * dy < 16 * 16 then return false end
+    end
+    return true
+end
+
+-- Populate room with enemies based on configuration
+-- config: { enemies = { count = N, min_dist = D, types = {...} } }
+function Spawner.populate(room, player)
+    -- Early exit if already spawned or no config
+    if not room or room.spawned or not room.contents_config then return end
+
+    local enemy_config = room.contents_config.enemies
+    if not enemy_config or not enemy_config.count or enemy_config.count <= 0 then return end
+
+    local num_enemies = enemy_config.count
+    local min_dist = enemy_config.min_dist or 96
+
+    room.enemy_positions = {}
+    local floor = room:get_inner_bounds()
+    local attempts = 0
+
+    while #room.enemy_positions < num_enemies and attempts < 200 do
+        attempts = attempts + 1
+
+        -- Pick random tile within floor bounds
+        local tx = floor.x1 + flr(rnd(floor.x2 - floor.x1 + 1))
+        local ty = floor.y1 + flr(rnd(floor.y2 - floor.y1 + 1))
+        local rx = tx * GRID_SIZE
+        local ry = ty * GRID_SIZE
+
+        -- Check distance from player
+        local dx = rx - player.x
+        local dy = ry - player.y
+        if dx * dx + dy * dy > min_dist * min_dist then
+            if Spawner.is_free_space(room, rx, ry) then
+                local etype = "Skulker"
+                -- Use configured types if available
+                if enemy_config.types and #enemy_config.types > 0 then
+                    etype = enemy_config.types[flr(rnd(#enemy_config.types)) + 1]
+                else
+                    -- Default fallback logic
+                    if rnd(1) < 0.4 then etype = "Shooter" end
+                end
+
+                table.insert(room.enemy_positions, {x = rx, y = ry, type = etype})
+            end
+        end
+    end
+
+    if #room.enemy_positions > 0 then
+        room.spawn_timer = 60 -- Default spawn delay
+        room.spawned = false  -- Will set to true after timer
+    else
+        room.spawned = true   -- No enemies, consider spawned immediately
+    end
+end
+
 return Spawner

@@ -9,16 +9,15 @@ local GameConstants = {
       move_speed = vec(1, 1),
       width = 16,
       height = 16,
-      -- Hitbox: smaller than sprite for forgiving collisions
       hitbox_width = 10,
       hitbox_height = 12,
-      hitbox_offset_x = 3, -- (16-10)/2 = 3 centered horizontally
-      hitbox_offset_y = 4, -- offset down to ignore head
+      hitbox_offset_x = 3,
+      hitbox_offset_y = 4,
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
-      regen_rate = 5,    -- HP per second (0 = disabled)
-      regen_delay = 3.0, -- Seconds without shooting before regen starts
+      regen_rate = 5,
+      regen_delay = 3.0,
       animations = {
          down = {
             idle      = {indices = {238, 239}, durations = {30, 30}},
@@ -48,9 +47,7 @@ local GameConstants = {
             hurt      = {indices = {252}, durations = {30}, flip = true},
             death     = {indices = {244}, durations = {8}, flip = true}
          }
-
       },
-      -- Keep sprite_index_offsets for change_sprite compatibility
       sprite_index_offsets = {
          down = 238,
          right = 246,
@@ -60,10 +57,9 @@ local GameConstants = {
       shadow_offset = 0,
    },
    Projectile = {
-      damage = 10, -- HP damage per projectile hit
-      -- Per-direction hitboxes for asymmetric laser sprite
+      damage = 10,
       hitbox = {
-         down  = {w = 6, h = 12, ox = 4, oy = 4}, -- perfectly centered
+         down  = {w = 6, h = 12, ox = 4, oy = 4},
          up    = {w = 6, h = 12, ox = 4, oy = 2},
          right = {w = 10, h = 6, ox = 3, oy = 5},
          left  = {w = 10, h = 6, ox = 3, oy = 5},

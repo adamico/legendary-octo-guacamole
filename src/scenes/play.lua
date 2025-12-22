@@ -6,18 +6,8 @@ local Systems = require("systems")
 local Play = SceneManager:addState("Play")
 
 world = eggs()
-player = {}
-room_manager = nil
-
--- TODO: Move this to a system
-local function draw_entity(entity)
-   local was_flashing = entity.flash_timer and entity.flash_timer > 0
-   Systems.Effects.update_flash(entity)
-   Systems.drawable(entity)
-   if was_flashing then
-      pal(0)
-   end
-end
+local player
+local room_manager
 
 function Play:enteredState()
    Log.trace("Entered Play scene")
@@ -30,14 +20,7 @@ function Play:enteredState()
    local px = room.pixels.x + room.pixels.w / 2
    local py = room.pixels.y + room.pixels.h / 2
    player = Entities.spawn_player(world, px, py)
-
-   camera()
-
-   -- Initialize RoomManager (handles transitions and enemy spawning)
    room_manager = RoomManager:new(world, player)
-
-   -- Spawn initial room enemies
-   DungeonManager.populate_enemies(DungeonManager.current_room, player, nil, 80)
 end
 
 function Play:update()
@@ -52,7 +35,6 @@ function Play:update()
          Systems.resolve_map_collisions(e, DungeonManager.current_room)
       end)()
       world.sys("velocity", Systems.velocity)()
-
       world.sys("animatable", Systems.update_fsm)()
       world.sys("sprite", Systems.change_sprite)()
       world.sys("animatable", Systems.animate)()
@@ -72,9 +54,6 @@ end
 function Play:draw()
    cls(0)
 
-   -- Apply camera offset:
-   -- 1. Scroll offset during transitions (relative to screen origin)
-   -- 2. -7px vertical to center 256px map in 270px screen
    local scroll = room_manager:getCameraOffset()
    camera(scroll.x, scroll.y - 7)
 
@@ -86,14 +65,10 @@ function Play:draw()
    -- 1. Background Layer: Shadows, Projectiles, Pickups
    world.sys("background,drawable_shadow",
       function(entity) Systems.draw_shadow_entity(entity, DungeonManager.current_room.pixels) end)()
-   world.sys("background,drawable", function(entity)
-      draw_entity(entity)
-   end)()
+   world.sys("background,drawable", Systems.draw_entity_with_flash)()
 
    -- 2. Middleground Layer: Characters (Y-Sorted)
-   Systems.draw_ysorted(world, "middleground,drawable", function(entity)
-      draw_entity(entity)
-   end)
+   Systems.draw_ysorted(world, "middleground,drawable", Systems.draw_entity_with_flash)
 
    -- 3. Global Effects & Debug
    world.sys("palette_swappable", Systems.palette_swappable)()

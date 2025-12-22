@@ -42,6 +42,7 @@ Systems.reset_spotlight = Rendering.reset_spotlight
 Systems.change_sprite = Rendering.change_sprite
 Systems.animatable = Rendering.animatable
 Systems.drawable = Rendering.drawable
+Systems.draw_entity_with_flash = Rendering.draw_entity_with_flash
 Systems.sync_shadows = Rendering.sync_shadows
 Systems.draw_shadow_entity = Rendering.draw_shadow_entity
 Systems.draw_spotlight = Rendering.draw_spotlight

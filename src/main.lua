@@ -17,10 +17,6 @@ Log = require("log")
 Log.init("trace")
 Log.trace("Log.init: current_level = "..Log.current_level)
 
-local Sound
--- local SoundManager = require("sound_manager")
-local sound_enabled = false
-
 local SceneManager = require("scene_manager")
 local Title = require("title")
 local Play = require("play")
@@ -30,7 +26,6 @@ local starting_scene = "Play"
 local Scene = SceneManager:new()
 
 function _init()
-   -- Sound = SoundManager:new(sound_enabled)
    Scene:gotoState(starting_scene)
 end
 

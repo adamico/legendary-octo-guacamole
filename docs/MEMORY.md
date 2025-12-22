@@ -55,4 +55,6 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - `DungeonManager`: Handles world-level generation, room placement on the grid, map carving, and player spawn calculations.
   - `RoomManager`: Handles the visual state machine (Exploring, Scrolling, Settling) and manages camera offsets and floor rendering.
 - **Fixed South Door Collision**: Resolved a coordinate mismatch in `identify_door` by aligning it with the new absolute world coordinate system.
+- **Refactored Entity Rendering**: Moved `draw_entity` from `play.lua` to `Systems.draw_entity_with_flash` in `src/systems/rendering.lua` to sanitize the Play scene loop and centralize rendering logic.
 - **Accurate Player/Enemy Positioning**: Ensured that the player and enemies spawn correctly within the world coordinate space of each room, fixing rendering bugs after transitions.
+- **Code Quality & Linting**: Established pattern of declaring manager instances (e.g., `room_manager` in `play.lua`) as `local` variables rather than globals. This resolves "Undefined field" linting ambiguities and matches the `SceneManager` pattern in `main.lua`.

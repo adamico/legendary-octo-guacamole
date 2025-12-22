@@ -13,6 +13,11 @@ local MIN_ROOM_W = 10
 local MAX_ROOM_W = 22
 local MIN_ROOM_H = 8
 local MAX_ROOM_H = 14
+local MIN_ENEMIES_PER_ROOM = 2
+local MAX_ENEMIES_PER_ROOM = 4
+local ENEMY_DENSITY_DIVISOR = 100   -- Tiles per enemy
+local DEFAULT_ENEMY_MIN_DIST = 80   -- Minimum pixels from player
+local MAP_MEMORY_ADDRESS = 0x100000 -- Picotron Extended Map Address
 
 -- Screen dimensions in tiles (visible area)
 local SCREEN_TILES_W = 30 -- SCREEN_WIDTH / GRID_SIZE
@@ -38,13 +43,6 @@ DungeonManager.map_data = nil
 local SPRITE_DOOR_OPEN = 3
 local SPRITE_DOOR_BLOCKED = 4
 
-local ROOM_DIRECTIONS = {
-   ["1,0"] = "east",
-   ["-1,0"] = "west",
-   ["0,1"] = "south",
-   ["0,-1"] = "north"
-}
-
 function DungeonManager.generate()
    DungeonManager.rooms = {}
 
@@ -56,22 +54,30 @@ function DungeonManager.generate()
    local next_room_x = 0
    local next_room_y = -1
    local next_room_xy = next_room_x..","..next_room_y
-   local next_door_xy = -next_room_x..","..-next_room_y
    local enemy_room = DungeonManager.create_room(next_room_x, next_room_y, false)
    DungeonManager.rooms[next_room_xy] = enemy_room
 
    -- 3. Connect them (Place Doors)
-   -- East door for Start Room
+   -- East door for Start Room (Direction from Start to Next)
+   local dir_to_next = DungeonManager.get_direction_name(next_room_x, next_room_y)
+   assert(dir_to_next, "Failed to resolve direction to next room")
+
    start_room.doors = start_room.doors or {}
-   start_room.doors[ROOM_DIRECTIONS[next_room_xy]] = {
+   start_room.doors[dir_to_next] = {
       sprite = SPRITE_DOOR_OPEN,
       target_gx = next_room_x,
       target_gy = next_room_y
    }
 
-   -- West door for Enemy Room
+   -- West door for Enemy Room (Direction from Next to Start)
+   local dir_to_start = DungeonManager.get_direction_name(-next_room_x, -next_room_y)
+   assert(dir_to_start, "Failed to resolve direction to start room")
+
    enemy_room.doors = enemy_room.doors or {}
-   enemy_room.doors[ROOM_DIRECTIONS[next_door_xy]] = {sprite = SPRITE_DOOR_OPEN, target_gx = 0, target_gy = 0}
+   enemy_room.doors[dir_to_start] = {sprite = SPRITE_DOOR_OPEN, target_gx = 0, target_gy = 0}
+
+   -- Assign content to Enemy Room
+   DungeonManager.assign_enemies(enemy_room, nil, 80)
 
    -- Set initial state
    DungeonManager.current_grid_x = 0
@@ -117,6 +123,7 @@ end
 
 function DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
    if not room.doors then return end
+
    tx_offset = tx_offset or 0
    ty_offset = ty_offset or 0
 
@@ -133,7 +140,6 @@ function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
    tx_offset = tx_offset or 0
    ty_offset = ty_offset or 0
 
-   -- Fill room with walls (using absolute room tile coords + optional temp offset)
    local bounds = room:get_bounds()
    for ty = bounds.y1, bounds.y2 do
       for tx = bounds.x1, bounds.x2 do
@@ -145,7 +151,6 @@ function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
       end
    end
 
-   -- Carve floor
    local floor = room:get_inner_bounds()
    for ty = floor.y1, floor.y2 do
       for tx = floor.x1, floor.x2 do
@@ -153,78 +158,35 @@ function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
       end
    end
 
-   -- Place Doors
    DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
 end
 
-function DungeonManager.populate_enemies(room, player, num_enemies, min_dist, types)
-   if room.is_safe or room.cleared then return end
+function DungeonManager.assign_enemies(room, num_enemies, min_dist, types)
+   if room.is_safe then return end
 
-   -- Scale enemies by room area if not explicitly provided
-   if not num_enemies then
-      local area = room.tiles.w * room.tiles.h
-      num_enemies = flr(area / 100) + 1
-      num_enemies = mid(2, num_enemies, 4)
-   end
+   local area = room.tiles.w * room.tiles.h
+   local default_count = mid(MIN_ENEMIES_PER_ROOM, flr(area / ENEMY_DENSITY_DIVISOR), MAX_ENEMIES_PER_ROOM)
 
-   min_dist = min_dist or 96
-   room.enemy_positions = {}
+   room.contents_config = room.contents_config or {}
+   room.contents_config.enemies = {
+      count = num_enemies or default_count,
+      min_dist = min_dist or DEFAULT_ENEMY_MIN_DIST,
+      types = types
+   }
+end
 
-   local floor = room:get_inner_bounds()
-   local attempts = 0
-   while #room.enemy_positions < num_enemies and attempts < 200 do
-      attempts = attempts + 1
-      local tx = floor.x1 + flr(rnd(floor.x2 - floor.x1 + 1))
-      local ty = floor.y1 + flr(rnd(floor.y2 - floor.y1 + 1))
-      local rx = tx * GRID_SIZE
-      local ry = ty * GRID_SIZE
+function DungeonManager.update_door_sprites(room, tx_offset, ty_offset)
+   if not room.doors then return end
 
-      local dx = rx - player.x
-      local dy = ry - player.y
-      if dx * dx + dy * dy > min_dist * min_dist then
-         if DungeonManager.is_free_space(room, rx, ry) then
-            local etype = "Skulker"
-            if rnd(1) < 0.4 then etype = "Shooter" end
-            table.insert(room.enemy_positions, {x = rx, y = ry, type = etype})
-         end
+   tx_offset = tx_offset or 0
+   ty_offset = ty_offset or 0
+
+   for dir, door in pairs(room.doors) do
+      local pos = room:get_door_tile(dir)
+      if pos then
+         mset(pos.tx + tx_offset, pos.ty + ty_offset, door.sprite)
       end
    end
-
-   if #room.enemy_positions > 0 then
-      DungeonManager.lock_room(room)
-   end
-end
-
-function DungeonManager.lock_room(room)
-   room.is_locked = true
-   if room.doors then
-      for _, door in pairs(room.doors) do door.sprite = SPRITE_DOOR_BLOCKED end
-      DungeonManager.apply_door_sprites(room)
-   end
-end
-
-function DungeonManager.unlock_room(room)
-   room.is_locked = false
-   room.cleared = true
-   if room.doors then
-      for _, door in pairs(room.doors) do door.sprite = SPRITE_DOOR_OPEN end
-      DungeonManager.apply_door_sprites(room)
-   end
-end
-
-function DungeonManager.check_room_clear(room)
-   if room.is_locked and #room.enemy_positions == 0 then
-      DungeonManager.unlock_room(room)
-   end
-end
-
-function DungeonManager.is_free_space(room, x, y)
-   for _, pos in ipairs(room.enemy_positions) do
-      local dx = x - pos.x
-      local dy = y - pos.y
-      if dx * dx + dy * dy < 16 * 16 then return false end
-   end
-   return true
 end
 
 function DungeonManager.clear_map()
@@ -237,11 +199,7 @@ function DungeonManager.clear_map()
 end
 
 function DungeonManager.enter_door(direction)
-   local dx, dy = 0, 0
-   if direction == "east" then dx = 1 end
-   if direction == "west" then dx = -1 end
-   if direction == "north" then dy = -1 end
-   if direction == "south" then dy = 1 end
+   local dx, dy = DungeonManager.get_direction_delta(direction)
 
    local target_gx = DungeonManager.current_grid_x + dx
    local target_gy = DungeonManager.current_grid_y + dy
@@ -264,20 +222,11 @@ function DungeonManager.enter_door(direction)
 end
 
 function DungeonManager.init()
-   -- Create extended map userdata (80x48 tiles)
    DungeonManager.map_data = userdata("i16", EXT_MAP_W, EXT_MAP_H)
-
-   -- Set as the current working map so mset/mget/map() work on it
-   memmap(DungeonManager.map_data, 0x100000)
-
-   Log.trace("Created extended map: "..EXT_MAP_W.."x"..EXT_MAP_H.." tiles")
-   Log.trace("Base offset: ("..BASE_OFFSET_X..","..BASE_OFFSET_Y..") tiles")
-
-   -- Generate dungeon
+   memmap(DungeonManager.map_data, MAP_MEMORY_ADDRESS)
    DungeonManager.generate()
 end
 
--- Get the base camera offset in pixels (for centering the view on the active area)
 function DungeonManager.get_base_camera_offset()
    return {
       x = BASE_OFFSET_X * GRID_SIZE,
@@ -285,13 +234,27 @@ function DungeonManager.get_base_camera_offset()
    }
 end
 
+-- Helper: Get vector delta for a direction string
+function DungeonManager.get_direction_delta(direction)
+   if direction == "east" then return 1, 0 end
+   if direction == "west" then return -1, 0 end
+   if direction == "north" then return 0, -1 end
+   if direction == "south" then return 0, 1 end
+   return 0, 0
+end
+
+-- Helper: Get direction string from vector delta
+function DungeonManager.get_direction_name(dx, dy)
+   if dx == 1 and dy == 0 then return "east" end
+   if dx == -1 and dy == 0 then return "west" end
+   if dx == 0 and dy == -1 then return "north" end
+   if dx == 0 and dy == 1 then return "south" end
+   return nil
+end
+
 -- Peek at next room without committing transition (for RoomManager scroll animation)
 function DungeonManager.peek_next_room(direction)
-   local dx, dy = 0, 0
-   if direction == "east" then dx = 1 end
-   if direction == "west" then dx = -1 end
-   if direction == "north" then dy = -1 end
-   if direction == "south" then dy = 1 end
+   local dx, dy = DungeonManager.get_direction_delta(direction)
 
    local target_gx = DungeonManager.current_grid_x + dx
    local target_gy = DungeonManager.current_grid_y + dy
