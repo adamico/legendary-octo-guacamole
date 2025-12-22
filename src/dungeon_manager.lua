@@ -79,6 +79,16 @@ function DungeonManager.create_room(gx, gy, is_safe)
    return room
 end
 
+function DungeonManager.apply_door_sprites(room)
+   if not room.doors then return end
+   local cx, cy = room.tiles.x + flr(room.tiles.w / 2), room.tiles.y + flr(room.tiles.h / 2)
+
+   if room.doors.north then mset(cx, room.tiles.y - 1, room.doors.north.sprite) end
+   if room.doors.south then mset(cx, room.tiles.y + room.tiles.h, room.doors.south.sprite) end
+   if room.doors.west then mset(room.tiles.x - 1, cy, room.doors.west.sprite) end
+   if room.doors.east then mset(room.tiles.x + room.tiles.w, cy, room.doors.east.sprite) end
+end
+
 function DungeonManager.carve_room(room, wall_options)
    wall_options = wall_options or {1, 2}
    local map_w = flr(SCREEN_WIDTH / GRID_SIZE)
@@ -103,22 +113,7 @@ function DungeonManager.carve_room(room, wall_options)
    end
 
    -- Place Doors
-   if room.doors then
-      local cx, cy = room.tiles.x + flr(room.tiles.w / 2), room.tiles.y + flr(room.tiles.h / 2)
-
-      if room.doors.north then
-         mset(cx, room.tiles.y - 1, room.doors.north.sprite)
-      end
-      if room.doors.south then
-         mset(cx, room.tiles.y + room.tiles.h, room.doors.south.sprite)
-      end
-      if room.doors.west then
-         mset(room.tiles.x - 1, cy, room.doors.west.sprite)
-      end
-      if room.doors.east then
-         mset(room.tiles.x + room.tiles.w, cy, room.doors.east.sprite)
-      end
-   end
+   DungeonManager.apply_door_sprites(room)
 end
 
 function DungeonManager.populate_enemies(room, player, num_enemies, min_dist, types)
@@ -152,7 +147,6 @@ function DungeonManager.populate_enemies(room, player, num_enemies, min_dist, ty
    end
 
    if #room.enemy_positions > 0 then
-      Log.trace("Locking room "..room.grid_x..","..room.grid_y.." with "..#room.enemy_positions.." enemies")
       DungeonManager.lock_room(room)
    end
 end
@@ -160,15 +154,8 @@ end
 function DungeonManager.lock_room(room)
    room.is_locked = true
    if room.doors then
-      local cx, cy = room.tiles.x + flr(room.tiles.w / 2), room.tiles.y + flr(room.tiles.h / 2)
-      for _, door in pairs(room.doors) do
-         door.sprite = SPRITE_DOOR_BLOCKED
-      end
-
-      if room.doors.north then mset(cx, room.tiles.y - 1, SPRITE_DOOR_BLOCKED) end
-      if room.doors.south then mset(cx, room.tiles.y + room.tiles.h, SPRITE_DOOR_BLOCKED) end
-      if room.doors.west then mset(room.tiles.x - 1, cy, SPRITE_DOOR_BLOCKED) end
-      if room.doors.east then mset(room.tiles.x + room.tiles.w, cy, SPRITE_DOOR_BLOCKED) end
+      for _, door in pairs(room.doors) do door.sprite = SPRITE_DOOR_BLOCKED end
+      DungeonManager.apply_door_sprites(room)
    end
 end
 
@@ -176,15 +163,8 @@ function DungeonManager.unlock_room(room)
    room.is_locked = false
    room.cleared = true
    if room.doors then
-      local cx, cy = room.tiles.x + flr(room.tiles.w / 2), room.tiles.y + flr(room.tiles.h / 2)
-      for _, door in pairs(room.doors) do
-         door.sprite = SPRITE_DOOR_OPEN
-      end
-
-      if room.doors.north then mset(cx, room.tiles.y - 1, SPRITE_DOOR_OPEN) end
-      if room.doors.south then mset(cx, room.tiles.y + room.tiles.h, SPRITE_DOOR_OPEN) end
-      if room.doors.west then mset(room.tiles.x - 1, cy, SPRITE_DOOR_OPEN) end
-      if room.doors.east then mset(room.tiles.x + room.tiles.w, cy, SPRITE_DOOR_OPEN) end
+      for _, door in pairs(room.doors) do door.sprite = SPRITE_DOOR_OPEN end
+      DungeonManager.apply_door_sprites(room)
    end
 end
 
