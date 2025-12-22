@@ -136,17 +136,7 @@ FSM-based animation using [lua-state-machine](https://github.com/kyleconroy/lua-
 
 **States**: `idle` → `walking` → `attacking` → `hurt` → `death`
 
-**Animation Config** (in `constants.lua`):
-
-```lua
-animations = {
-   down = {
-      idle = {indices = {238, 239}, durations = {30, 30}},
-      walking = {top_indices = {240}, bottom_indices = {240, 255}, durations = {8, 8}, split_row = 9},
-      attacking = {indices = {241, 242}, durations = {15, 15}}
-   }
-}
-```
+Animation configs are defined in `constants.lua` per entity type, with direction-specific states (`down`, `up`, `left`, `right`) containing frame `indices` and `durations` arrays.
 
 **Features**:
 
@@ -172,71 +162,33 @@ The game uses **palette-aware lighting**:
 
 Uses handler registries for decoupled collision responses:
 
-```lua
--- Entity-Entity handlers (keyed by "Type1,Type2")
-CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
-    -- Handle damage, knockback, invulnerability
-end
-
--- Entity-Map handlers (keyed by entity type)
-CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_y)
-    -- Particles and deletion
-end
-```
+- **Entity-Entity handlers**: Keyed by `"Type1,Type2"` (e.g., `"Player,Enemy"`). Handle damage, knockback, invulnerability.
+- **Entity-Map handlers**: Keyed by entity type (e.g., `"Projectile"`). Handle particles and deletion on wall hits.
 
 ## Game Loop (Play Scene)
 
-```lua
-function Play:update()
-    -- Input & Physics
-    world.sys("controllable", Systems.controllable)()
-    world.sys("acceleration", Systems.acceleration)()
-    world.sys("collidable,velocity", Systems.resolve_map_collisions)()
-    world.sys("velocity", Systems.velocity)()
-    
-    -- Visuals & Combat
-    world.sys("sprite", Systems.change_sprite)()
-    world.sys("animatable", Systems.animatable)()
-    world.sys("shooter", Systems.shooter)()
-    
-    -- AI & Collisions
-    world.sys("enemy", Systems.enemy_ai)()
-    world.sys("collidable", Systems.resolve_entity_collisions)()
-    
-    -- Health & Invulnerability
-    world.sys("health", Systems.health_regen)()
-    world.sys("player", Systems.invulnerability_tick)()
-    world.sys("health", Systems.health_manager)()
-    
-    -- Global Effects
-    Systems.Effects.update_shake()
-end
+The Play scene (`src/scenes/play.lua`) uses a `RoomManager` state machine to manage room transitions.
 
-function Play:draw()
-    cls(0)
-    draw_room()
-    map()
-    Systems.reset_spotlight()
-    
-    -- Spotlight pass
-    world.sys("spotlight", function(e) Systems.draw_spotlight(e, ROOM_PIXELS) end)()
-    
-    -- 1. Background Pass: Shadows and Pickups
-    world.sys("background,drawable_shadow", function(e) Systems.draw_shadow_entity(e, ROOM_PIXELS) end)()
-    world.sys("background,drawable", draw_entity)()
-    
-    -- 2. Middleground Pass: Characters and Projectiles (Y-Sorted)
-    Systems.draw_ysorted(world, "middleground,drawable", draw_entity)
-    
-    -- Global Effects
-    world.sys("palette_swappable", Systems.palette_swappable)()
-    Systems.Spawner.draw(ROOM_PIXELS)
-    pal()
+### Update Phase
 
-    -- 3. Foreground Pass: UI
-    world.sys("health", Systems.draw_health_bar)()
-end
-```
+1. **Room State Management**: `room_manager:update()` delegates to current state
+2. **Gameplay Systems** (only when `isExploring()`):
+   - Input & Physics: `controllable` → `acceleration` → `resolve_map_collisions` → `velocity`
+   - Animation: `update_fsm` → `change_sprite` → `animate`
+   - Combat: `shoot_input` → `projectile_fire` → `enemy_ai` → `resolve_entity_collisions`
+   - Status: `health_regen` → `invulnerability_tick` → `health_manager` → `sync_shadows`
+   - Effects: `update_shake()`
+
+### Draw Phase
+
+1. **Camera Setup**: Apply scroll offset from `room_manager:getCameraOffset()`
+2. **Screen-Space Clip**: Convert room world coordinates to screen coordinates for `clip()`
+3. **Layered Rendering**:
+   - Background: Shadows, pickups
+   - Middleground: Characters and projectiles (Y-sorted)
+   - Foreground: Health bars, debug hitboxes (F2)
+
+**Important**: The `clip()` function uses screen coordinates. When camera is offset, world-space room bounds must be converted by subtracting the camera scroll.
 
 ## Key Libraries
 

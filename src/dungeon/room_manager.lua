@@ -164,29 +164,6 @@ function Scrolling:enteredState(world, player, door_dir)
     self.current_room_offset = {x = current_offset_x * GRID_SIZE, y = current_offset_y * GRID_SIZE}
     self.next_room_offset = {x = next_offset_x * GRID_SIZE, y = next_offset_y * GRID_SIZE}
 
-    -- DEBUG: Log room positions and offsets
-    Log.trace("=== TRANSITION DEBUG ===")
-    Log.trace("Direction: "..door_dir)
-    Log.trace("Current Room: tiles("..
-        current_room.tiles.x..","..current_room.tiles.y..") size("..current_room.tiles.w.."x"..current_room.tiles.h..")")
-    Log.trace("Next Room: tiles("..
-        next_room.tiles.x..","..next_room.tiles.y..") size("..next_room.tiles.w.."x"..next_room.tiles.h..")")
-    Log.trace("Current Offset (tiles): ("..current_offset_x..","..current_offset_y..")")
-    Log.trace("Next Offset (tiles): ("..next_offset_x..","..next_offset_y..")")
-    Log.trace("Scroll Distance: ("..scroll_distance_x..","..scroll_distance_y..")")
-    Log.trace("Camera Start: ("..self.camera_start.x..","..self.camera_start.y..")")
-    Log.trace("Camera Target: ("..self.camera_target.x..","..self.camera_target.y..")")
-
-    -- Calculate actual wall positions for debugging
-    local cur_top = (current_room.tiles.y + current_offset_y) * GRID_SIZE
-    local cur_bot = (current_room.tiles.y + current_room.tiles.h + current_offset_y) * GRID_SIZE
-    local next_top = (next_room.tiles.y + next_offset_y) * GRID_SIZE
-    local next_bot = (next_room.tiles.y + next_room.tiles.h + next_offset_y) * GRID_SIZE
-    Log.trace("Current Room Y: "..cur_top.." to "..cur_bot)
-    Log.trace("Next Room Y: "..next_top.." to "..next_bot)
-    Log.trace("Gap: "..(next_top - cur_bot).." or "..(cur_top - next_bot))
-    Log.trace("========================")
-
     -- Offset player position to match the current room's offset
     -- This keeps the player visually in the correct room during the scroll
     player.x = player.x + self.current_room_offset.x

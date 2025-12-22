@@ -57,14 +57,23 @@ function Play:draw()
    local scroll = room_manager:getCameraOffset()
    camera(scroll.x, scroll.y - 7)
 
+   -- Calculate screen-space clip square (clip() operates in screen coords, not world coords)
+   local room_pixels = DungeonManager.current_room.pixels
+   local clip_square = {
+      x = room_pixels.x - scroll.x,
+      y = room_pixels.y - (scroll.y - 7),
+      w = room_pixels.w,
+      h = room_pixels.h
+   }
+
    Systems.reset_spotlight()
    room_manager:drawRooms()
    map()
-   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, DungeonManager.current_room.pixels) end)()
+   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, clip_square) end)()
 
    -- 1. Background Layer: Shadows, Projectiles, Pickups
    world.sys("background,drawable_shadow",
-      function(entity) Systems.draw_shadow_entity(entity, DungeonManager.current_room.pixels) end)()
+      function(entity) Systems.draw_shadow_entity(entity, clip_square) end)()
    world.sys("background,drawable", Systems.draw_entity_with_flash)()
 
    -- 2. Middleground Layer: Characters (Y-Sorted)
