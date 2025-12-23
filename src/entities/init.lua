@@ -14,8 +14,9 @@ Entities.spawn_player = Player.spawn
 Entities.spawn_projectile = Projectile.spawn
 Entities.spawn_enemy_projectile = Projectile.spawn_enemy
 
--- Pickup factory
-Entities.spawn_pickup_projectile = Pickup.spawn
+-- Pickup factories
+Entities.spawn_pickup_projectile = Pickup.spawn_projectile
+Entities.spawn_health_pickup = Pickup.spawn_health
 
 -- Enemy factory
 Entities.spawn_enemy = Enemy.spawn

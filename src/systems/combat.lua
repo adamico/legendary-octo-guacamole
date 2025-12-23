@@ -104,12 +104,10 @@ Combat.DeathHandlers["Enemy"] = function(entity)
     -- Drop HP pickup (100% for MVP)
     local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
 
-    -- Spawn pickup at enemy's last position
-    -- Use a neutral direction for the drop (downward)
-    Entities.spawn_pickup_projectile(world, entity.x, entity.y, 0, 1, recovery, 78)
+    -- Spawn health pickup at enemy's last position (sprite 64)
+    Entities.spawn_health_pickup(world, entity.x, entity.y, recovery)
 
     -- Visual/audio feedback for death
-
     Effects.death_explosion(entity, "explosion")
 
     world.del(entity)

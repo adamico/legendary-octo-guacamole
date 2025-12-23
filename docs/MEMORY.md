@@ -51,7 +51,18 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Squash and Stretch**: Enemies flatten vertically and expand horizontally using `sspr`.
   - **Palette Flash**: Enemies flash white and then flicker red/purple/gray.
   - **Shake**: Added random position jitter.
-  - configured `death` animation state in `GameConstants` with a 30-frame duration.
+  - Configured `death` animation state in `GameConstants` with a 30-frame duration.
+  - **Fixed death flow**: Removed immediate `world.del()` from collision handler, allowing FSM death state to play animation before cleanup.
+- **Implemented Dual Pickup System with Extensible Architecture**:
+  - **ProjectilePickup**: Spawned when player projectiles hit walls (maintains directional sprite from projectile).
+  - **HealthPickup**: Spawned when enemies die (sprite 64, simple static pickup).
+  - **Effect Registry**: Implemented `PickupEffects` registry in collision.lua that maps `pickup_type` to effect handlers.
+  - **Type-based Dispatch**: Pickups now have a `pickup_type` field that determines which effect handler runs.
+  - **Extensible Design**: New pickup types (ammo, powerups, coins) can be added by:
+    1. Adding an effect handler to `PickupEffects` registry
+    2. Creating a spawn function with the appropriate `pickup_type`
+    3. No changes needed to collision handlers
+  - See `docs/PICKUP_SYSTEM.md` for architecture details and examples.
 - **Refactored Dungeon Management**: Renamed `RoomManager` to `DungeonManager` and implemented grid-based dungeon generation with safe starts and enemy rooms.
 - **Implemented Single-Screen Rendering**: Switched to a model where rooms are carved into the (0,0) map area on each transition, simplifying camera and coordinate management.
 - **Implemented Room Locking Mechanics**: Doors now lock (sprite 4) upon room entry and unlock (sprite 3) only after all enemies are defeated. Improved robustness by checking spawner completion state.

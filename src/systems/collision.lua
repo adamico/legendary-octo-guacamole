@@ -61,8 +61,12 @@ Collision.CollisionHandlers.tile["Player,Door"] = function(player, tx, ty, tile,
     return room:identify_door(tx, ty)
 end
 
--- Registry for Player + ProjectilePickup interaction
-Collision.CollisionHandlers.entity["Player,ProjectilePickup"] = function(player, pickup)
+-- Pickup Effects Registry
+-- Maps pickup_type to effect handler function(player, pickup)
+local PickupEffects = {}
+
+-- Health pickup effect: restore HP with overflow banking
+PickupEffects.health = function(player, pickup)
     player.hp = player.hp + (pickup.recovery_amount or 16)
 
     -- Bank overflow HP for future mechanics
@@ -70,12 +74,36 @@ Collision.CollisionHandlers.entity["Player,ProjectilePickup"] = function(player,
         player.overflow_hp = (player.overflow_hp or 0) + (player.hp - player.max_hp)
         player.hp = player.max_hp
     end
+end
+
+-- Future pickup types can be added here:
+-- PickupEffects.ammo = function(player, pickup) ... end
+-- PickupEffects.speed_boost = function(player, pickup) ... end
+-- PickupEffects.damage_boost = function(player, pickup) ... end
+-- PickupEffects.coin = function(player, pickup) ... end
+
+-- Helper: Handle pickup collection with type-based effects
+local function handle_pickup_collection(player, pickup)
+    local pickup_type = pickup.pickup_type or "health" -- Default to health
+    local effect_handler = PickupEffects[pickup_type]
+
+    if effect_handler then
+        effect_handler(player, pickup)
+    else
+        Log.trace("Warning: Unknown pickup_type '"..pickup_type.."', skipping effect")
+    end
 
     -- Visual/audio feedback
     Effects.pickup_collect(pickup)
 
     world.del(pickup)
 end
+
+-- Registry for Player + ProjectilePickup interaction
+Collision.CollisionHandlers.entity["Player,ProjectilePickup"] = handle_pickup_collection
+
+-- Registry for Player + HealthPickup interaction
+Collision.CollisionHandlers.entity["Player,HealthPickup"] = handle_pickup_collection
 
 -- Registry for Projectile + Map interaction
 Collision.CollisionHandlers.map["Projectile"] = function(projectile, map_x, map_y)
