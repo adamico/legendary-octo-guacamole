@@ -107,9 +107,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
     5. Entity created with `Utils.spawn_entity(world, config.tags, entity)` - auto-spawns shadows if tagged
   - Consistent type key naming: `enemy_type`, `projectile_type`, `pickup_type` stored on entities
   - Created shared `entities/utils.lua` with:
-    - `get_direction_name(dx, dy)` - converts velocity to direction string
-    - `spawn_entity(world, tags, entity_data)` - centralized entity creation that auto-spawns shadows for entities with "shadow" tag
-  - Added "shadow" tag to entity configs in constants.lua (Laser, EnemyBullet, Skulker, Shooter, Skull, Player)
-  - Removed manual `Shadow.spawn()` calls from all factories - shadows are now data-driven
-  - Cleaned up dead code in `entities/init.lua`: removed `spawn_projectile`, `spawn_laser`, `spawn_pickup`, `spawn_shadow`
-  - Renamed to `spawn_player_projectile` and `spawn_enemy_projectile` for clarity
+    - `get_direction_name(dx, dy, default)` - converts velocity to direction string with thresholding and fallback support.
+    - `spawn_entity(world, tags, entity_data)` - centralized entity creation that auto-spawns shadows for entities containing the "shadow" tag.
+  - **Data-driven Shadows**: Shadows are no longer manually spawned by factories. Adding the "shadow" tag to any entity in `constants.lua` automatically creates a linked `Shadow` entity via `Utils.spawn_entity`.
+  - Added "shadow" tag to entity configs in constants.lua (Laser, EnemyBullet, Skulker, Shooter, Skull, Player).
+  - Cleaned up dead code in `entities/init.lua`: removed `spawn_projectile`, `spawn_laser`, `spawn_pickup`, `spawn_shadow`.
+  - Renamed to `spawn_player_projectile` and `spawn_enemy_projectile` for clarity.
+- **Documentation & Task Management**:
+  - Updated `ARCHITECTURE.md` to reflect unified factory patterns and data-driven shadows.
+  - Updated `TODO.md` status for procedural generation and combat fixes.

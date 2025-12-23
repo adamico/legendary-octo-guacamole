@@ -61,10 +61,11 @@ drive/src/
 │   └── room.lua            # Room class (stores bounds, types, and logic)
 ├── entities/             # Entity factory modules
 │   ├── init.lua          # Aggregates all entity factories
+│   ├── utils.lua         # Shared helpers: spawning, direction conversion
 │   ├── player.lua        # Player entity with movement, health, shooting
-│   ├── enemy.lua         # Enemy entities (Skulker, Shooter, Skull)
-│   ├── projectile.lua    # Player and enemy bullets
-│   └── pickup.lua        # Health recovery/ammo pickups
+│   ├── enemy.lua         # Type Object factory for Skulker, Shooter, Skull
+│   ├── projectile.lua    # Type Object factory for all bullets
+│   └── pickup.lua        # Type Object factory for all collectibles
 ├── systems/              # ECS system modules
 │   ├── init.lua          # Aggregates all systems
 │   ├── spawner.lua       # Enemy population and skull timer management
@@ -102,10 +103,10 @@ Created via factory functions, each entity is a table with:
 
 | Entity | Tags |
 |--------|------|
-| Player | `player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,middleground` |
-| Enemy | `enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,middleground` |
-| Skull | `skull,enemy,velocity,collidable,health,drawable,sprite,middleground` |
-| Projectile | `projectile,velocity,map_collidable,collidable,drawable,animatable,middleground` |
+| Player | `player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,shadow,middleground` |
+| Enemy | `enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground` |
+| Skull | `skull,enemy,velocity,collidable,health,drawable,sprite,shadow,middleground` |
+| Projectile | `projectile,velocity,map_collidable,collidable,drawable,animatable,shadow,middleground` |
 | Pickup | `collidable,drawable,sprite,background` |
 | Shadow | `shadow_entity,drawable_shadow,background` |
 
@@ -128,7 +129,7 @@ Systems are functions called per-entity based on tag matching:
 | `invulnerability_tick` | player | Decrement `invuln_timer` after taking damage |
 | `health_manager` | health | Check for `hp <= 0`, handle death effects |
 | `draw_spotlight` | spotlight | Render localized lighting (uses extended palette) |
-| `draw_shadow` | shadow | Render oval shadow beneath entities |
+| `draw_shadow` | drawable_shadow | Render oval shadow beneath entities |
 | `draw_layer` | (drawable) | Render entities with sorting options (handles flash) |
 | `draw_health_bar` | health | Render segmented 3-state health/ammo bar |
 
