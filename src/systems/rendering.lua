@@ -1,4 +1,5 @@
--- Rendering and visual effects systems
+-- Refactoring Rendering.drawable and Rendering.draw_ysorted into Rendering.draw_layer
+
 local GameConstants = require("constants")
 local Collision = require("collision")
 local qsort = require("qsort")
@@ -13,7 +14,6 @@ Rendering.SHADOW_COLOR = 32
 local spotlight_initialized = false
 
 -- Initialize the extended palette (colors 32-63)
--- Defines lighter/darker variants for base colors 0-15
 function Rendering.init_extended_palette()
     local base_colors = {
         [0] = 0x000000,
@@ -63,7 +63,7 @@ function Rendering.init_spotlight()
     spotlight_initialized = true
 end
 
--- Reset the spotlight color table (can be called each frame after palette changes)
+-- Reset the spotlight color table
 function Rendering.reset_spotlight()
     local spotlight_row_address = 0x8000 + Rendering.SPOTLIGHT_COLOR * 64
     local shadow_row_address = 0x8000 + Rendering.SHADOW_COLOR * 64
@@ -93,7 +93,6 @@ function Rendering.reset_spotlight()
 end
 
 -- Sprite system: update sprite based on direction
--- Skip entities with FSM - they use the animation system
 function Rendering.change_sprite(entity)
     if entity.fsm then return end -- Animation system handles sprites
 
@@ -111,7 +110,6 @@ function Rendering.change_sprite(entity)
     local sprite_index
     local flip = false
 
-    -- Get sprite config (use enemy_type for enemies, type for everything else)
     local lookup_type = entity.type == "Enemy" and entity.enemy_type or entity.type
     local config = GameConstants[lookup_type] or GameConstants.Enemy[lookup_type]
     if not config then return end
@@ -125,22 +123,24 @@ function Rendering.change_sprite(entity)
     end
 
     entity.base_sprite_index = sprite_index
-    entity.sprite_index = sprite_index -- Also set directly for non-animated entities
+    entity.sprite_index = sprite_index
     entity.flip_x = flip
     entity.flip_y = false
 end
 
--- Simple animation system: alternates between base sprite and base+1 every 30 frames
+-- Simple animation system
 function Rendering.animatable(entity)
     local base = entity.base_sprite_index or entity.sprite_index
-    local anim_offset = (flr(t() * 2) % 2) -- 0 or 1, switches every 0.5s (30 frames)
+    local anim_offset = (flr(t() * 2) % 2)
     entity.sprite_index = base + anim_offset
 end
 
--- Drawable system: render entity sprite
--- Supports composite sprites where top and bottom halves are drawn separately
--- Supports sprite_offset_x/y for visual adjustments (elevation, etc.)
-function Rendering.drawable(entity)
+-- Internal sprite drawer (combines flask check and standard drawing)
+local function draw_sprite(entity)
+    local was_flashing = entity.flash_timer and entity.flash_timer > 0
+    Effects.update_flash(entity)
+
+    -- Actual drawing (previously Rendering.drawable)
     local flip_x = entity.flip_x or entity.flip or false
     local flip_y = entity.flip_y or false
     local sx = entity.x + (entity.sprite_offset_x or 0)
@@ -148,30 +148,27 @@ function Rendering.drawable(entity)
 
     -- Check for composite sprite (top + bottom halves)
     if entity.sprite_top ~= nil and entity.sprite_bottom ~= nil then
-        -- Picotron sspr: sspr(sprite_index, sx, sy, sw, sh, dx, dy, dw, dh, flip_x, flip_y)
-        -- sx, sy are coordinates WITHIN the sprite (not the spritesheet)
-
         -- Use dynamic split_row (defaults to height/2)
         local width = entity.width or 16
         local height = entity.height or 16
         local split_row = entity.split_row or flr(height / 2)
         local bottom_height = height - split_row
 
-        -- Draw top half (first split_row rows of top sprite)
+        -- Draw top half
         sspr(
-            entity.sprite_top, -- sprite index
-            0, 0,              -- source x, y within sprite
-            width, split_row,  -- source width, height (top portion)
-            sx, sy,            -- destination
-            width, split_row,  -- destination width, height
+            entity.sprite_top,
+            0, 0,
+            width, split_row,
+            sx, sy,
+            width, split_row,
             flip_x, flip_y
         )
-        -- Draw bottom half (remaining rows of bottom sprite)
+        -- Draw bottom half
         sspr(
-            entity.sprite_bottom, -- sprite index
-            0, split_row,         -- source x, y within sprite (start at split_row)
-            width, bottom_height, -- source width, height (bottom portion)
-            sx, sy + split_row,   -- destination (offset by split_row)
+            entity.sprite_bottom,
+            0, split_row,
+            width, bottom_height,
+            sx, sy + split_row,
             width, bottom_height,
             flip_x, flip_y
         )
@@ -179,15 +176,33 @@ function Rendering.drawable(entity)
         -- Standard single sprite
         spr(entity.sprite_index, sx, sy, flip_x, flip_y)
     end
-end
 
--- Draw entity with flash effect handling
-function Rendering.draw_entity_with_flash(entity)
-    local was_flashing = entity.flash_timer and entity.flash_timer > 0
-    Effects.update_flash(entity)
-    Rendering.drawable(entity)
     if was_flashing then
         pal(0) -- Reset palette
+    end
+end
+
+-- Unified Drawing System
+-- Draws all entities matching 'tags'. Optionally sorts them by Y position.
+function Rendering.draw_layer(world, tags, sorted)
+    if sorted then
+        local entities = {}
+        world.sys(tags, function(e)
+            add(entities, e)
+        end)()
+
+        -- Sort by Y position (bottom of sprite)
+        qsort(entities, function(a, b)
+            local ay = a.y + (a.height or 16)
+            local by = b.y + (b.height or 16)
+            return ay < by
+        end)
+
+        for i = 1, #entities do
+            draw_sprite(entities[i])
+        end
+    else
+        world.sys(tags, draw_sprite)()
     end
 end
 
@@ -195,17 +210,13 @@ end
 function Rendering.sync_shadows(shadow)
     local parent = shadow.parent
 
-    -- Cleanup if parent is gone
     if not parent or not world.msk(parent) then
         world.del(shadow)
         return
     end
 
-    -- Sync base position (ground footprint)
     shadow.x = parent.x
     shadow.y = parent.y
-
-    -- Sync visual/centering properties
     shadow.w = parent.width or 16
     shadow.h = parent.height or 16
     shadow.shadow_offset = parent.shadow_offset or 0
@@ -221,11 +232,9 @@ function Rendering.draw_shadow_entity(shadow, clip_square)
     local parent = shadow.parent
     if not parent or not world.msk(parent) then return end
 
-    -- Current orientation
     local dir = parent.direction or parent.current_direction
     local hb = Collision.get_hitbox(parent)
 
-    -- Determine width/height
     local sw = shadow.shadow_width
     if shadow.shadow_widths and dir and shadow.shadow_widths[dir] then
         sw = shadow.shadow_widths[dir]
@@ -243,15 +252,11 @@ function Rendering.draw_shadow_entity(shadow, clip_square)
     end
     sh = sh or 3
 
-    -- Vertical offset override
     local offset_y = shadow.shadow_offset or 0
     if shadow.shadow_offsets and dir and shadow.shadow_offsets[dir] then
         offset_y = shadow.shadow_offsets[dir]
     end
 
-    -- UNIFIED ALIGNMENT:
-    -- 1. Center horizontally on the HITBOX (physical center)
-    -- 2. Anchor vertically to the HITBOX bottom minus visual elevation (physical footprint)
     local cx = flr(hb.x + hb.w / 2)
     local ground_y = flr((hb.y + hb.h) - (parent.sprite_offset_y or 0))
     local cy = ground_y + offset_y
@@ -277,7 +282,7 @@ function Rendering.draw_spotlight(entity, clip_square)
     clip()
 end
 
--- Health bar system: three-state visualization
+-- Health bar system
 function Rendering.draw_health_bar(entity)
     if not entity.hp then return end
 
@@ -295,15 +300,12 @@ function Rendering.draw_health_bar(entity)
         local segment_hp = min(shot_cost, max(0, entity.hp - (i * shot_cost)))
 
         if segment_hp >= shot_cost then
-            -- Full segment: GREEN (shot ready)
             rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 11)
         elseif segment_hp > 0 then
-            -- Partial segment: RED background + ORANGE fill (charging)
             rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
             local fill_w = ceil((segment_hp / shot_cost) * seg_w)
             rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 9)
         else
-            -- Empty segment: RED only (no ammo)
             rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
         end
     end
@@ -317,28 +319,9 @@ end
 
 function Rendering.palette_swappable(entity)
     if not entity.palette_swaps then return end
+
     for _, swap in ipairs(entity.palette_swaps) do
         pal(swap.from, swap.to)
-    end
-end
-
--- Y-Sorted Rendering: Gathers, sorts, and draws entities
-function Rendering.draw_ysorted(world, tags, draw_fn)
-    local entities = {}
-    world.sys(tags, function(e)
-        add(entities, e)
-    end)()
-
-    -- Sort by Y position (bottom of sprite)
-    -- Using entity.y + entity.height for sorting baseline
-    qsort(entities, function(a, b)
-        local ay = a.y + (a.height or 16)
-        local by = b.y + (b.height or 16)
-        return ay < by
-    end)
-
-    for i = 1, #entities do
-        draw_fn(entities[i])
     end
 end
 

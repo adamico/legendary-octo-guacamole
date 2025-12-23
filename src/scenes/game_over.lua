@@ -1,4 +1,5 @@
 local pgui = require("pgui")
+local SceneManager = require("scene_manager")
 local GameOver = SceneManager:addState("GameOver")
 
 local restart_clicked = false

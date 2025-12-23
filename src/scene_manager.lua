@@ -1,4 +1,4 @@
-SceneManager = Class("SceneManager"):include(Stateful)
+local SceneManager = Class("SceneManager"):include(Stateful)
 
 function SceneManager:initialize()
 end

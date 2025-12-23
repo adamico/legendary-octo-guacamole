@@ -6,6 +6,7 @@ local AI = require("ai")
 local Rendering = require("rendering")
 local Effects = require("effects")
 local Animation = require("animation")
+local LocalInput = require("input")
 local Spawner = require("spawner")
 
 
@@ -14,18 +15,17 @@ local Systems = {}
 
 -- Collision systems
 Systems.CollisionHandlers = Collision.CollisionHandlers
-Systems.resolve_entity_collisions = Collision.resolve_entity_collisions
-Systems.resolve_map_collisions = Collision.resolve_map_collisions
-Systems.entity_collision = Collision.entity_collision
+Systems.resolve_entities = Collision.resolve_entities
+Systems.resolve_map = Collision.resolve_map
+Systems.check_overlap = Collision.check_overlap
 Systems.is_solid = Collision.is_solid
 
 -- Physics systems
-Systems.controllable = Physics.controllable
+Systems.read_input = LocalInput.read_input
 Systems.acceleration = Physics.acceleration
 Systems.velocity = Physics.velocity
 
 -- Combat systems
-Systems.shoot_input = Combat.shoot_input
 Systems.projectile_fire = Combat.projectile_fire
 Systems.health_manager = Combat.health_manager
 Systems.health_regen = Combat.health_regen
@@ -41,17 +41,14 @@ Systems.init_spotlight = Rendering.init_spotlight
 Systems.reset_spotlight = Rendering.reset_spotlight
 Systems.change_sprite = Rendering.change_sprite
 Systems.animatable = Rendering.animatable
-Systems.drawable = Rendering.drawable
-Systems.draw_entity_with_flash = Rendering.draw_entity_with_flash
+Systems.draw_layer = Rendering.draw_layer
 Systems.sync_shadows = Rendering.sync_shadows
 Systems.draw_shadow_entity = Rendering.draw_shadow_entity
 Systems.draw_spotlight = Rendering.draw_spotlight
 Systems.draw_health_bar = Rendering.draw_health_bar
 Systems.draw_hitbox = Rendering.draw_hitbox
-Systems.draw_ysorted = Rendering.draw_ysorted
 Systems.palette_swappable = Rendering.palette_swappable
-Systems.SPOTLIGHT_COLOR = Rendering.SPOTLIGHT_COLOR
-Systems.SHADOW_COLOR = Rendering.SHADOW_COLOR
+
 
 -- Animation FSM systems
 Systems.update_fsm = Animation.update_fsm

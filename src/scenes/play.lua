@@ -3,6 +3,8 @@ local Entities = require("entities")
 local RoomManager = require("room_manager")
 local Systems = require("systems")
 
+local SceneManager = require("scene_manager")
+
 local Play = SceneManager:addState("Play")
 
 world = eggs()
@@ -24,24 +26,21 @@ function Play:enteredState()
 end
 
 function Play:update()
-   -- Room State Management (delegates to current state's update)
    room_manager:update(world, player)
 
-   -- Gameplay Systems (only if exploring)
    if room_manager:isExploring() then
-      world.sys("controllable", Systems.controllable)()
+      world.sys("controllable", Systems.read_input)()
       world.sys("acceleration", Systems.acceleration)()
       world.sys("collidable,velocity", function(e)
-         Systems.resolve_map_collisions(e, DungeonManager.current_room)
+         Systems.resolve_map(e, DungeonManager.current_room)
       end)()
       world.sys("velocity", Systems.velocity)()
       world.sys("animatable", Systems.update_fsm)()
       world.sys("sprite", Systems.change_sprite)()
       world.sys("animatable", Systems.animate)()
-      world.sys("shooter", Systems.shoot_input)()
       world.sys("shooter", Systems.projectile_fire)()
       world.sys("enemy", Systems.enemy_ai)()
-      world.sys("collidable", Systems.resolve_entity_collisions)()
+      world.sys("collidable", Systems.resolve_entities)()
       world.sys("health", Systems.health_regen)()
       world.sys("player", Systems.invulnerability_tick)()
       world.sys("health", Systems.health_manager)()
@@ -62,7 +61,6 @@ function Play:draw()
    local shake = Systems.Effects.get_shake_offset()
    camera(scroll.x + shake.x, scroll.y - 7 + shake.y)
 
-   -- Calculate screen-space clip square (clip() operates in screen coords, not world coords)
    local room_pixels = DungeonManager.current_room.pixels
    local clip_square = {
       x = room_pixels.x - scroll.x,
@@ -79,10 +77,10 @@ function Play:draw()
    -- 1. Background Layer: Shadows, Projectiles, Pickups
    world.sys("background,drawable_shadow",
       function(entity) Systems.draw_shadow_entity(entity, clip_square) end)()
-   world.sys("background,drawable", Systems.draw_entity_with_flash)()
+   world.sys("background,drawable", function() Systems.draw_layer(world, "background,drawable", false) end)()
 
    -- 2. Middleground Layer: Characters (Y-Sorted)
-   Systems.draw_ysorted(world, "middleground,drawable", Systems.draw_entity_with_flash)
+   Systems.draw_layer(world, "middleground,drawable", true)
 
    -- 3. Global Effects & Debug
    world.sys("palette_swappable", Systems.palette_swappable)()

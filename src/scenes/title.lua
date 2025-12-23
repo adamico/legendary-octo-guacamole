@@ -1,4 +1,5 @@
 local pgui             = require("pgui")
+local SceneManager     = require("scene_manager")
 local Title            = SceneManager:addState("Title")
 
 local new_game_clicked = false

@@ -253,7 +253,7 @@ function Collision.get_overlapping_tile(x, y, w, h, target_sprite)
 end
 
 -- Entity-Entity Collision Resolver
-function Collision.resolve_entity_collisions(entity1)
+function Collision.resolve_entities(entity1)
     -- We iterate over all entities that might collide with entity1
     world.sys("collidable", function(entity2)
         if entity1 == entity2 then return end
@@ -263,7 +263,7 @@ function Collision.resolve_entity_collisions(entity1)
         local key = type1..","..type2
         local handler = Collision.CollisionHandlers.entity[key]
 
-        if handler and Collision.entity_collision(entity1, entity2) then
+        if handler and Collision.check_overlap(entity1, entity2) then
             handler(entity1, entity2)
         end
     end)()
@@ -271,7 +271,7 @@ end
 
 -- Entity-Map Collision Resolver (Abstracted)
 -- Also checks for tile triggers (non-blocking tiles with flags)
-function Collision.resolve_map_collisions(entity, room)
+function Collision.resolve_map(entity, room)
     local hb = get_hitbox(entity)
     local x = hb.x
     local y = hb.y
@@ -319,7 +319,7 @@ function Collision.resolve_map_collisions(entity, room)
 end
 
 -- Entity collision system: generic overlap check using hitboxes
-function Collision.entity_collision(entity1, entity2)
+function Collision.check_overlap(entity1, entity2)
     local hb1 = get_hitbox(entity1)
     local hb2 = get_hitbox(entity2)
     return hb1.x < hb2.x + hb2.w and

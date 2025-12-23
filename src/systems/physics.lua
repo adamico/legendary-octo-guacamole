@@ -3,24 +3,6 @@ local GameConstants = require("constants")
 
 local Physics = {}
 
--- Input system: read controls and set direction
-function Physics.controllable(entity)
-    local left = btn(GameConstants.controls.move_left)
-    local right = btn(GameConstants.controls.move_right)
-    local up = btn(GameConstants.controls.move_up)
-    local down = btn(GameConstants.controls.move_down)
-
-    local dx = 0
-    local dy = 0
-    if left then dx = dx - 1 end
-    if right then dx = dx + 1 end
-    if up then dy = dy - 1 end
-    if down then dy = dy + 1 end
-
-    entity.dir_x = dx
-    entity.dir_y = dy
-end
-
 -- Acceleration system: apply acceleration, friction, and clamp velocity
 function Physics.acceleration(entity)
     local dx = entity.dir_x or 0

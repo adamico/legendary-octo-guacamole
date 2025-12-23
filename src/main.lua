@@ -18,9 +18,9 @@ Log.init("trace")
 Log.trace("Log.init: current_level = "..Log.current_level)
 
 local SceneManager = require("scene_manager")
-local Title = require("title")
-local Play = require("play")
-local GameOver = require("game_over")
+require("title")
+require("play")
+require("game_over")
 
 local starting_scene = "Play"
 local Scene = SceneManager:new()

@@ -113,21 +113,21 @@ Systems are functions called per-entity based on tag matching:
 
 | System | Tags | Purpose |
 |--------|------|---------|
-| `controllable` | controllable | Read input, set `dir_x/dir_y` |
+| `read_input` | controllable | Read movement & shoot input, set `dir` & `shoot_dir` |
 | `acceleration` | acceleration | Apply acceleration/friction to `vel_x/vel_y` |
 | `velocity` | velocity | Apply velocity to position with sub-pixel precision (`sub_x/sub_y`) |
-| `resolve_map_collisions` | collidable,velocity | Stop entities at solid tiles (flag 0) |
-| `resolve_entity_collisions` | collidable | Detect overlaps, dispatch to handlers |
+| `resolve_map` | collidable,velocity | Stop entities at solid tiles (flag 0) |
+| `resolve_entities` | collidable | Detect overlaps, dispatch to handlers |
 | `change_sprite` | sprite | Update `sprite_index` based on direction (skips FSM entities) |
 | `update_fsm` | animatable | FSM state transitions (idle/walking/attacking/hurt/death) |
 | `animate` | animatable | Calculate sprite from animation config (indices, durations, composite) |
-| `shooter` | shooter | Handle projectile firing and ammo cost |
+| `shooter` | shooter | Handle projectile firing and ammo cost (input moved to `read_input`) |
 | `health_regen` | health | Passive HP recovery over time |
 | `invulnerability_tick` | player | Decrement `invuln_timer` after taking damage |
 | `health_manager` | health | Check for `hp <= 0`, handle death effects |
 | `draw_spotlight` | spotlight | Render localized lighting (uses extended palette) |
 | `draw_shadow` | shadow | Render oval shadow beneath entities |
-| `drawable` | drawable | Render the entity sprite (handles flashing) |
+| `draw_layer` | (drawable) | Render entities with sorting options (handles flash) |
 | `draw_health_bar` | health | Render segmented 3-state health/ammo bar |
 
 ## Animation System
@@ -173,9 +173,9 @@ The Play scene (`src/scenes/play.lua`) uses a `RoomManager` state machine to man
 
 1. **Room State Management**: `room_manager:update()` delegates to current state
 2. **Gameplay Systems** (only when `isExploring()`):
-   - Input & Physics: `controllable` → `acceleration` → `resolve_map_collisions` → `velocity`
+   - Input & Physics: `read_input` → `acceleration` → `resolve_map` → `velocity`
    - Animation: `update_fsm` → `change_sprite` → `animate`
-   - Combat: `shoot_input` → `projectile_fire` → `enemy_ai` → `resolve_entity_collisions`
+   - Combat: `projectile_fire` → `enemy_ai` → `resolve_entities`
    - Status: `health_regen` → `invulnerability_tick` → `health_manager` → `sync_shadows`
    - Effects: `update_shake()`
 

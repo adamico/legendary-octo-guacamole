@@ -7,7 +7,7 @@ local Combat = {}
 -- Invulnerability timer system: counts down invuln frames
 function Combat.invulnerability_tick(entity)
     if entity.invuln_timer and entity.invuln_timer > 0 then
-        entity.invuln_timer = entity.invuln_timer - 1
+        entity.invuln_timer -= 1
     end
 end
 
@@ -23,20 +23,6 @@ local function direction_from_shoot(sx, sy)
         return "up"
     end
     return nil
-end
-
--- Shoot input system: reads buttons, sets shoot direction on entity
-function Combat.shoot_input(entity)
-    -- Read directional shooting buttons
-    local sx = 0
-    local sy = 0
-    if btn(GameConstants.controls.shoot_left) then sx = -1 end
-    if btn(GameConstants.controls.shoot_right) then sx = 1 end
-    if btn(GameConstants.controls.shoot_up) then sy = -1 end
-    if btn(GameConstants.controls.shoot_down) then sy = 1 end
-
-    entity.shoot_dir_x = sx
-    entity.shoot_dir_y = sy
 end
 
 -- Projectile fire system: checks conditions, spawns projectile, handles FSM
