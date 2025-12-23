@@ -109,7 +109,6 @@ local function init_dasher_fsm(entity)
             entity.dasher_timer = entity.windup_duration
             entity.vel_x = 0
             entity.vel_y = 0
-            -- Trigger 'attack' animation state to use shell sprite (235)
             if entity.fsm and entity.fsm:can("attack") then
                entity.fsm:attack()
             end
@@ -186,6 +185,15 @@ local function dasher_behavior(entity, player)
       if dist > 0 then
          entity.dash_target_dx = dx / dist
          entity.dash_target_dy = dy / dist
+
+         -- Update facing direction to match target so animation rotates correctly
+         entity.dir_x = entity.dash_target_dx > 0 and 1 or (entity.dash_target_dx < 0 and -1 or 0)
+         entity.dir_y = entity.dash_target_dy > 0 and 1 or (entity.dash_target_dy < 0 and -1 or 0)
+
+         -- Force update current_direction for animation system (since vel is 0)
+         local Utils = require("entities/utils")
+         entity.current_direction = Utils.get_direction_name(entity.dash_target_dx, entity.dash_target_dy,
+            entity.current_direction)
       end
 
       entity.dasher_timer = entity.dasher_timer - 1
@@ -204,9 +212,8 @@ local function dasher_behavior(entity, player)
       entity.rotation_timer = (entity.rotation_timer or 0) + 1
       if entity.rotation_timer >= 8 then
          entity.rotation_timer = 0
-         -- Rotate 90 degrees if moving right, -90 if moving left
-         local rot_dir = entity.dir_x >= 0 and 1 or -1
-         entity.rotation_angle = (entity.rotation_angle or 0) + (90 * rot_dir)
+         -- Rotate 90 degrees every 8 frames (always clockwise internally, flip_x handles visual direction)
+         entity.rotation_angle = (entity.rotation_angle or 0) + 90
       end
 
       -- Transition: collision with wall (hit_wall) or player (dasher_collision)
