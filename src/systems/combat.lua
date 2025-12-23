@@ -2,6 +2,7 @@
 local Entities = require("entities")
 local GameConstants = require("constants")
 local Effects = require("effects")
+local Utils = require("utils")
 local Combat = {}
 
 -- Invulnerability timer system: counts down invuln frames
@@ -9,20 +10,6 @@ function Combat.invulnerability_tick(entity)
     if entity.invuln_timer and entity.invuln_timer > 0 then
         entity.invuln_timer -= 1
     end
-end
-
--- Helper: convert shoot direction to facing direction name
-local function direction_from_shoot(sx, sy)
-    if sx > 0 then
-        return "right"
-    elseif sx < 0 then
-        return "left"
-    elseif sy > 0 then
-        return "down"
-    elseif sy < 0 then
-        return "up"
-    end
-    return nil
 end
 
 -- Projectile fire system: checks conditions, spawns projectile, handles FSM
@@ -42,7 +29,7 @@ function Combat.projectile_fire(entity)
 
     if wants_to_shoot and has_enough_hp and cooldown_ready then
         -- Update facing direction
-        local dir = direction_from_shoot(sx, sy)
+        local dir = Utils.get_direction_name(sx, sy)
         if dir and entity.fsm then
             entity.current_direction = dir
             -- Trigger or extend attack animation
@@ -60,9 +47,9 @@ function Combat.projectile_fire(entity)
         local spawn_x = entity.x + (entity.width / 2) - (proj_size / 2)
         local spawn_y = entity.y + (entity.height / 2) - (proj_size / 2)
 
-        Entities.spawn_projectile(
+        Entities.spawn_player_projectile(
             world, spawn_x, spawn_y, sx, sy,
-            "Laser", {recovery_percent = entity.recovery_percent, shot_cost = entity.shot_cost}
+            {recovery_percent = entity.recovery_percent, shot_cost = entity.shot_cost}
         )
         entity.shoot_cooldown = 15
     end

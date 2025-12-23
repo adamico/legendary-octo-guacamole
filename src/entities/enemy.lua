@@ -2,16 +2,24 @@
 -- All enemy types are defined as pure data in GameConstants.Enemy
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
+local Utils = require("utils")
 
 local Enemy = {}
 
-function Enemy.spawn(world, x, y, enemy_type)
+-- Unified spawn function using Type Object pattern
+-- @param world - ECS world
+-- @param x, y - spawn position
+-- @param enemy_type - type key in GameConstants.Enemy (default: "Skulker")
+-- @param instance_data - optional table with instance-specific overrides
+function Enemy.spawn(world, x, y, enemy_type, instance_data)
     enemy_type = enemy_type or "Skulker"
+    instance_data = instance_data or {}
+
     local config = GameConstants.Enemy[enemy_type]
 
-    -- Build enemy entity from type config (instance data only)
+    -- Build enemy entity from type config
     local enemy = {
-        type = config.entity_type, -- From config
+        type = config.entity_type,
         enemy_type = enemy_type,
         x = x,
         y = y,
@@ -38,25 +46,20 @@ function Enemy.spawn(world, x, y, enemy_type)
         dir_x = 0,
         dir_y = 1,
         sprite_index = config.sprite_index_offsets.down,
-        flip_x = false
+        flip_x = false,
+        -- Type-specific properties from config
+        shoot_timer = config.shoot_delay,
+        shoot_delay = config.shoot_delay,
+        is_shooter = config.is_shooter,
     }
 
-    -- Copy type-specific properties if they exist
-    if config.shoot_delay then
-        enemy.shoot_timer = config.shoot_delay
-        enemy.shoot_delay = config.shoot_delay
-    end
-    if config.is_shooter then
-        enemy.is_shooter = true
+    -- Apply instance-specific overrides
+    for k, v in pairs(instance_data) do
+        enemy[k] = v
     end
 
-    -- Create entity with tags from config
-    local ent = world.ent(config.tags, enemy)
-
-    local Shadow = require("shadow")
-    Shadow.spawn(world, ent)
-
-    return ent
+    -- Create entity with tags from config (shadow auto-spawned if tagged)
+    return Utils.spawn_entity(world, config.tags, enemy)
 end
 
 return Enemy

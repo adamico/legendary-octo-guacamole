@@ -1,78 +1,80 @@
--- Pickup entity factory
+-- Pickup entity factory (Type Object pattern)
+-- All pickup types are defined as pure data in GameConstants.Pickup
+-- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
+local Utils = require("utils")
 
 local Pickup = {}
 
--- Helper: Create base pickup entity with common properties
-local function spawn_base(config)
+-- Unified spawn function using Type Object pattern
+-- @param world - ECS world
+-- @param x, y - spawn position
+-- @param pickup_type - type key in GameConstants.Pickup (e.g., "ProjectilePickup", "HealthPickup")
+-- @param instance_data - optional table with instance-specific overrides
+function Pickup.spawn(world, x, y, pickup_type, instance_data)
+    instance_data = instance_data or {}
+
+    local config = GameConstants.Pickup[pickup_type]
+    local direction = instance_data.direction
+
+    -- Build pickup entity from type config
     local pickup = {
-        type = config.type,
-        pickup_type = config.pickup_type or "health",
-        x = config.x,
-        y = config.y,
-        width = config.width or 16,
-        height = config.height or 16,
+        type = config.entity_type,
+        pickup_type = pickup_type,
+        pickup_effect = config.pickup_effect,
+        x = x,
+        y = y,
+        width = config.width,
+        height = config.height,
         vel_x = 0,
         vel_y = 0,
         sub_x = 0,
         sub_y = 0,
-        sprite_index = config.sprite_index,
     }
 
-    -- Optional properties
-    if config.hitbox then
-        pickup.hitbox = config.hitbox
+    -- Sprite: use instance override, or direction-based lookup, or static sprite
+    if instance_data.sprite_index then
+        pickup.sprite_index = instance_data.sprite_index
+    elseif config.sprite_index_offsets and direction then
+        pickup.sprite_index = config.sprite_index_offsets[direction]
     else
-        pickup.hitbox_width = config.hitbox_width or 12
-        pickup.hitbox_height = config.hitbox_height or 12
-        pickup.hitbox_offset_x = config.hitbox_offset_x or 2
-        pickup.hitbox_offset_y = config.hitbox_offset_y or 2
+        pickup.sprite_index = config.sprite_index or 0
     end
 
-    if config.direction then pickup.direction = config.direction end
-    if config.dir_x then pickup.dir_x = config.dir_x end
-    if config.dir_y then pickup.dir_y = config.dir_y end
-    if config.recovery_amount then pickup.recovery_amount = config.recovery_amount end
+    -- Hitbox: special handling for projectile-based pickups (uses Laser hitbox)
+    if config.hitbox_from_projectile then
+        pickup.hitbox = GameConstants.Projectile.Laser.hitbox
+    else
+        pickup.hitbox_width = config.hitbox_width
+        pickup.hitbox_height = config.hitbox_height
+        pickup.hitbox_offset_x = config.hitbox_offset_x
+        pickup.hitbox_offset_y = config.hitbox_offset_y
+    end
 
-    return world.ent("pickup,collidable,drawable,sprite,background", pickup)
+    -- Apply instance-specific overrides
+    for k, v in pairs(instance_data) do
+        pickup[k] = v
+    end
+
+    -- Create entity with tags from config
+    return world.ent(config.tags, pickup)
 end
 
--- Spawn projectile-based pickup (from wall collisions)
+-- Convenience: Spawn projectile-based pickup (from wall collisions)
 function Pickup.spawn_projectile(world, x, y, dir_x, dir_y, amount, sprite_index)
-    -- Determine direction name from source projectile direction
-    local direction
-    if dir_x > 0 then
-        direction = "right"
-    elseif dir_x < 0 then
-        direction = "left"
-    elseif dir_y < 0 then
-        direction = "up"
-    else
-        direction = "down"
-    end
-
-    return spawn_base({
-        type = "ProjectilePickup",
-        pickup_type = "health",
-        x = x,
-        y = y,
+    local direction = Utils.get_direction_name(dir_x, dir_y)
+    return Pickup.spawn(world, x, y, "ProjectilePickup", {
+        direction = direction,
         dir_x = dir_x,
         dir_y = dir_y,
-        direction = direction,
-        hitbox = GameConstants.Projectile.hitbox,
-        sprite_index = sprite_index,
         recovery_amount = amount,
+        sprite_index = sprite_index,
     })
 end
 
--- Spawn simple health pickup (from enemy deaths)
+-- Convenience: Spawn simple health pickup (from enemy deaths)
 function Pickup.spawn_health(world, x, y, amount)
-    return spawn_base({
-        type = "HealthPickup",
-        pickup_type = "health",
-        x = x,
-        y = y,
-        sprite_index = 64,
+    return Pickup.spawn(world, x, y, "HealthPickup", {
         recovery_amount = amount,
     })
 end

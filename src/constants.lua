@@ -61,7 +61,7 @@ local GameConstants = {
       -- Player's laser projectile
       Laser = {
          entity_type = "Projectile",
-         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,middleground",
+         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,shadow,middleground",
          owner = "player",
          speed = 4,
          damage = 10,
@@ -129,7 +129,7 @@ local GameConstants = {
       -- Enemy bullet projectile
       EnemyBullet = {
          entity_type = "EnemyProjectile",
-         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,middleground",
+         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,shadow,middleground",
          owner = "enemy",
          speed = 1.5,
          damage = 10,
@@ -153,18 +153,41 @@ local GameConstants = {
          shadow_width = 4,
       },
    },
-   ProjectilePickup = {
-      sprite_index_offsets = {
-         down = 78,
-         right = 77,
-         left = 77,
-         up = 78,
+   Pickup = {
+      -- Pickup spawned when player projectile hits wall (recoverable health)
+      ProjectilePickup = {
+         entity_type = "ProjectilePickup",
+         tags = "pickup,collidable,drawable,sprite,background",
+         pickup_effect = "health",
+         width = 16,
+         height = 16,
+         -- Uses direction-based hitbox from Projectile.Laser
+         hitbox_from_projectile = true,
+         sprite_index_offsets = {
+            down = 78,
+            right = 77,
+            left = 77,
+            up = 78,
+         },
+      },
+      -- Health pickup spawned when enemies die
+      HealthPickup = {
+         entity_type = "HealthPickup",
+         tags = "pickup,collidable,drawable,sprite,background",
+         pickup_effect = "health",
+         width = 16,
+         height = 16,
+         sprite_index = 64,
+         hitbox_width = 12,
+         hitbox_height = 12,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 2,
       },
    },
    Enemy = {
       Skulker = {
          entity_type = "Enemy",
-         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,middleground",
+         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 20,
          speed = 0.5,
          contact_damage = 10,
@@ -188,7 +211,7 @@ local GameConstants = {
       },
       Shooter = {
          entity_type = "Enemy",
-         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,middleground",
+         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 30,
          speed = 0.3,
          contact_damage = 10,
@@ -215,7 +238,7 @@ local GameConstants = {
       },
       Skull = {
          entity_type = "Skull",
-         tags = "skull,enemy,velocity,collidable,health,drawable,sprite,middleground",
+         tags = "skull,enemy,velocity,collidable,health,drawable,sprite,shadow,middleground",
          hp = 1,
          speed = 0.6,
          contact_damage = 20,

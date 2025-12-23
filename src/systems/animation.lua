@@ -1,5 +1,6 @@
 local machine = require("lua-state-machine/statemachine")
 local GameConstants = require("constants")
+local Utils = require("utils")
 
 local Animation = {}
 
@@ -11,17 +12,11 @@ local DEFAULT_SPEED = 8
 
 -- Get the direction name from entity velocity (for animation facing)
 local function get_direction(entity)
-   local vx = entity.vel_x or 0
-   local vy = entity.vel_y or 0
-
-   -- Priority: horizontal over vertical for diagonals
-   if vx > 0.1 then return "right" end
-   if vx < -0.1 then return "left" end
-   if vy > 0.1 then return "down" end
-   if vy < -0.1 then return "up" end
-
-   -- Return current direction if velocity is near zero (preserve last)
-   return entity.current_direction
+   return Utils.get_direction_name(
+      entity.vel_x or 0,
+      entity.vel_y or 0,
+      entity.current_direction
+   )
 end
 
 -- Get animation config for entity type

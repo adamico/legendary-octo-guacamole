@@ -2,34 +2,22 @@
 -- All projectile types are defined as pure data in GameConstants.Projectile
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
+local Utils = require("utils")
 
 local Projectile = {}
-
--- Helper to determine direction name from velocity
-local function get_direction(dx, dy)
-    if dx > 0 then
-        return "right"
-    elseif dx < 0 then
-        return "left"
-    elseif dy < 0 then
-        return "up"
-    else
-        return "down"
-    end
-end
 
 -- Unified spawn function using Type Object pattern
 -- @param world - ECS world
 -- @param x, y - spawn position
 -- @param dx, dy - direction vector (normalized)
 -- @param projectile_type - type key in GameConstants.Projectile (default: "Laser")
--- @param instance_data - optional table with instance-specific overrides (recovery_percent, shot_cost)
+-- @param instance_data - optional table with instance-specific overrides
 function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     projectile_type = projectile_type or "Laser"
     instance_data = instance_data or {}
 
     local config = GameConstants.Projectile[projectile_type]
-    local direction = get_direction(dx, dy)
+    local direction = Utils.get_direction_name(dx, dy)
 
     -- Build projectile entity from type config
     local projectile = {
@@ -39,7 +27,6 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         y = y,
         width = config.width,
         height = config.height,
-        -- Direction-based hitbox (looked up by get_hitbox using direction)
         hitbox = config.hitbox,
         hitbox_width = config.hitbox_width,
         hitbox_height = config.hitbox_height,
@@ -66,21 +53,13 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         shadow_heights = config.shadow_heights,
     }
 
-    -- Apply instance-specific overrides (for player projectiles)
-    if instance_data.recovery_percent then
-        projectile.recovery_percent = instance_data.recovery_percent
-    end
-    if instance_data.shot_cost then
-        projectile.shot_cost = instance_data.shot_cost
+    -- Apply instance-specific overrides
+    for k, v in pairs(instance_data) do
+        projectile[k] = v
     end
 
-    -- Create entity with tags from config
-    local ent = world.ent(config.tags, projectile)
-
-    local Shadow = require("shadow")
-    Shadow.spawn(world, ent)
-
-    return ent
+    -- Create entity with tags from config (shadow auto-spawned if tagged)
+    return Utils.spawn_entity(world, config.tags, projectile)
 end
 
 return Projectile
