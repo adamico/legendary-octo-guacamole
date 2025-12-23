@@ -87,3 +87,8 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Spawn Logic**: Spawns truly offscreen (32px beyond viewport) at the farthest corner from the player.
   - **Refactoring**: Implemented `map_collidable` ECS tag to distinguish between entity-map and entity-entity collisions. The skull is `collidable` but not `map_collidable`, allowing it to pass through walls.
   - **Cleanup**: `RoomManager` handles skull deletion on room transition and timer reset on re-entry.
+- **Refactored Projectile System to Type Object Pattern**:
+  - Consolidated `Projectile.spawn` and `Projectile.spawn_enemy` into a single unified `Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)` function.
+  - Moved all projectile type definitions (`Laser`, `EnemyBullet`) into `GameConstants.Projectile` as pure data objects, mirroring the Enemy system design.
+  - Each projectile type config includes: `entity_type`, `tags`, `owner`, `speed`, `damage`, hitbox data, animation configs, shadow settings, and palette swaps.
+  - Updated `Entities` module with convenience aliases (`spawn_laser`, `spawn_enemy_projectile`) and preserved backward compatibility.

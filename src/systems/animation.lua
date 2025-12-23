@@ -29,6 +29,10 @@ local function get_entity_config(entity)
    if entity.type == "Enemy" and entity.enemy_type then
       return GameConstants.Enemy[entity.enemy_type]
    end
+   -- Handle projectile Type Object pattern
+   if (entity.type == "Projectile" or entity.type == "EnemyProjectile") and entity.projectile_type then
+      return GameConstants.Projectile[entity.projectile_type]
+   end
    return GameConstants[entity.type]
 end
 
@@ -159,16 +163,19 @@ function Animation.update_fsm(entity)
 end
 
 function Animation.animate(entity)
-   if not entity.fsm then return end
-
+   -- Initialize animation timer if missing (for entities without FSM)
+   if not entity.anim_timer then
+      entity.anim_timer = 0
+   end
    entity.anim_timer += 1
 
-   local state = entity.fsm.current
-   local direction = entity.current_direction
+   -- Get state from FSM, or default to "idle" for FSM-less entities (e.g., projectiles)
+   local state = entity.fsm and entity.fsm.current or "idle"
+   local direction = entity.current_direction or entity.direction
    local config = get_entity_config(entity)
 
-   -- Skip invalid states
-   if not VALID_STATES[state] then return end
+   -- Skip invalid states (only for FSM entities)
+   if entity.fsm and not VALID_STATES[state] then return end
 
    -- Get state-specific animation config
    local state_anim

@@ -58,61 +58,99 @@ local GameConstants = {
       shadow_offset = 0,
    },
    Projectile = {
-      damage = 10,
-      hitbox = {
-         down  = {w = 6, h = 12, ox = 4, oy = 4},
-         up    = {w = 6, h = 12, ox = 4, oy = 2},
-         right = {w = 10, h = 6, ox = 3, oy = 5},
-         left  = {w = 10, h = 6, ox = 3, oy = 5},
-      },
-      sprite_index_offsets = {
-         down = 78,
-         right = 77,
-         left = 77,
-         up = 78,
-      },
-      sprite_offset_y = 0,
-      animations = {
-         down = {
-            indices = {78, 78},
-            durations = {8, 8},
-            flips = {
-               {x = false, y = false}, {x = true, y = false}
-            }
+      -- Player's laser projectile
+      Laser = {
+         entity_type = "Projectile",
+         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,middleground",
+         owner = "player",
+         speed = 4,
+         damage = 10,
+         width = 16,
+         height = 16,
+         hitbox = {
+            down  = {w = 6, h = 12, ox = 4, oy = 4},
+            up    = {w = 6, h = 12, ox = 4, oy = 2},
+            right = {w = 10, h = 6, ox = 3, oy = 5},
+            left  = {w = 10, h = 6, ox = 3, oy = 5},
          },
-         up = {
-            indices = {78, 78},
-            durations = {8, 8},
-            flips = {
-               {x = false, y = false}, {x = true, y = false}
-            }
+         sprite_index_offsets = {
+            down = 78,
+            right = 77,
+            left = 77,
+            up = 78,
          },
-         right = {
-            indices = {77, 77},
-            durations = {8, 8},
-            flips = {
-               {x = false, y = false}, {x = false, y = true}
-            }
+         sprite_offset_y = 0,
+         animations = {
+            down = {
+               indices = {78, 78},
+               durations = {8, 8},
+               flips = {
+                  {x = false, y = false}, {x = true, y = false}
+               }
+            },
+            up = {
+               indices = {78, 78},
+               durations = {8, 8},
+               flips = {
+                  {x = false, y = false}, {x = true, y = false}
+               }
+            },
+            right = {
+               indices = {77, 77},
+               durations = {8, 8},
+               flips = {
+                  {x = false, y = false}, {x = false, y = true}
+               }
+            },
+            left = {
+               indices = {77, 77},
+               durations = {8, 8},
+               flips = {
+                  {x = false, y = false}, {x = false, y = true}
+               }
+            },
          },
-         left = {
-            indices = {77, 77},
-            durations = {8, 8},
-            flips = {
-               {x = false, y = false}, {x = false, y = true}
-            }
+         palette_swaps = {
+            {from = 5, to = 12},
+         },
+         shadow_offsets = {
+            down = 8,
+            up = 8,
+            right = 2,
+            left = 2,
+         },
+         shadow_widths = {
+            down = 6,
+            up = 6,
+            right = 10,
+            left = 10,
          },
       },
-      shadow_offsets = {
-         down = 8,
-         up = 8,
-         right = 2,
-         left = 2,
-      },
-      shadow_widths = {
-         down = 6,
-         up = 6,
-         right = 10,
-         left = 10,
+      -- Enemy bullet projectile
+      EnemyBullet = {
+         entity_type = "EnemyProjectile",
+         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,middleground",
+         owner = "enemy",
+         speed = 1.5,
+         damage = 10,
+         width = 16,
+         height = 16,
+         hitbox_width = 8,
+         hitbox_height = 8,
+         hitbox_offset_x = 4,
+         hitbox_offset_y = 4,
+         sprite_index_offsets = {
+            down = 71,
+            right = 71,
+            left = 71,
+            up = 71,
+         },
+         animations = {
+            idle = {indices = {71, 72}, durations = {8, 8}}
+         },
+         sprite_offset_y = -5,
+         shadow_offset = 3,
+         shadow_width = 4,
       },
    },
    ProjectilePickup = {
@@ -122,20 +160,6 @@ local GameConstants = {
          left = 77,
          up = 78,
       },
-   },
-   EnemyProjectile = {
-      damage = 10,
-      speed = 1.5,
-      hitbox_width = 8,
-      hitbox_height = 8,
-      hitbox_offset_x = 4,
-      hitbox_offset_y = 4,
-      animations = {
-         idle = {indices = {71, 72}, durations = {8, 8}}
-      },
-      sprite_offset_y = -5,
-      shadow_offset = 3,
-      shadow_width = 4,
    },
    Enemy = {
       Skulker = {

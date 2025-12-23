@@ -62,7 +62,7 @@ function Combat.projectile_fire(entity)
 
         Entities.spawn_projectile(
             world, spawn_x, spawn_y, sx, sy,
-            entity.recovery_percent, entity.shot_cost
+            "Laser", {recovery_percent = entity.recovery_percent, shot_cost = entity.shot_cost}
         )
         entity.shoot_cooldown = 15
     end
