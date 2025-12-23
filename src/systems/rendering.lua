@@ -146,6 +146,55 @@ local function draw_sprite(entity)
     local sx = entity.x + (entity.sprite_offset_x or 0)
     local sy = entity.y + (entity.sprite_offset_y or 0)
 
+    -- Check for death state to apply procedural effects
+    if entity.fsm and entity.fsm:is("death") then
+        Log.trace("Drawing death animation for entity, timer="..(entity.anim_timer or 0))
+        local t = entity.anim_timer or 0
+        local max_t = 30 -- assume 30 frame death
+        local p = min(t / max_t, 1.0)
+
+        -- Shake
+        sx = sx + rnd(2) - 1
+        sy = sy + rnd(2) - 1
+
+        -- Flash/Palette effects
+        if t < 4 then
+            -- Initial white flash
+            for i = 1, 15 do pal(i, 7) end
+            for i = 32, 63 do pal(i, 7) end
+        else
+            -- Flicker breakdown
+            if flr(t / 4) % 2 == 0 then
+                pal(6, 8)  -- light gray -> red
+                pal(5, 2)  -- dark gray -> purple
+                pal(13, 2) -- purple -> purple
+            end
+            -- Fade out near end
+            if p > 0.8 then
+                -- dithering or just disappearing handled by size
+            end
+        end
+
+        -- Procedural Stretch/Squash using sspr
+        local n = entity.sprite_index or 0
+        local w = entity.width or 16
+        local h = entity.height or 16
+
+        -- Squash vertically, spread horizontally
+        local target_h = h * (1 - p)
+        local target_w = w * (1 + p * 1.5)
+
+        -- Keep feet anchored (draw_y adjusts as height shrinks)
+        local draw_x = sx - (target_w - w) / 2
+        local draw_y = sy + (h - target_h)
+
+        -- Use sspr with sprite number directly (Picotron style)
+        sspr(n, 0, 0, w, h, draw_x, draw_y, target_w, target_h, flip_x, flip_y)
+
+        pal() -- Reset palette
+        return
+    end
+
     -- Check for composite sprite (top + bottom halves)
     if entity.sprite_top ~= nil and entity.sprite_bottom ~= nil then
         -- Use dynamic split_row (defaults to height/2)

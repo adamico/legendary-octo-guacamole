@@ -1,7 +1,7 @@
 -- Combat systems: shooting, health management, regen
 local Entities = require("entities")
 local GameConstants = require("constants")
-
+local Effects = require("effects")
 local Combat = {}
 
 -- Invulnerability timer system: counts down invuln frames
@@ -97,12 +97,27 @@ Combat.DeathHandlers["Player"] = function(entity)
     -- entity.hp = entity.max_hp  -- Uncomment to respawn
 end
 
--- Default death handler for other entities
-Combat.DeathHandlers.default = function(entity)
+-- Enemy death handler
+Combat.DeathHandlers["Enemy"] = function(entity)
+    Log.trace("Enemy cleanup after death animation")
+
+    -- Drop HP pickup (100% for MVP)
+    local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
+
+    -- Spawn pickup at enemy's last position
+    -- Use a neutral direction for the drop (downward)
+    Entities.spawn_pickup_projectile(world, entity.x, entity.y, 0, 1, recovery, 78)
+
     -- Visual/audio feedback for death
-    local Effects = require("effects")
+
     Effects.death_explosion(entity, "explosion")
 
+    world.del(entity)
+end
+
+-- Default death handler for other entities
+Combat.DeathHandlers.default = function(entity)
+    Effects.death_explosion(entity, "explosion")
     world.del(entity)
 end
 
@@ -112,10 +127,12 @@ function Combat.health_manager(entity)
         -- If entity has an FSM, let the FSM handle the death sequence
         if entity.fsm then
             if not entity.fsm:is("death") then
+                Log.trace("Entity "..entity.type.." died, transitioning to death state")
                 entity.fsm:die()
             end
         else
             -- No FSM, delete immediately
+            Log.trace("Entity "..entity.type.." died (no FSM), deleting immediately")
             local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
             handler(entity)
         end

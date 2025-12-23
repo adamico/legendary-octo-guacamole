@@ -47,6 +47,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Enabled Projectile Animations**: Updated the animation system to handle simplified directional configs (no state nesting) and added the `animatable` tag to player projectiles, enabling effects like spinning lasers.
 - **Implemented Dead Player Deactivation**: Added logic to the animation system to remove active ECS tags (`controllable`, `collidable`, `shooter`, `player`, etc.) from entities upon entering the `death` state. This ensures dead entities are ignored by AI and collisions, and cannot be controlled, while remaining rendered on screen.
 - **Implemented Enemy Freeze on Player Death**: Updated the AI system to zero out enemy velocity and direction when no player entity is found, causing enemies to stop in place upon player death.
+- **Implemented Enemy Death Animations**: Added procedural death effects for enemies using sprite manipulation:
+  - **Squash and Stretch**: Enemies flatten vertically and expand horizontally using `sspr`.
+  - **Palette Flash**: Enemies flash white and then flicker red/purple/gray.
+  - **Shake**: Added random position jitter.
+  - configured `death` animation state in `GameConstants` with a 30-frame duration.
 - **Refactored Dungeon Management**: Renamed `RoomManager` to `DungeonManager` and implemented grid-based dungeon generation with safe starts and enemy rooms.
 - **Implemented Single-Screen Rendering**: Switched to a model where rooms are carved into the (0,0) map area on each transition, simplifying camera and coordinate management.
 - **Implemented Room Locking Mechanics**: Doors now lock (sprite 4) upon room entry and unlock (sprite 3) only after all enemies are defeated. Improved robustness by checking spawner completion state.

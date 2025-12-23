@@ -99,6 +99,7 @@ end
 Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, enemy)
     -- Deal damage to enemy
     enemy.hp = enemy.hp - (projectile.damage or GameConstants.Projectile.damage or 10)
+    Log.trace("Enemy took damage, hp now: "..enemy.hp)
 
     -- Visual/audio feedback (reusable effect)
     Effects.hit_impact(projectile, enemy)
@@ -108,17 +109,6 @@ Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, en
 
     -- Destroy projectile
     world.del(projectile)
-
-    -- Check if enemy died
-    if enemy.hp <= 0 then
-        -- Drop HP pickup (100% for MVP)
-        local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
-        Entities.spawn_pickup_projectile(world, enemy.x, enemy.y, projectile.dir_x, projectile.dir_y, recovery,
-            projectile.sprite_index)
-
-        -- Delete enemy
-        world.del(enemy)
-    end
 end
 
 -- Registry for Player + Enemy interaction (contact damage)

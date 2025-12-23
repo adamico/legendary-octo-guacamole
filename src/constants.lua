@@ -147,6 +147,9 @@ local GameConstants = {
             left = 231,
             up = 231,
          },
+         animations = {
+            death = {indices = {231}, durations = {30}}
+         },
          width = 16,
          height = 16,
          hitbox_width = 12,
@@ -174,7 +177,8 @@ local GameConstants = {
          hitbox_offset_x = 2,
          hitbox_offset_y = 3,
          animations = {
-            idle = {indices = {225, 226}, durations = {30, 30}}
+            idle = {indices = {225, 226}, durations = {30, 30}},
+            death = {indices = {225}, durations = {30}}
          },
          shadow_offset = 3,
          shadow_width = 12,

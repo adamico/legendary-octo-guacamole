@@ -135,9 +135,6 @@ function Effects.death_explosion(entity, ptype)
     -- Flash before deletion
     Effects.flash_sprite(entity, 5, 7)
 
-    -- Shake
-    Effects.screen_shake(3, 4)
-
     -- Sound
     -- sfx(10) -- explosion sound (uncomment when SFX ready)
 end
