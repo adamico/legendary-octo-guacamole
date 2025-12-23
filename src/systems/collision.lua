@@ -122,6 +122,15 @@ Collision.CollisionHandlers.map["EnemyProjectile"] = function(projectile, map_x,
     world.del(projectile)
 end
 
+-- Registry for Enemy + Map interaction
+Collision.CollisionHandlers.map["Enemy"] = function(enemy, map_x, map_y)
+    enemy.hit_wall = true
+    -- Flag Dasher collision if in dash state
+    if enemy.enemy_type == "Dasher" and enemy.dasher_fsm and enemy.dasher_fsm:is("dash") then
+        enemy.dasher_collision = true
+    end
+end
+
 
 -- Registry for Projectile + Enemy interaction
 Collision.CollisionHandlers.entity["Projectile,Enemy"] = function(projectile, enemy)
@@ -141,6 +150,11 @@ end
 
 -- Registry for Player + Enemy interaction (contact damage)
 Collision.CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
+    -- Check if this is a Dasher in dash state - flag collision for stun
+    if enemy.enemy_type == "Dasher" and enemy.dasher_state == "dash" then
+        enemy.dasher_collision = true
+    end
+
     -- Skip if player is invulnerable
     if player.invuln_timer and player.invuln_timer > 0 then
         return

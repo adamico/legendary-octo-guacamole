@@ -267,11 +267,12 @@ function DungeonManager.assign_room_types()
    end
 
    -- Remaining rooms are combat rooms with enemies
+   local combat_enemy_types = {"Skulker", "Skulker", "Shooter", "Dasher"} -- Weighted toward Skulker
    for _, room in pairs(DungeonManager.rooms) do
       if not room.room_type then
          room.room_type = "combat"
          room.floor_color = 5 -- Default gray
-         DungeonManager.assign_enemies(room)
+         DungeonManager.assign_enemies(room, nil, nil, combat_enemy_types)
       end
    end
 end

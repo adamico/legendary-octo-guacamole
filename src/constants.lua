@@ -257,6 +257,58 @@ local GameConstants = {
          shadow_offset = 0,
          shadow_width = 13,
       },
+      Dasher = {
+         entity_type = "Enemy",
+         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         hp = 60,                    -- Higher HP (tank)
+         speed = 0.2,                -- Very slow base speed
+         contact_damage = 15,
+         vision_range = 100,         -- Same as Shooter's target distance
+         windup_duration = 60,       -- Frames before dash
+         stun_duration = 120,        -- Frames of stun after collision
+         dash_speed_multiplier = 10, -- 10x base speed during dash
+         sprite_index_offsets = {
+            down = 236,
+            right = 236,
+            left = 236,
+            up = 236,
+         },
+         sprite_shell = 235, -- Shell sprite during dash
+         width = 16,
+         height = 16,
+         hitbox_width = 12,
+         hitbox_height = 10,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 3,
+         animations = {
+            down = {
+               idle      = {indices = {236}, durations = {30}},
+               walking   = {indices = {236, 237}, durations = {8, 8}},
+               attacking = {indices = {235}, durations = {10}, loop = true},
+               death     = {indices = {235}, durations = {30}}
+            },
+            up = {
+               idle      = {indices = {236}, durations = {30}},
+               walking   = {indices = {236, 237}, durations = {8, 8}},
+               attacking = {indices = {235}, durations = {10}, loop = true},
+               death     = {indices = {235}, durations = {30}}
+            },
+            right = {
+               idle      = {indices = {236}, durations = {30}},
+               walking   = {indices = {236, 237}, durations = {8, 8}},
+               attacking = {indices = {235}, durations = {10}, loop = true},
+               death     = {indices = {235}, durations = {30}}
+            },
+            left = {
+               idle      = {indices = {236}, durations = {30}, flip = true},
+               walking   = {indices = {236, 237}, durations = {8, 8}, flip = true},
+               attacking = {indices = {235}, durations = {10}, loop = true, flip = true},
+               death     = {indices = {235}, durations = {30}, flip = true}
+            }
+         },
+         shadow_offset = 2,
+         shadow_width = 12,
+      },
       drop_chance = 1.0,
    },
    title = "Pizak",

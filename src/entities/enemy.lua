@@ -51,6 +51,19 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
         shoot_timer = config.shoot_delay,
         shoot_delay = config.shoot_delay,
         is_shooter = config.is_shooter,
+        -- Dasher-specific properties
+        vision_range = config.vision_range,
+        windup_duration = config.windup_duration,
+        stun_duration = config.stun_duration,
+        dash_speed_multiplier = config.dash_speed_multiplier,
+        sprite_shell = config.sprite_shell,
+        -- Dasher state (initialized at spawn)
+        dasher_state = config.vision_range and "patrol" or nil, -- patrol/windup/dash/stun
+        dasher_timer = 0,
+        patrol_dir_x = 0,
+        patrol_dir_y = 1, -- Start moving down
+        dash_target_dx = 0,
+        dash_target_dy = 0,
     }
 
     -- Apply instance-specific overrides

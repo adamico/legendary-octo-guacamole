@@ -113,6 +113,15 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - Added "shadow" tag to entity configs in constants.lua (Laser, EnemyBullet, Skulker, Shooter, Skull, Player).
   - Cleaned up dead code in `entities/init.lua`: removed `spawn_projectile`, `spawn_laser`, `spawn_pickup`, `spawn_shadow`.
   - Renamed to `spawn_player_projectile` and `spawn_enemy_projectile` for clarity.
+- **Implemented Dasher Enemy (Snail)**:
+  - **Configuration**: Added `Dasher` to `GameConstants.Enemy` with 60 HP (tank), slow speed (0.2), and Patrol/Windup/Dash/Stun behavior parameters.
+  - **AI System**: Implemented `dasher_behavior` using `lua-state-machine` FSM:
+    - **Patrol**: Random cardinal movement until blocked -> orthogonal turn.
+    - **Windup**: 60-frame pause when spotting player, tracking player position.
+    - **Dash**: Fast movement (4x speed) towards last seen player position.
+    - **Stun**: 120-frame pause after collision with wall/player.
+  - **Visuals**: Mapped `attacking` animation state to the "snail in shell" sprite (235) to visually represent the Dash/Shell mode, synchronized via FSM events.
+  - **Collision**: Added logic to detect Dasher collisions during Dash state and trigger Stun.
 - **Documentation & Task Management**:
   - Updated `ARCHITECTURE.md` to reflect unified factory patterns and data-driven shadows.
   - Updated `TODO.md` status for procedural generation and combat fixes.

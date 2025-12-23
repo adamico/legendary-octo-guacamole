@@ -4,6 +4,7 @@ local GameConstants = require("constants")
 local Collision = require("collision")
 local qsort = require("qsort")
 local Effects = require("effects")
+local Rotator = require("systems/sprite_rotator")
 
 local Rendering = {}
 
@@ -223,7 +224,11 @@ local function draw_sprite(entity)
         )
     else
         -- Standard single sprite
-        spr(entity.sprite_index, sx, sy, flip_x, flip_y)
+        local drawable = entity.sprite_index
+        if entity.rotation_angle and entity.rotation_angle ~= 0 then
+            drawable = Rotator.get(entity.sprite_index, entity.rotation_angle)
+        end
+        spr(drawable, sx, sy, flip_x, flip_y)
     end
 
     if was_flashing then

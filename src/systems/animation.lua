@@ -62,7 +62,7 @@ local function clear_composite_props(entity)
 end
 
 -- Handle animation-triggered state completion (death cleanup, attack finish)
-local function handle_state_completion(entity, state, timer, total_duration)
+local function handle_state_completion(entity, state, timer, total_duration, state_anim)
    if state == "death" and timer >= total_duration then
       local Combat = require("combat")
       local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
@@ -71,6 +71,10 @@ local function handle_state_completion(entity, state, timer, total_duration)
          handler(entity)
       end
    elseif state == "attacking" and timer >= total_duration then
+      -- Don't finish if the animation is meant to loop
+      if state_anim and state_anim.loop then
+         return
+      end
       entity.fsm:finish()
    end
 end
@@ -235,7 +239,7 @@ function Animation.animate(entity)
 
          clear_composite_props(entity)
          entity.sprite_index = indices[(frame_idx % #indices) + 1] or 0
-         handle_state_completion(entity, state, entity.anim_timer, total_duration)
+         handle_state_completion(entity, state, entity.anim_timer, total_duration, state_anim)
 
          -- Standard base + frames
       elseif state_anim.base then
@@ -248,7 +252,7 @@ function Animation.animate(entity)
 
          clear_composite_props(entity)
          entity.sprite_index = state_anim.base + frame_idx
-         handle_state_completion(entity, state, entity.anim_timer, total_duration)
+         handle_state_completion(entity, state, entity.anim_timer, total_duration, state_anim)
       end
    else
       -- Fallback: use sprite_index_offsets
