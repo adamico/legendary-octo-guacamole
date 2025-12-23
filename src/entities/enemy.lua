@@ -1,4 +1,6 @@
--- Enemy entity factory
+-- Enemy entity factory (Type Object pattern)
+-- All enemy types are defined as pure data in GameConstants.Enemy
+-- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
 
 local Enemy = {}
@@ -7,14 +9,14 @@ function Enemy.spawn(world, x, y, enemy_type)
     enemy_type = enemy_type or "Skulker"
     local config = GameConstants.Enemy[enemy_type]
 
+    -- Build enemy entity from type config (instance data only)
     local enemy = {
-        type = "Enemy",          -- For collision handlers
-        enemy_type = enemy_type, -- "Skulker", etc. for AI/sprite
+        type = config.entity_type, -- From config
+        enemy_type = enemy_type,
         x = x,
         y = y,
         width = config.width,
         height = config.height,
-        -- Hitbox properties from config
         hitbox_width = config.hitbox_width,
         hitbox_height = config.hitbox_height,
         hitbox_offset_x = config.hitbox_offset_x,
@@ -34,17 +36,22 @@ function Enemy.spawn(world, x, y, enemy_type)
         sub_x = 0,
         sub_y = 0,
         dir_x = 0,
-        dir_y = 1, -- Default facing down
+        dir_y = 1,
         sprite_index = config.sprite_index_offsets.down,
+        flip_x = false
     }
-    if enemy_type == "Shooter" then
+
+    -- Copy type-specific properties if they exist
+    if config.shoot_delay then
         enemy.shoot_timer = config.shoot_delay
         enemy.shoot_delay = config.shoot_delay
+    end
+    if config.is_shooter then
         enemy.is_shooter = true
     end
 
-    local ent = world.ent("enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,middleground",
-        enemy)
+    -- Create entity with tags from config
+    local ent = world.ent(config.tags, enemy)
 
     local Shadow = require("shadow")
     Shadow.spawn(world, ent)

@@ -149,7 +149,7 @@ function Spawner.spawn_skull(world, room)
     end
 
     -- Spawn skull at farthest corner
-    local skull = Entities.spawn_skull(world, spawn_pos.x, spawn_pos.y)
+    local skull = Entities.spawn_enemy(world, spawn_pos.x, spawn_pos.y, "Skull")
     room.skull_entity = skull -- Track for cleanup
 
     Log.trace("Spawned skull at ("..spawn_pos.x..", "..spawn_pos.y..")")

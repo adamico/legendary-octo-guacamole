@@ -62,11 +62,12 @@ drive/src/
 ├── entities/             # Entity factory modules
 │   ├── init.lua          # Aggregates all entity factories
 │   ├── player.lua        # Player entity with movement, health, shooting
-│   ├── enemy.lua         # Enemy entities (Skulker type)
-│   ├── projectile.lua    # Player bullets
+│   ├── enemy.lua         # Enemy entities (Skulker, Shooter, Skull)
+│   ├── projectile.lua    # Player and enemy bullets
 │   └── pickup.lua        # Health recovery/ammo pickups
 ├── systems/              # ECS system modules
 │   ├── init.lua          # Aggregates all systems
+│   ├── spawner.lua       # Enemy population and skull timer management
 │   ├── physics.lua       # Movement: controllable, acceleration, velocity (sub-pixel)
 │   ├── collision.lua     # Entity-entity and entity-map collision resolution
 │   ├── combat.lua        # Shooter, health_regen, invulnerability_tick, health_manager
@@ -101,9 +102,10 @@ Created via factory functions, each entity is a table with:
 
 | Entity | Tags |
 |--------|------|
-| Player | `player,controllable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,middleground` |
-| Enemy | `enemy,velocity,acceleration,collidable,drawable,sprite,health,middleground` |
-| Projectile | `projectile,velocity,collidable,drawable,sprite,middleground` |
+| Player | `player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,middleground` |
+| Enemy | `enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,middleground` |
+| Skull | `skull,enemy,velocity,collidable,health,drawable,sprite,middleground` |
+| Projectile | `projectile,velocity,map_collidable,collidable,drawable,animatable,middleground` |
 | Pickup | `collidable,drawable,sprite,background` |
 | Shadow | `shadow_entity,drawable_shadow,background` |
 
@@ -116,10 +118,10 @@ Systems are functions called per-entity based on tag matching:
 | `read_input` | controllable | Read movement & shoot input, set `dir` & `shoot_dir` |
 | `acceleration` | acceleration | Apply acceleration/friction to `vel_x/vel_y` |
 | `velocity` | velocity | Apply velocity to position with sub-pixel precision (`sub_x/sub_y`) |
-| `resolve_map` | collidable,velocity | Stop entities at solid tiles (flag 0) |
+| `resolve_map` | map_collidable,velocity | Stop entities at solid tiles (flag 0) |
 | `resolve_entities` | collidable | Detect overlaps, dispatch to handlers |
-| `change_sprite` | sprite | Update `sprite_index` based on direction (skips FSM entities) |
-| `update_fsm` | animatable | FSM state transitions (idle/walking/attacking/hurt/death) |
+| `enemy_spawner` | (room hook) | Handle initial population and skull pressure timer |
+| `enemy_ai` | enemy | Handle entity behavior (Skulker, Shooter, Skull) |
 | `animate` | animatable | Calculate sprite from animation config (indices, durations, composite) |
 | `shooter` | shooter | Handle projectile firing and ammo cost (input moved to `read_input`) |
 | `health_regen` | health | Passive HP recovery over time |
@@ -240,3 +242,4 @@ To prevent rendering and collision bugs, the game uses **Absolute World Coordina
 
 - **Extended Map**: A `userdata("i16", 80, 48)` is used as the map memory, providing a larger canvas than the screen (30x16) to allow for layout flexibility and room "peek" effects during transitions.
 - **Zelda-style Transitions**: When the player touches a door, the `RoomManager` enters the `Scrolling` state, freezes the player, and pans the camera relative to the absolute world coordinates.
+- **Skull Pressure Mechanic**: Cleared combat rooms initialize a `SKULL_SPAWN_TIMER` (in `constants.lua`). If the player remains in a cleared room while below max health, a projectile-immune "skull" enemy spawns offscreen at the farthest corner to force progression. The skull can pass through walls (`collidable` but not `map_collidable`).

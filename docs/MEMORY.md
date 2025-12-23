@@ -80,3 +80,10 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Accurate Player/Enemy Positioning**: Ensured that the player and enemies spawn correctly within the world coordinate space of each room, fixing rendering bugs after transitions.
 - **Code Quality & Linting**: Established pattern of declaring manager instances (e.g., `room_manager` in `play.lua`) as `local` variables rather than globals. This resolves "Undefined field" linting ambiguities and matches the `SceneManager` pattern in `main.lua`.
 - **Fixed Spotlight and Shadow Rendering**: The `clip()` function operates in screen coordinates, not world coordinates. When camera offsets are applied, the room's world-space `pixels` must be converted to screen-space by subtracting the camera scroll. This fix ensures spotlights and shadows render correctly regardless of camera position.
+- **Implemented Skull Pressure Mechanic**:
+  - Introduced a "skull" enemy that spawns in cleared combat rooms after a configurable timer (`SKULL_SPAWN_TIMER = 420` frames/7 seconds).
+  - **Logic**: Only spawns if the player is below max health, preventing indefinite idle regeneration without movement.
+  - **Properties**: 1 HP, immune to projectiles, deals 20 HP damage (one segment) on contact.
+  - **Spawn Logic**: Spawns truly offscreen (32px beyond viewport) at the farthest corner from the player.
+  - **Refactoring**: Implemented `map_collidable` ECS tag to distinguish between entity-map and entity-entity collisions. The skull is `collidable` but not `map_collidable`, allowing it to pass through walls.
+  - **Cleanup**: `RoomManager` handles skull deletion on room transition and timer reset on re-entry.
