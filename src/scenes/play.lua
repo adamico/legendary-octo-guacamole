@@ -31,7 +31,7 @@ function Play:update()
    if room_manager:isExploring() then
       world.sys("controllable", Systems.read_input)()
       world.sys("acceleration", Systems.acceleration)()
-      world.sys("collidable,velocity", function(e)
+      world.sys("map_collidable,velocity", function(e)
          Systems.resolve_map(e, DungeonManager.current_room)
       end)()
       world.sys("velocity", Systems.velocity)()

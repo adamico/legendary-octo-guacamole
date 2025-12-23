@@ -8,12 +8,12 @@ A **Binding of Isaac-style dungeon crawler** where **health is your ammunition**
 
 ### Core Loop
 
-1. **Shoot** → Lose HP (20 per shot)
+1. **Shoot** → Lose HP
 2. **Projectile hits wall** → Becomes pickup
-3. **Collect pickup** → Recover HP (16, or 80% of cost)
-4. **Passive regen** → Slow HP recovery when not shooting (5 HP/sec after 3s delay)
+3. **Collect pickup** → Recover HP
+4. **Passive regen** → Slow HP recovery when not shooting
 
-### Player Stats (Base Values)
+### Example Player Stats (Base Values)
 
 ```lua
 max_hp = 100          -- 5 shots at full health
@@ -68,13 +68,6 @@ recovery = projectile.shot_cost * projectile.recovery_percent
 ### 2. Overflow HP Banking
 
 HP exceeding `max_hp` is stored in `overflow_hp` rather than discarded:
-
-```lua
-if player.hp > player.max_hp then
-   player.overflow_hp += (player.hp - player.max_hp)
-   player.hp = player.max_hp
-end
-```
 
 **Potential Uses:**
 

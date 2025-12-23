@@ -47,7 +47,8 @@ function Projectile.spawn(world, x, y, dx, dy, recovery_percent, shot_cost)
         shadow_widths = GameConstants.Projectile.shadow_widths,
         shadow_heights = GameConstants.Projectile.shadow_heights,
     }
-    local ent = world.ent("projectile,velocity,collidable,drawable,animatable,palette_swappable,middleground", projectile)
+    local ent = world.ent(
+    "projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,middleground", projectile)
 
     local Shadow = require("shadow")
     Shadow.spawn(world, ent)
@@ -84,7 +85,7 @@ function Projectile.spawn_enemy(world, x, y, dx, dy)
         shadow_widths = config.shadow_widths,
         shadow_heights = config.shadow_heights,
     }
-    local ent = world.ent("projectile,velocity,collidable,drawable,animatable,middleground", projectile)
+    local ent = world.ent("projectile,velocity,map_collidable,collidable,drawable,animatable,middleground", projectile)
 
     local Shadow = require("shadow")
     Shadow.spawn(world, ent)

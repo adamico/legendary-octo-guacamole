@@ -12,7 +12,6 @@ function Room:initialize(tx, ty, w, h)
     self.floor_color = 5
 end
 
--- Door Sprite Constants
 local SPRITE_DOOR_OPEN = 3
 local SPRITE_DOOR_BLOCKED = 4
 
@@ -29,6 +28,12 @@ function Room:unlock()
     if self.doors then
         for _, door in pairs(self.doors) do door.sprite = SPRITE_DOOR_OPEN end
     end
+
+    -- Start skull timer for combat rooms (18 seconds = 1080 frames at 60fps)
+    if self.room_type == "combat" then
+        self.skull_timer = SKULL_SPAWN_TIMER
+        self.skull_spawned = false
+    end
 end
 
 function Room:check_clear()
@@ -37,7 +42,6 @@ function Room:check_clear()
     end
 end
 
--- Get outer boundaries in world tiles (inclusive)
 function Room:get_bounds()
     return {
         x1 = self.tiles.x,
@@ -47,7 +51,6 @@ function Room:get_bounds()
     }
 end
 
--- Get inner boundaries (world floor area) in tiles (inclusive)
 function Room:get_inner_bounds()
     return {
         x1 = self.tiles.x + 1,
@@ -57,7 +60,6 @@ function Room:get_inner_bounds()
     }
 end
 
--- Get world center tile coords
 function Room:get_center_tile()
     return {
         tx = self.tiles.x + flr(self.tiles.w / 2),
@@ -65,7 +67,6 @@ function Room:get_center_tile()
     }
 end
 
--- Get world tile position for a door in a given direction
 function Room:get_door_tile(direction)
     local center = self:get_center_tile()
     local bounds = self:get_bounds()
@@ -78,9 +79,7 @@ function Room:get_door_tile(direction)
     return nil
 end
 
--- Identify which door direction is at these world tile coords
 function Room:identify_door(tx, ty)
-    -- Check each door position directly
     for _, dir in ipairs({"north", "south", "east", "west"}) do
         local door_pos = self:get_door_tile(dir)
         if door_pos and door_pos.tx == tx and door_pos.ty == ty then

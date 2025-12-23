@@ -172,6 +172,7 @@ function Scrolling:enteredState(world, player, door_dir)
     -- Cleanup old room entities
     world.sys("projectile", function(e) world.del(e) end)()
     world.sys("pickup", function(e) world.del(e) end)()
+    world.sys("skull", function(e) world.del(e) end)()
 
     -- Clear map and carve both rooms at their respective offsets
     DungeonManager.clear_map()
@@ -262,6 +263,12 @@ function Settling:enteredState()
         if #next_room.enemy_positions > 0 then
             next_room:lock()
             DungeonManager.update_door_sprites(next_room)
+        end
+
+        -- Restart skull timer if entering a cleared combat room
+        if next_room.cleared and next_room.room_type == "combat" then
+            next_room.skull_timer = SKULL_SPAWN_TIMER
+            next_room.skull_spawned = false
         end
     end
 

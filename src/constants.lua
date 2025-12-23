@@ -2,6 +2,7 @@ SCREEN_WIDTH = 480
 SCREEN_HEIGHT = 270
 GRID_SIZE = 16
 SOLID_FLAG = 0
+SKULL_SPAWN_TIMER = 420
 
 local GameConstants = {
    Player = {

@@ -164,6 +164,34 @@ Collision.CollisionHandlers.entity["Player,Enemy"] = function(player, enemy)
     player.time_since_shot = 0
 end
 
+-- Registry for Player + Skull interaction (special enemy)
+Collision.CollisionHandlers.entity["Player,Skull"] = function(player, skull)
+    -- Skip if player is invulnerable
+    if player.invuln_timer and player.invuln_timer > 0 then
+        return
+    end
+
+    -- Deal contact damage to player (skip if godmode)
+    if not GameConstants.cheats.godmode then
+        player.hp -= (skull.contact_damage or 20)
+    end
+
+    -- Damage skull (1 HP = instant death, health_manager handles cleanup)
+    skull.hp -= 1
+
+    -- Visual/audio feedback (heavier for player damage)
+    Effects.hit_impact(skull, player, "heavy_shake")
+
+    -- Apply knockback to player (pushed away from skull)
+    Effects.apply_knockback(skull, player, 16)
+
+    -- Set invulnerability frames (30 frames ≈ 0.5 seconds at 60fps)
+    player.invuln_timer = 30
+
+    -- Reset regen timer (player took damage = in combat)
+    player.time_since_shot = 0
+end
+
 -- Registry for EnemyProjectile + Player interaction
 Collision.CollisionHandlers.entity["EnemyProjectile,Player"] = function(projectile, player)
     -- Skip if player is invulnerable
@@ -290,6 +318,11 @@ end
 -- Entity-Map Collision Resolver (Abstracted)
 -- Also checks for tile triggers (non-blocking tiles with flags)
 function Collision.resolve_map(entity, room)
+    -- Skip map collision for entities that ignore it (e.g., skull)
+    if entity.ignore_map_collision then
+        return
+    end
+
     local hb = get_hitbox(entity)
     local x = hb.x
     local y = hb.y

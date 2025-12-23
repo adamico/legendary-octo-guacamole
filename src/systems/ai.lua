@@ -2,7 +2,7 @@ local AI = {}
 local Entities = require("entities")
 
 -- Enemy AI system: simple chase behavior
-local function skulker_behavior(entity, player)
+local function chaser_behavior(entity, player)
     local dx = player.x - entity.x
     local dy = player.y - entity.y
     local dist = sqrt(dx * dx + dy * dy)
@@ -66,8 +66,8 @@ function AI.enemy_ai(entity)
         return
     end
 
-    if entity.enemy_type == "Skulker" then
-        skulker_behavior(entity, player)
+    if entity.enemy_type == "Skulker" or entity.enemy_type == "Skull" then
+        chaser_behavior(entity, player)
     elseif entity.enemy_type == "Shooter" then
         shooter_behavior(entity, player)
     end
