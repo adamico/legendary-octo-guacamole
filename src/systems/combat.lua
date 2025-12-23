@@ -86,8 +86,6 @@ end
 
 -- Enemy death handler
 Combat.DeathHandlers["Enemy"] = function(entity)
-    Log.trace("Enemy cleanup after death animation")
-
     -- Drop HP pickup (100% for MVP)
     local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
 
@@ -112,12 +110,9 @@ function Combat.health_manager(entity)
         -- If entity has an FSM, let the FSM handle the death sequence
         if entity.fsm then
             if not entity.fsm:is("death") then
-                Log.trace("Entity "..entity.type.." died, transitioning to death state")
                 entity.fsm:die()
             end
         else
-            -- No FSM, delete immediately
-            Log.trace("Entity "..entity.type.." died (no FSM), deleting immediately")
             local handler = Combat.DeathHandlers[entity.type] or Combat.DeathHandlers.default
             handler(entity)
         end

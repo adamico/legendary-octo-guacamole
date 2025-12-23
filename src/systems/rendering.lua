@@ -1,5 +1,3 @@
--- Refactoring Rendering.drawable and Rendering.draw_ysorted into Rendering.draw_layer
-
 local GameConstants = require("constants")
 local Collision = require("collision")
 local qsort = require("qsort")
@@ -8,13 +6,11 @@ local Rotator = require("systems/sprite_rotator")
 
 local Rendering = {}
 
--- Spotlight color constants
 Rendering.SPOTLIGHT_COLOR = 33
 Rendering.SHADOW_COLOR = 32
 
 local spotlight_initialized = false
 
--- Initialize the extended palette (colors 32-63)
 function Rendering.init_extended_palette()
     local base_colors = {
         [0] = 0x000000,
@@ -57,14 +53,12 @@ function Rendering.init_extended_palette()
     end
 end
 
--- Initialize the spotlight color table
 function Rendering.init_spotlight()
     if spotlight_initialized then return end
     Rendering.reset_spotlight()
     spotlight_initialized = true
 end
 
--- Reset the spotlight color table
 function Rendering.reset_spotlight()
     local spotlight_row_address = 0x8000 + Rendering.SPOTLIGHT_COLOR * 64
     local shadow_row_address = 0x8000 + Rendering.SHADOW_COLOR * 64
@@ -129,7 +123,6 @@ function Rendering.change_sprite(entity)
     entity.flip_y = false
 end
 
--- Simple animation system
 function Rendering.animatable(entity)
     local base = entity.base_sprite_index or entity.sprite_index
     local anim_offset = (flr(t() * 2) % 2)
@@ -149,7 +142,6 @@ local function draw_sprite(entity)
 
     -- Check for death state to apply procedural effects
     if entity.fsm and entity.fsm:is("death") then
-        Log.trace("Drawing death animation for entity, timer="..(entity.anim_timer or 0))
         local t = entity.anim_timer or 0
         local max_t = 30 -- assume 30 frame death
         local p = min(t / max_t, 1.0)
@@ -236,7 +228,6 @@ local function draw_sprite(entity)
     end
 end
 
--- Unified Drawing System
 -- Draws all entities matching 'tags'. Optionally sorts them by Y position.
 function Rendering.draw_layer(world, tags, sorted)
     if sorted then
@@ -260,7 +251,6 @@ function Rendering.draw_layer(world, tags, sorted)
     end
 end
 
--- Shadow System: Sync shadow entity position to parent
 function Rendering.sync_shadows(shadow)
     local parent = shadow.parent
 
@@ -325,7 +315,6 @@ function Rendering.draw_shadow_entity(shadow, clip_square)
     clip()
 end
 
--- Spotlight system
 function Rendering.draw_spotlight(entity, clip_square)
     local center_x = entity.x + (entity.width or 16) / 2
     local center_y = entity.y + (entity.height or 16) / 2
@@ -336,7 +325,6 @@ function Rendering.draw_spotlight(entity, clip_square)
     clip()
 end
 
--- Health bar system
 function Rendering.draw_health_bar(entity)
     if not entity.hp then return end
 
@@ -365,7 +353,6 @@ function Rendering.draw_health_bar(entity)
     end
 end
 
--- Debug hitboxes
 function Rendering.draw_hitbox(entity)
     local hb = Collision.get_hitbox(entity)
     rect(hb.x, hb.y, hb.x + hb.w, hb.y + hb.h, 8)

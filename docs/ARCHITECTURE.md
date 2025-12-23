@@ -71,6 +71,7 @@ drive/src/
 │   ├── spawner.lua       # Enemy population and skull timer management
 │   ├── physics.lua       # Movement: controllable, acceleration, velocity (sub-pixel)
 │   ├── collision.lua     # Entity-entity and entity-map collision resolution
+│   ├── handlers.lua      # Collision response handlers (entity-entity, map, tile)
 │   ├── combat.lua        # Shooter, health_regen, invulnerability_tick, health_manager
 │   ├── ai.lua            # Enemy AI (chase player)
 │   ├── rendering.lua     # Sprite drawing, spotlight/shadow, palette lighting, health bars
