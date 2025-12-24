@@ -1,12 +1,4 @@
 local Room = require("room")
-local Collision = require("collision")
-
-local DungeonManager = {}
-
-DungeonManager.current_room = nil
-DungeonManager.rooms = {} -- Hash map: "x,y" -> Room
-DungeonManager.current_grid_x = 0
-DungeonManager.current_grid_y = 0
 
 -- Constants for procedural generation
 local MIN_ROOM_W = 10
@@ -18,30 +10,22 @@ local MAX_ENEMIES_PER_ROOM = 4
 local ENEMY_DENSITY_DIVISOR = 100   -- Tiles per enemy
 local DEFAULT_ENEMY_MIN_DIST = 80   -- Minimum pixels from player
 local MAP_MEMORY_ADDRESS = 0x100000 -- Picotron Extended Map Address
-
--- Screen dimensions in tiles (visible area)
-local SCREEN_TILES_W = 30 -- SCREEN_WIDTH / GRID_SIZE
-local SCREEN_TILES_H = 16 -- Playable area height in tiles
-
--- Extended map dimensions (supports two max rooms in any direction)
-local EXT_MAP_W = 80 -- MAX_ROOM_W * 2 + SCREEN_TILES_W + buffer
-local EXT_MAP_H = 48 -- MAX_ROOM_H * 2 + SCREEN_TILES_H + buffer
-
--- Base offset for the "active view" - rooms carved relative to this
--- This gives us margin on all sides for previous room peek
-local BASE_OFFSET_X = MAX_ROOM_W -- 22 tiles left margin
-local BASE_OFFSET_Y = MAX_ROOM_H -- 14 tiles top margin
-
--- Legacy compatibility (used by create_room for centering)
-local MAP_W = SCREEN_TILES_W
-local MAP_H = SCREEN_TILES_H
-
--- The custom map userdata (initialized in init())
-DungeonManager.map_data = nil
-
--- Procedural Generation Constants
+local SCREEN_TILES_W = 30           -- SCREEN_WIDTH / GRID_SIZE
+local SCREEN_TILES_H = 16           -- Playable area height in tiles
+local EXT_MAP_W = 80                -- MAX_ROOM_W * 2 + SCREEN_TILES_W + buffer
+local EXT_MAP_H = 48                -- MAX_ROOM_H * 2 + SCREEN_TILES_H + buffer
+local BASE_OFFSET_X = MAX_ROOM_W    -- 22 tiles left margin
+local BASE_OFFSET_Y = MAX_ROOM_H    -- 14 tiles top margin
 local TARGET_ROOM_COUNT = 8
 local DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
+
+local DungeonManager = {}
+
+DungeonManager.current_room = nil
+DungeonManager.rooms = {} -- Hash map: "x,y" -> Room
+DungeonManager.current_grid_x = 0
+DungeonManager.current_grid_y = 0
+DungeonManager.map_data = nil
 
 -- Helper: Count neighbors at a grid position
 function DungeonManager.count_neighbors(gx, gy)
@@ -95,9 +79,8 @@ function DungeonManager.generate()
       -- Pick random room from active list
       local parent = active_list[flr(rnd(#active_list)) + 1]
 
-      -- Shuffle directions for variety
-      local dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
-      local dir = dirs[flr(rnd(4)) + 1]
+      -- Pick random direction from constant
+      local dir = DIRECTIONS[flr(rnd(#DIRECTIONS)) + 1]
       local nx, ny = parent.grid_x + dir[1], parent.grid_y + dir[2]
       local key = nx..","..ny
 
@@ -146,8 +129,8 @@ function DungeonManager.create_room(gx, gy, is_safe)
    h = h - (h % 2)
 
    -- Local position within a "virtual" screen cell
-   local local_tx = flr((MAP_W - w) / 2)
-   local local_ty = flr((MAP_H - h) / 2)
+   local local_tx = flr((SCREEN_TILES_W - w) / 2)
+   local local_ty = flr((SCREEN_TILES_H - h) / 2)
 
    -- Absolute World Position (Base Offset + Local)
    local world_tx = BASE_OFFSET_X + local_tx

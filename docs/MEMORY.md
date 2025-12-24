@@ -142,3 +142,4 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Transitions**: `enter` (populated→spawning), `spawn` (spawning→active), `clear` (active→cleared).
   - **Door Updates**: FSM callbacks handle door sprite changes automatically on state entry.
   - **Consumers Updated**: `RoomManager`, `Spawner`, and `Handlers` now use `room.lifecycle:is()` / `room.lifecycle:can()` instead of flags.
+- **Code Cleanup**: Removed duplicated directions table in `DungeonManager.generate` in favor of the `DIRECTIONS` constant.
