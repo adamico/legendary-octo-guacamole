@@ -127,3 +127,7 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - Updated `TODO.md` status for procedural generation and combat fixes.
 - **Refactoring**: Extracted collision handlers from `collision.lua` to `src/systems/handlers.lua` to improve code organization and maintainability.
 - **Simplification**: Refactored `src/systems/ai.lua` to use the built-in `sgn()` function for calculating entity directions, replacing complex ternary logic.
+- **Implemented Door Guidance (Wall Sliding)**:
+  - Added a "guidance" system to map collisions: when the player moves toward a wall tile adjacent to an unlocked door, they are nudged toward the door's center.
+  - Centralized tile flags (`SOLID_FLAG`, `DOOR_FLAG`) and door sprites (`SPRITE_DOOR_OPEN`, `SPRITE_DOOR_BLOCKED`) as global constants in `constants.lua`.
+  - Updated `Collision.resolve_map` to detect adjacent doors and apply a corrective velocity (1.5x base speed) on the orthogonal axis.

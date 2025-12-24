@@ -39,10 +39,6 @@ local MAP_H = SCREEN_TILES_H
 -- The custom map userdata (initialized in init())
 DungeonManager.map_data = nil
 
--- Door Sprites
-local SPRITE_DOOR_OPEN = 3
-local SPRITE_DOOR_BLOCKED = 4
-
 -- Procedural Generation Constants
 local TARGET_ROOM_COUNT = 8
 local DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}

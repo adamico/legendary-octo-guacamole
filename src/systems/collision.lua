@@ -35,9 +35,6 @@ local function get_hitbox(entity)
 end
 
 Collision.get_hitbox = get_hitbox
--- Tile Flags
-local SOLID_FLAG = 0
-local DOOR_FLAG = 1 -- Set this flag on door sprites in the GFX editor
 
 Collision.CollisionHandlers = require("handlers")
 
@@ -59,6 +56,40 @@ local function is_solid(x, y, w, h)
 end
 
 Collision.is_solid = is_solid
+
+local function find_solid_tile(x, y, w, h)
+    local x1 = flr(x / GRID_SIZE)
+    local y1 = flr(y / GRID_SIZE)
+    local x2 = flr((x + w - 0.001) / GRID_SIZE)
+    local y2 = flr((y + h - 0.001) / GRID_SIZE)
+
+    for tx = x1, x2 do
+        for ty = y1, y2 do
+            local tile = mget(tx, ty)
+            if tile and fget(tile, SOLID_FLAG) then
+                return tx, ty
+            end
+        end
+    end
+    return nil, nil
+end
+
+local function get_guidance(tx, ty, axis)
+    -- Check 4 neighbors for an open door
+    local neighbors = {
+        {dx = 1, dy = 0}, {dx = -1, dy = 0},
+        {dx = 0, dy = 1}, {dx = 0, dy = -1}
+    }
+    for _, n in ipairs(neighbors) do
+        local ntx, nty = tx + n.dx, ty + n.dy
+        local tile = mget(ntx, nty)
+        if tile == SPRITE_DOOR_OPEN then
+            if axis == "x" and n.dy ~= 0 then return 0, n.dy end
+            if axis == "y" and n.dx ~= 0 then return n.dx, 0 end
+        end
+    end
+    return 0, 0
+end
 
 local function get_flagged_tile(x, y, w, h, flag)
     local x1 = flr(x / GRID_SIZE)
@@ -152,6 +183,17 @@ function Collision.resolve_map(entity, room)
 
         if is_solid(cx, cy, w, h) then
             if handler then handler(entity, cx, cy) end
+
+            -- Door guidance for player
+            if entity.type == "Player" then
+                local tx, ty = find_solid_tile(cx, cy, w, h)
+                if tx then
+                    local gdx, gdy = get_guidance(tx, ty, axis)
+                    if gdx ~= 0 then entity.vel_x = gdx * 1.5 end
+                    if gdy ~= 0 then entity.vel_y = gdy * 1.5 end
+                end
+            end
+
             entity["vel_"..axis] = 0
             entity["sub_"..axis] = 0
             return 0

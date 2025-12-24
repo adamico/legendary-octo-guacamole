@@ -12,9 +12,6 @@ function Room:initialize(tx, ty, w, h)
     self.floor_color = 5
 end
 
-local SPRITE_DOOR_OPEN = 3
-local SPRITE_DOOR_BLOCKED = 4
-
 function Room:lock()
     self.is_locked = true
     if self.doors then
