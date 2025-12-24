@@ -47,6 +47,13 @@ local function carve_room_at_offset(room, offset_x, offset_y)
     apply_door_sprites_at_offset(room, offset_x, offset_y)
 end
 
+local OPPOSITE_DIR = {
+    north = "south",
+    south = "north",
+    east = "west",
+    west = "east"
+}
+
 -- State: Exploring
 local Exploring = RoomManager:addState("Exploring")
 
@@ -125,34 +132,20 @@ function Scrolling:enteredState(world, player, door_dir)
         return
     end
 
-    local current_offset_x, current_offset_y = 0, 0
-    local next_offset_x, next_offset_y = 0, 0
-    local scroll_distance_x, scroll_distance_y = 0, 0
+    local current_ox, current_oy = 0, 0
+    local next_ox, next_oy = 0, 0
 
-    if door_dir == "east" then
-        -- Place next room so its west wall OVERLAPS current room's east wall
-        -- Subtract 1 to create overlap instead of adjacency
-        next_offset_x = (current_room.tiles.x + current_room.tiles.w - 1) - next_room.tiles.x
-        scroll_distance_x = next_offset_x * GRID_SIZE
+    if door_dir == "east" or door_dir == "south" then
+        -- East/South: Current room stays at 0,0. Next room is offset.
+        next_ox, next_oy = self:getAlignmentOffset(current_room, next_room, door_dir)
         self.camera_start = {x = 0, y = 0}
-        self.camera_target = {x = scroll_distance_x, y = 0}
-    elseif door_dir == "west" then
-        -- Place current room so its west wall OVERLAPS next room's east wall
-        current_offset_x = (next_room.tiles.x + next_room.tiles.w - 1) - current_room.tiles.x
-        scroll_distance_x = current_offset_x * GRID_SIZE
-        self.camera_start = {x = scroll_distance_x, y = 0}
-        self.camera_target = {x = 0, y = 0}
-    elseif door_dir == "south" then
-        -- Place next room so its north wall OVERLAPS current room's south wall
-        next_offset_y = (current_room.tiles.y + current_room.tiles.h - 1) - next_room.tiles.y
-        scroll_distance_y = next_offset_y * GRID_SIZE
-        self.camera_start = {x = 0, y = 0}
-        self.camera_target = {x = 0, y = scroll_distance_y}
-    elseif door_dir == "north" then
-        -- Place current room so its north wall OVERLAPS next room's south wall
-        current_offset_y = (next_room.tiles.y + next_room.tiles.h - 1) - current_room.tiles.y
-        scroll_distance_y = current_offset_y * GRID_SIZE
-        self.camera_start = {x = 0, y = scroll_distance_y}
+        self.camera_target = {x = next_ox * GRID_SIZE, y = next_oy * GRID_SIZE}
+    else
+        -- West/North: Next room stays at 0,0. Current room is offset.
+        -- We place the current room on the opposite side of the next room.
+        local opposite = OPPOSITE_DIR[door_dir]
+        current_ox, current_oy = self:getAlignmentOffset(next_room, current_room, opposite)
+        self.camera_start = {x = current_ox * GRID_SIZE, y = current_oy * GRID_SIZE}
         self.camera_target = {x = 0, y = 0}
     end
 
@@ -161,8 +154,8 @@ function Scrolling:enteredState(world, player, door_dir)
     -- Store room references and their pixel offsets for drawing floors
     self.current_room = current_room
     self.next_room = next_room
-    self.current_room_offset = {x = current_offset_x * GRID_SIZE, y = current_offset_y * GRID_SIZE}
-    self.next_room_offset = {x = next_offset_x * GRID_SIZE, y = next_offset_y * GRID_SIZE}
+    self.current_room_offset = {x = current_ox * GRID_SIZE, y = current_oy * GRID_SIZE}
+    self.next_room_offset = {x = next_ox * GRID_SIZE, y = next_oy * GRID_SIZE}
 
     -- Offset player position to match the current room's offset
     -- This keeps the player visually in the correct room during the scroll
@@ -176,9 +169,9 @@ function Scrolling:enteredState(world, player, door_dir)
 
     -- Clear map and carve both rooms at their respective offsets
     DungeonManager.clear_map()
-    carve_room_at_offset(current_room, current_offset_x, current_offset_y)
+    carve_room_at_offset(current_room, current_ox, current_oy)
     if next_room then
-        carve_room_at_offset(next_room, next_offset_x, next_offset_y)
+        carve_room_at_offset(next_room, next_ox, next_oy)
     end
 end
 
@@ -211,42 +204,27 @@ local Settling = RoomManager:addState("Settling")
 function Settling:enteredState()
     Log.trace("Entered Settling state")
 
-    -- Remove the scroll offset from player position (it was added during Scrolling:enteredState)
-    local original_player_x = self.player.x - (self.current_room_offset and self.current_room_offset.x or 0)
-    local original_player_y = self.player.y - (self.current_room_offset and self.current_room_offset.y or 0)
+    -- 1. Restore player world coordinates (remove temporary scroll offset)
+    local ox = self.current_room_offset and self.current_room_offset.x or 0
+    local oy = self.current_room_offset and self.current_room_offset.y or 0
+    local original_player_x = self.player.x - ox
+    local original_player_y = self.player.y - oy
 
-    -- Remember the previous room before transitioning
+    -- 2. Commit room transition in DungeonManager
     local prev_room = DungeonManager.current_room
-
-    -- Commit room transition
     local next_room = DungeonManager.enter_door(self.door_direction)
 
     if next_room then
-        -- Calculate the offset for showing the previous room at the edge
-        -- Use the same alignment formula as the scroll (walls overlapping)
-        local prev_offset_x, prev_offset_y = 0, 0
-        if self.door_direction == "north" then
-            -- Previous room was below, place its top wall at current room's bottom wall
-            prev_offset_y = (next_room.tiles.y + next_room.tiles.h - 1) - prev_room.tiles.y
-        elseif self.door_direction == "south" then
-            -- Previous room was above, place its bottom wall at current room's top wall
-            prev_offset_y = (next_room.tiles.y - prev_room.tiles.h + 1) - prev_room.tiles.y
-        elseif self.door_direction == "east" then
-            -- Previous room was left, place its right wall at current room's left wall
-            prev_offset_x = (next_room.tiles.x - prev_room.tiles.w + 1) - prev_room.tiles.x
-        elseif self.door_direction == "west" then
-            -- Previous room was right, place its left wall at current room's right wall
-            prev_offset_x = (next_room.tiles.x + next_room.tiles.w - 1) - prev_room.tiles.x
-        end
+        -- 3. Prepare visual continuity (the "peek" effect)
+        -- Place previous room aligned to the entrance side of the new room
+        local entrance_side = OPPOSITE_DIR[self.door_direction]
+        local prev_ox, prev_oy = self:getAlignmentOffset(next_room, prev_room, entrance_side)
 
-        -- Clear map and carve new room at (0,0)
         DungeonManager.clear_map()
         DungeonManager.carve_room(next_room)
+        carve_room_at_offset(prev_room, prev_ox, prev_oy)
 
-        -- Also carve the previous room at the edge (for visual continuity)
-        carve_room_at_offset(prev_room, prev_offset_x, prev_offset_y)
-
-        -- Teleport player to appropriate position (preserving cross-axis coordinate)
+        -- 4. Position player in new room
         local spawn_pos = DungeonManager.calculate_spawn_position(
             self.door_direction,
             next_room,
@@ -256,37 +234,14 @@ function Settling:enteredState()
         self.player.x = spawn_pos.x
         self.player.y = spawn_pos.y
 
-        -- Spawn enemies automatically for combat rooms
-        local Systems = require("systems")
-        Systems.Spawner.populate(next_room, self.player)
-
-        if #next_room.enemy_positions > 0 then
-            next_room:lock()
-            DungeonManager.update_door_sprites(next_room)
-        end
-
-        -- Restart skull timer if entering a cleared combat room
-        if next_room.cleared and next_room.room_type == "combat" then
-            next_room.skull_timer = SKULL_SPAWN_TIMER
-            next_room.skull_spawned = false
-        end
+        -- 5. Initialize room content
+        self:setupRoom(next_room)
     end
 
-    -- Reset camera
-    self.camera_offset = {x = 0, y = 0}
+    -- 6. Cleanup transition state
+    self:finalizeTransition()
 
-    -- Unfreeze player
-    if self.player_frozen then
-        self.player.vel_x = self.saved_vel_x or 0
-        self.player.vel_y = self.saved_vel_y or 0
-        self.player_frozen = false
-    end
-
-    -- Clear any door trigger and set active flag to false (must leave door footprint)
-    self.player.door_trigger = nil
-    self.player.is_door_active = false
-
-    -- Immediately transition to exploring
+    -- 7. Resume gameplay
     self:gotoState("Exploring")
 end
 
@@ -299,20 +254,71 @@ function RoomManager:initialize(world, player)
     self.world = world
     self.player = player
 
-    -- Populate initial room enemies
+    -- Populate initial room
     local room = DungeonManager.current_room
     if room then
-        local Systems = require("systems")
-        Systems.Spawner.populate(room, player)
-
-        -- If enemies spawned, lock the room
-        if #room.enemy_positions > 0 then
-            room:lock()
-            DungeonManager.update_door_sprites(room)
-        end
+        self:setupRoom(room)
     end
 
     self:gotoState("Exploring")
+end
+
+-- Refactored Helpers --
+
+-- Calculates tile offset to place 'target' room on a specific 'side' of 'ref' room
+-- side: "north", "south", "east", "west"
+function RoomManager:getAlignmentOffset(ref, target, side)
+    local ox, oy = 0, 0
+    if side == "north" then
+        -- target is above ref -> target's bottom wall at ref's top wall
+        oy = (ref.tiles.y - target.tiles.h + 1) - target.tiles.y
+    elseif side == "south" then
+        -- target is below ref -> target's top wall at ref's bottom wall
+        oy = (ref.tiles.y + ref.tiles.h - 1) - target.tiles.y
+    elseif side == "east" then
+        -- target is right of ref -> target's left wall at ref's right wall
+        ox = (ref.tiles.x + ref.tiles.w - 1) - target.tiles.x
+    elseif side == "west" then
+        -- target is left of ref -> target's right wall at ref's left wall
+        ox = (ref.tiles.x - target.tiles.w + 1) - target.tiles.x
+    end
+    return ox, oy
+end
+
+-- Initialize room contents (enemies, locks, timers)
+function RoomManager:setupRoom(room)
+    local Systems = require("systems")
+    Systems.Spawner.populate(room, self.player)
+
+    -- If enemies spawned, lock the room
+    if #room.enemy_positions > 0 then
+        room:lock()
+        DungeonManager.update_door_sprites(room)
+    end
+
+    -- Restart skull timer if entering a cleared combat room
+    if room.cleared and room.room_type == "combat" then
+        room.skull_timer = SKULL_SPAWN_TIMER
+        room.skull_spawned = false
+    end
+end
+
+-- Reset camera, unfreeze player, and clear transition flags
+function RoomManager:finalizeTransition()
+    self.camera_offset = {x = 0, y = 0}
+
+    -- Unfreeze player
+    if self.player_frozen then
+        self.player.vel_x = self.saved_vel_x or 0
+        self.player.vel_y = self.saved_vel_y or 0
+        self.player_frozen = false
+    end
+
+    -- Clear temporary state
+    self.player.door_trigger = nil
+    self.player.is_door_active = false
+    self.current_room_offset = nil
+    self.next_room_offset = nil
 end
 
 -- Getter for camera offset (returns WORLD pixel coordinates)
