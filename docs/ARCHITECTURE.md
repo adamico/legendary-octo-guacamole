@@ -243,5 +243,6 @@ To prevent rendering and collision bugs, the game uses **Absolute World Coordina
 ## Technical Details
 
 - **Extended Map**: A `userdata("i16", 80, 48)` is used as the map memory, providing a larger canvas than the screen (30x16) to allow for layout flexibility and room "peek" effects during transitions.
-- **Zelda-style Transitions**: When the player touches a door, the `RoomManager` enters the `Scrolling` state, freezes the player, and pans the camera relative to the absolute world coordinates.
+- **Zelda-style Transitions**: When the player touches the `TRANSITION_TRIGGER_TILE` (index 24) in the middle of a 1x3 corridor, the `RoomManager` enters the `Scrolling` state, freezes the player, and pans the camera relative to the absolute world coordinates.
+- **1x3 Corridors**: Rooms are separated by 3-tile long corridors. These corridors are carved with walls and dynamically colored to match the floor when the room is unlocked.
 - **Skull Pressure Mechanic**: Cleared combat rooms initialize a `SKULL_SPAWN_TIMER` (in `constants.lua`). If the player remains in a cleared room while below max health, a projectile-immune "skull" enemy spawns offscreen at the farthest corner to force progression. The skull can pass through walls (`collidable` but not `map_collidable`).

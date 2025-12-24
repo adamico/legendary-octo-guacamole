@@ -79,24 +79,77 @@ end
 function Room:identify_door(tx, ty)
     for _, dir in ipairs({"north", "south", "east", "west"}) do
         local door_pos = self:get_door_tile(dir)
-        if door_pos and door_pos.tx == tx and door_pos.ty == ty then
-            return dir
+        if door_pos then
+            -- Calculate trigger position (middle of 1x3 corridor extension)
+            local dx, dy = 0, 0
+            if dir == "east" then dx = 2 end
+            if dir == "west" then dx = -2 end
+            if dir == "north" then dy = -2 end
+            if dir == "south" then dy = 2 end
+
+            if door_pos.tx + dx == tx and door_pos.ty + dy == ty then
+                return dir
+            end
         end
     end
 
     return nil
 end
 
-function Room:draw()
-    self:draw_floor()
+function Room:draw(ox, oy)
+    self:draw_floor(ox, oy)
+    if not self.is_locked then
+        self:draw_corridors(ox, oy)
+    end
 end
 
-function Room:draw_floor()
-    local rx = self.pixels.x
-    local ry = self.pixels.y
+function Room:draw_floor(ox, oy)
+    ox = ox or 0
+    oy = oy or 0
+    local rx = self.pixels.x + ox
+    local ry = self.pixels.y + oy
     local rx2 = rx + self.pixels.w - 1
     local ry2 = ry + self.pixels.h - 1
     rectfill(rx, ry, rx2, ry2, self.floor_color)
+end
+
+function Room:draw_corridors(ox, oy)
+    if not self.doors then return end
+    ox = ox or 0
+    oy = oy or 0
+
+    for dir, _ in pairs(self.doors) do
+        local pos = self:get_door_tile(dir)
+        if pos then
+            local dx, dy = 0, 0
+            if dir == "east" then dx = 1 end
+            if dir == "west" then dx = -1 end
+            if dir == "north" then dy = -1 end
+            if dir == "south" then dy = 1 end
+
+            local cx = pos.tx * GRID_SIZE + ox
+            local cy = pos.ty * GRID_SIZE + oy
+            local cw = GRID_SIZE
+            local ch = GRID_SIZE
+
+            -- Draw rectangle for corridor length
+            if dx ~= 0 then
+                -- Horizontal corridor
+                local x1 = cx + (dx > 0 and GRID_SIZE or -CORRIDOR_LENGTH * GRID_SIZE)
+                local y1 = cy
+                local x2 = x1 + CORRIDOR_LENGTH * GRID_SIZE - 1
+                local y2 = y1 + GRID_SIZE - 1
+                rectfill(x1, y1, x2, y2, self.floor_color)
+            else
+                -- Vertical corridor
+                local x1 = cx
+                local y1 = cy + (dy > 0 and GRID_SIZE or -CORRIDOR_LENGTH * GRID_SIZE)
+                local x2 = x1 + GRID_SIZE - 1
+                local y2 = y1 + CORRIDOR_LENGTH * GRID_SIZE - 1
+                rectfill(x1, y1, x2, y2, self.floor_color)
+            end
+        end
+    end
 end
 
 return Room

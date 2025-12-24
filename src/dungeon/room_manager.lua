@@ -44,6 +44,9 @@ local function carve_room_at_offset(room, offset_x, offset_y)
 
    -- Place doors at offset
    apply_door_sprites_at_offset(room, offset_x, offset_y)
+
+   -- Place corridors at offset
+   DungeonManager.carve_corridors(room, offset_x, offset_y)
 end
 
 local OPPOSITE_DIR = {
@@ -103,10 +106,7 @@ function Exploring:exitedState()
 end
 
 function Exploring:drawRooms()
-   local room = self.room
-   local rx, ry = room.pixels.x, room.pixels.y
-   local rx2, ry2 = rx + room.pixels.w - 1, ry + room.pixels.h - 1
-   rectfill(rx, ry, rx2, ry2, room.floor_color)
+   self.room:draw()
 end
 
 -- State: Scrolling
@@ -185,21 +185,13 @@ function Scrolling:exitedState()
 end
 
 function Scrolling:drawRooms()
-   local c, n = self.room, self.next_room
    local cox, coy = self.current_room_offset.x, self.current_room_offset.y
 
    -- Draw current room at its scrolled offset
-   rectfill(
-      c.pixels.x + cox, c.pixels.y + coy,
-      c.pixels.x + cox + c.pixels.w - 1, c.pixels.y + coy + c.pixels.h - 1,
-      c.floor_color
-   )
+   self.room:draw(cox, coy)
+
    -- Draw next room at origin
-   rectfill(
-      n.pixels.x, n.pixels.y,
-      n.pixels.x + n.pixels.w - 1, n.pixels.y + n.pixels.h - 1,
-      n.floor_color
-   )
+   self.next_room:draw(0, 0)
 end
 
 -- State: Settling
@@ -261,10 +253,11 @@ end
 -- side: "north", "south", "east", "west"
 function RoomManager:getAlignmentOffset(ref, target, side)
    local r, t = ref.tiles, target.tiles
-   if side == "north" then return 0, r.y - t.y + 1 - t.h end
-   if side == "south" then return 0, r.y - t.y + r.h - 1 end
-   if side == "east" then return r.x - t.x + r.w - 1, 0 end
-   if side == "west" then return r.x - t.x + 1 - t.w, 0 end
+   local gap = CORRIDOR_LENGTH
+   if side == "north" then return 0, r.y - t.y - t.h - gap end
+   if side == "south" then return 0, r.y - t.y + r.h + gap end
+   if side == "east" then return r.x - t.x + r.w + gap, 0 end
+   if side == "west" then return r.x - t.x - t.w - gap, 0 end
    return 0, 0
 end
 
@@ -308,7 +301,8 @@ function RoomManager:getCameraOffset(offset)
 end
 
 function RoomManager:isExploring()
-   return self:isState("Exploring")
+   local stack = self:getStateStackDebugInfo()
+   return stack and stack[1] == "Exploring"
 end
 
 return RoomManager

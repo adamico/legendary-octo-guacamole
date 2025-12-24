@@ -181,6 +181,36 @@ function DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
    end
 end
 
+function DungeonManager.carve_corridors(room, tx_offset, ty_offset)
+   if not room.doors then return end
+   tx_offset = tx_offset or 0
+   ty_offset = ty_offset or 0
+
+   for dir, door in pairs(room.doors) do
+      local pos = room:get_door_tile(dir)
+      if pos then
+         local dx, dy = DungeonManager.get_direction_delta(dir)
+         for i = 1, CORRIDOR_LENGTH do
+            local ctx = pos.tx + tx_offset + dx * i
+            local cty = pos.ty + ty_offset + dy * i
+
+            -- Place trigger in the middle of the corridor (i=2)
+            local tile = (i == 2) and TRANSITION_TRIGGER_TILE or 0
+            mset(ctx, cty, tile) -- Carve floor or trigger
+
+            -- Carve walls around the corridor (1 tile width)
+            if dx ~= 0 then
+               mset(ctx, cty - 1, 1) -- Top wall
+               mset(ctx, cty + 1, 1) -- Bottom wall
+            else
+               mset(ctx - 1, cty, 1) -- Left wall
+               mset(ctx + 1, cty, 1) -- Right wall
+            end
+         end
+      end
+   end
+end
+
 function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
    wall_options = wall_options or {1, 2}
    tx_offset = tx_offset or 0
@@ -205,6 +235,7 @@ function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
    end
 
    DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
+   DungeonManager.carve_corridors(room, tx_offset, ty_offset)
 end
 
 function DungeonManager.assign_enemies(room, num_enemies, min_dist, types)
