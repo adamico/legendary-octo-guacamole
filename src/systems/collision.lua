@@ -203,18 +203,6 @@ function Collision.resolve_map(entity, room)
 
     local mx = check("x", 0, 0)
     check("y", entity.sub_x == 0 and 0 or mx, 0)
-
-    if entity.type == "Player" and room then
-        local tx, ty, tile = get_flagged_tile(hb.x, hb.y, hb.w, hb.h, DOOR_FLAG)
-        if tx then
-            local tile_handler = Collision.CollisionHandlers.tile["Player,Door"]
-            if tile_handler then
-                entity.door_trigger = tile_handler(entity, tx, ty, tile, room)
-            end
-        else
-            entity.door_trigger = nil
-        end
-    end
 end
 
 function Collision.check_overlap(entity1, entity2)

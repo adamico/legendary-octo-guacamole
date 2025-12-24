@@ -57,14 +57,14 @@ end
 function Play:draw()
    cls(0)
 
-   local scroll = room_manager:getCameraOffset()
+   local sx, sy = room_manager:getCameraOffset()
    local shake = Systems.Effects.get_shake_offset()
-   camera(scroll.x + shake.x, scroll.y - 7 + shake.y)
+   camera(sx + shake.x, sy - 7 + shake.y)
 
    local room_pixels = DungeonManager.current_room.pixels
    local clip_square = {
-      x = room_pixels.x - scroll.x,
-      y = room_pixels.y - (scroll.y - 7),
+      x = room_pixels.x - sx,
+      y = room_pixels.y - (sy - 7),
       w = room_pixels.w,
       h = room_pixels.h
    }
