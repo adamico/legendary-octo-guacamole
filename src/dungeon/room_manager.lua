@@ -4,51 +4,6 @@ local Systems = require("systems")
 local Collision = require("collision")
 local DungeonManager = require("dungeon_manager")
 
--- Helper: Place door sprites with optional temp offset
--- offset_x/y are RELATIVE to the room's canonical world position
-local function apply_door_sprites_at_offset(room, offset_x, offset_y)
-   if not room.doors then return end
-
-   for dir, door in pairs(room.doors) do
-      local pos = room:get_door_tile(dir)
-      if pos then
-         mset(pos.tx + offset_x, pos.ty + offset_y, door.sprite)
-      end
-   end
-end
-
--- Helper: Carve room at offset position for transition animation
--- offset_x/y are RELATIVE to the room's canonical world position
-local function carve_room_at_offset(room, offset_x, offset_y)
-   local wall_options = {1, 2}
-
-   -- Fill area with walls
-   local bounds = room:get_bounds()
-   for ty = bounds.y1, bounds.y2 do
-      for tx = bounds.x1, bounds.x2 do
-         local sprite = wall_options[1]
-         if #wall_options > 1 and rnd() < 0.1 then
-            sprite = wall_options[flr(rnd(#wall_options - 1)) + 2]
-         end
-         mset(tx + offset_x, ty + offset_y, sprite)
-      end
-   end
-
-   -- Carve floor
-   local floor = room:get_inner_bounds()
-   for ty = floor.y1, floor.y2 do
-      for tx = floor.x1, floor.x2 do
-         mset(tx + offset_x, ty + offset_y, 0)
-      end
-   end
-
-   -- Place doors at offset
-   apply_door_sprites_at_offset(room, offset_x, offset_y)
-
-   -- Place corridors at offset
-   DungeonManager.carve_corridors(room, offset_x, offset_y)
-end
-
 local OPPOSITE_DIR = {
    north = "south",
    south = "north",
@@ -71,7 +26,7 @@ function Exploring:update(world)
    local player = self.player
 
    -- Check room clear
-   if room.is_locked and room.spawned then
+   if not room.cleared and room.is_locked and room.spawned then
       local enemy_count = 0
       world.sys("enemy", function(e)
          if not e.dead then enemy_count += 1 end
@@ -79,7 +34,7 @@ function Exploring:update(world)
 
       if enemy_count == 0 then
          room:unlock()
-         DungeonManager.update_door_sprites(room)
+         DungeonManager.apply_door_sprites(room)
       end
    end
 
@@ -155,8 +110,10 @@ function Scrolling:enteredState(world, player, door_dir)
 
    -- Clear map and carve both rooms at their respective offsets
    DungeonManager.clear_map()
-   carve_room_at_offset(current_room, ox, oy)
-   carve_room_at_offset(next_room, 0, 0)
+   DungeonManager.carve_room(current_room, nil, ox, oy)
+   DungeonManager.carve_corridors(current_room, ox, oy)
+   DungeonManager.carve_room(next_room)
+   DungeonManager.carve_corridors(next_room)
 end
 
 function Scrolling:update(world, player)
@@ -186,15 +143,10 @@ end
 
 function Scrolling:drawRooms()
    local cox, coy = self.current_room_offset.x, self.current_room_offset.y
-
-   -- Draw current room at its scrolled offset
    self.room:draw(cox, coy)
-
-   -- Draw next room at origin
    self.next_room:draw(0, 0)
 end
 
--- State: Settling
 local Settling = RoomManager:addState("Settling")
 
 function Settling:enteredState()
@@ -205,25 +157,16 @@ function Settling:enteredState()
    local px, py = self.player.x - ox, self.player.y - oy
 
    -- 2. Commit room transition logical state
-   local next_room = DungeonManager.enter_door(self.door_direction)
+   local next_room = DungeonManager.enter_door(self.door_direction, true)
 
-   -- 3. Visual: Add "peek" of the previous room (enter_door already carved the main room)
-   local entrance_side = OPPOSITE_DIR[self.door_direction]
-   local pox, poy = self:getAlignmentOffset(next_room, self.room, entrance_side)
-   carve_room_at_offset(self.room, pox, poy)
-
-   -- 4. Position player in new room
-   local spawn_pos = DungeonManager.calculate_spawn_position(
-      self.door_direction,
-      next_room,
-      px, py
-   )
+   -- 3. Position player in new room
+   local spawn_pos = DungeonManager.calculate_spawn_position(self.door_direction, next_room, px, py)
    self.player.x, self.player.y = spawn_pos.x, spawn_pos.y
 
    -- Update manager room reference
    self.room = next_room
 
-   -- 5. Finalize and resume
+   -- 4. Finalize and resume
    self:finalizeTransition()
    self:gotoState("Exploring")
 end
@@ -266,10 +209,10 @@ function RoomManager:setupRoom()
    local room = self.room
    Systems.Spawner.populate(room, self.player)
 
-   -- If enemies spawned, lock the room
-   if #room.enemy_positions > 0 then
+   -- If enemies spawned and room not yet cleared, lock it
+   if #room.enemy_positions > 0 and not room.cleared then
       room:lock()
-      DungeonManager.update_door_sprites(room)
+      DungeonManager.apply_door_sprites(room)
    end
 
    -- Restart skull timer if entering a cleared combat room
@@ -282,11 +225,7 @@ end
 -- Reset camera, unfreeze player, and clear transition flags
 function RoomManager:finalizeTransition()
    self.camera_offset = {x = 0, y = 0}
-
-   -- Unfreeze player by restoring movement tags
    self.world.tag(self.player, "controllable,velocity,acceleration")
-
-   -- Reset door latch
    self.is_door_active = false
    self.current_room_offset = nil
    self.next_room_offset = nil

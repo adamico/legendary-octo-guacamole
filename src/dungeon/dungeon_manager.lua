@@ -120,8 +120,8 @@ function DungeonManager.generate()
    -- Phase 3: Specialization (assign room types based on distance/topology)
    DungeonManager.assign_room_types()
 
-   -- Phase 4: Connection (auto-generate doors based on neighbors)
-   DungeonManager.connect_doors()
+   -- Phase 4: Connection (Connect Neighbor Rooms with corridor)
+   DungeonManager.connect_neighbor_rooms()
 
    -- Set initial state
    DungeonManager.current_grid_x = 0
@@ -131,6 +131,7 @@ function DungeonManager.generate()
    -- Carve initial room
    DungeonManager.clear_map()
    DungeonManager.carve_room(start_room)
+   DungeonManager.carve_corridors(start_room)
 
    Log.info("Generated dungeon with "..#DungeonManager.get_all_rooms().." rooms")
 end
@@ -235,7 +236,6 @@ function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
    end
 
    DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
-   DungeonManager.carve_corridors(room, tx_offset, ty_offset)
 end
 
 function DungeonManager.assign_enemies(room, num_enemies, min_dist, types)
@@ -304,8 +304,8 @@ function DungeonManager.assign_room_types()
    end
 end
 
--- Phase 4: Auto-generate doors based on neighbor lookup
-function DungeonManager.connect_doors()
+-- Phase 4: Connect neighbor rooms and setup corridors
+function DungeonManager.connect_neighbor_rooms()
    local door_dirs = {
       {dx = 1,  dy = 0,  from = "east",  to = "west"},
       {dx = -1, dy = 0,  from = "west",  to = "east"},
@@ -328,20 +328,6 @@ function DungeonManager.connect_doors()
    end
 end
 
-function DungeonManager.update_door_sprites(room, tx_offset, ty_offset)
-   if not room.doors then return end
-
-   tx_offset = tx_offset or 0
-   ty_offset = ty_offset or 0
-
-   for dir, door in pairs(room.doors) do
-      local pos = room:get_door_tile(dir)
-      if pos then
-         mset(pos.tx + tx_offset, pos.ty + ty_offset, door.sprite)
-      end
-   end
-end
-
 function DungeonManager.clear_map()
    -- Clear the entire extended map
    for ty = 0, EXT_MAP_H - 1 do
@@ -351,7 +337,7 @@ function DungeonManager.clear_map()
    end
 end
 
-function DungeonManager.enter_door(direction)
+function DungeonManager.enter_door(direction, skip_carve)
    local dx, dy = DungeonManager.get_direction_delta(direction)
 
    local target_gx = DungeonManager.current_grid_x + dx
@@ -366,8 +352,11 @@ function DungeonManager.enter_door(direction)
       DungeonManager.current_room = next_room
 
       -- Single-Screen transition: Clear previous room, carve new room
-      DungeonManager.clear_map()
-      DungeonManager.carve_room(next_room)
+      if not skip_carve then
+         DungeonManager.clear_map()
+         DungeonManager.carve_room(next_room)
+         DungeonManager.carve_corridors(next_room)
+      end
 
       return next_room
    end
