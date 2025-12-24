@@ -139,9 +139,6 @@ function DungeonManager.create_room(gx, gy, is_safe)
    local room = Room:new(world_tx, world_ty, w, h, is_safe)
 
    -- Initialize room metadata
-   room.enemy_positions = {}
-   room.spawn_timer = 60
-   room.is_safe = is_safe
    room.grid_x = gx
    room.grid_y = gy
 
@@ -219,8 +216,6 @@ function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
 end
 
 function DungeonManager.assign_enemies(room, num_enemies, min_dist, types)
-   if room.is_safe then return end
-
    local area = room.tiles.w * room.tiles.h
    local default_count = mid(MIN_ENEMIES_PER_ROOM, flr(area / ENEMY_DENSITY_DIVISOR), MAX_ENEMIES_PER_ROOM)
 
