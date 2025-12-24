@@ -107,7 +107,7 @@ Created via factory functions, each entity is a table with:
 - **Tags**: Comma-separated list defining which systems process this entity
 
 | Entity | Tags |
-|--------|------|
+| :--- | :--- |
 | Player | `player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,shadow,middleground` |
 | Enemy | `enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground` |
 | Skull | `skull,enemy,velocity,collidable,health,drawable,sprite,shadow,middleground` |
@@ -120,7 +120,7 @@ Created via factory functions, each entity is a table with:
 Systems are functions called per-entity based on tag matching:
 
 | System | Tags | Purpose |
-|--------|------|---------|
+| :--- | :--- | :--- |
 | `read_input` | controllable | Read movement & shoot input, set `dir` & `shoot_dir` |
 | `acceleration` | acceleration | Apply acceleration/friction to `vel_x/vel_y` |
 | `velocity` | velocity | Apply velocity to position with sub-pixel precision (`sub_x/sub_y`) |
@@ -205,7 +205,7 @@ The Play scene (`src/scenes/play.lua`) manages the game loop and room transition
 ## Key Libraries
 
 | Library | Purpose |
-|---------|---------|
+| :--- | :--- |
 | `eggs` | ECS entity management |
 | `middleclass` | OOP class system |
 | `stateful` | State machine for scenes |
@@ -242,7 +242,7 @@ The game uses a dual-manager system for handling its world:
 ## Technical Details
 
 - **Extended Map**: A `userdata("i16", 256, 256)` is used as the map memory, providing a massive persistent world where rooms are carved at their absolute coordinates.
-- **Room Transitions**: When the player's world position exits the current room's pixel bounds (e.g., by entering a door opening), the `CameraManager` calculates the target room based on the player's center position, teleports them to the corresponding entrance, and updates the active room bounds.
+- **Room Transitions**: When the player's world position exits the current room's pixel bounds (e.g., by entering a door opening), a transition is triggered. The `CameraManager` enters a `Scrolling` state, teleports the player to the entrance of the target room, and smoothly interpolates the camera position from the old room to the new one over 30 frames. During this scroll, both rooms are rendered to the screen. Once complete, the camera returns to its `Following` (clamping) state and the target room becomes the new active room.
 - **Room Lifecycle**: Each room has an internal FSM (`populated`, `spawning`, `active`, `cleared`) that controls enemy spawning and door status.
 - **Directly Adjacent Rooms**: Following the *The Binding of Isaac* style, rooms are carved at contiguous grid positions (e.g., Room 1 at grid `0,0` and Room 2 at `1,0`). This results in a 2-tile thick wall boundary between rooms, which is pierced by clearing the door tiles in both rooms when they are connected.
 - **Skull Pressure Mechanic**: Cleared combat rooms initialize a `SKULL_SPAWN_TIMER` (in `constants.lua`). If the player remains in a cleared room while below max health, a projectile-immune "skull" enemy spawns offscreen at the farthest corner to force progression. The skull can pass through walls (`collidable` but not `map_collidable`).

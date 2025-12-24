@@ -86,13 +86,7 @@ function Room:identify_door(tx, ty)
     for _, dir in ipairs({"north", "south", "east", "west"}) do
         local door_pos = self:get_door_tile(dir)
         if door_pos then
-            local dx, dy = 0, 0
-            if dir == "east" then dx = 2 end
-            if dir == "west" then dx = -2 end
-            if dir == "north" then dy = -2 end
-            if dir == "south" then dy = 2 end
-
-            if door_pos.tx + dx == tx and door_pos.ty + dy == ty then
+            if door_pos.tx == tx and door_pos.ty == ty then
                 return dir
             end
         end

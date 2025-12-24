@@ -46,6 +46,11 @@ function Play:update()
    -- Update camera
    camera_manager:update()
 
+   -- If scrolling, skip all gameplay systems
+   if camera_manager:is_scrolling() then
+      return
+   end
+
    -- Update spawner
    Systems.Spawner.update(world, current_room)
 
@@ -87,6 +92,28 @@ function Play:update()
    end
 end
 
+-- Hide blocked doors from map rendering (temporarily clear to 0)
+local function hide_blocked_doors(room)
+   if not room or not room.doors then return end
+   for dir, door in pairs(room.doors) do
+      if door.sprite == SPRITE_DOOR_BLOCKED then
+         local pos = room:get_door_tile(dir)
+         if pos then mset(pos.tx, pos.ty, 0) end
+      end
+   end
+end
+
+-- Restore blocked doors to map for collision detection
+local function restore_blocked_doors(room)
+   if not room or not room.doors then return end
+   for dir, door in pairs(room.doors) do
+      if door.sprite == SPRITE_DOOR_BLOCKED then
+         local pos = room:get_door_tile(dir)
+         if pos then mset(pos.tx, pos.ty, SPRITE_DOOR_BLOCKED) end
+      end
+   end
+end
+
 function Play:draw()
    cls(0)
 
@@ -97,18 +124,33 @@ function Play:draw()
    local cam_y = sy + shake.y
    camera(cam_x, cam_y)
 
-   local room_pixels = current_room.pixels
-   local clip_square = {
-      x = room_pixels.x - cam_x,
-      y = room_pixels.y - cam_y,
-      w = room_pixels.w,
-      h = room_pixels.h
-   }
+   local clip_square
+   if camera_manager:is_scrolling() then
+      -- During transition, allow drawing across both rooms
+      clip_square = {x = 0, y = 0, w = SCREEN_WIDTH, h = SCREEN_HEIGHT}
+      camera_manager.old_room:draw()
+      camera_manager.new_room:draw()
+      hide_blocked_doors(camera_manager.old_room)
+      hide_blocked_doors(camera_manager.new_room)
+      map()
+      restore_blocked_doors(camera_manager.old_room)
+      restore_blocked_doors(camera_manager.new_room)
+   else
+      local room_pixels = current_room.pixels
+      clip_square = {
+         x = room_pixels.x - cam_x,
+         y = room_pixels.y - cam_y,
+         w = room_pixels.w,
+         h = room_pixels.h
+      }
+      current_room:draw()
+      hide_blocked_doors(current_room)
+      map()
+      restore_blocked_doors(current_room)
+      Systems.draw_doors(current_room)
+   end
 
    Systems.reset_spotlight()
-   current_room:draw()
-   map()
-   Systems.draw_doors(current_room)
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, clip_square) end)()
 
    -- 1. Background Layer: Shadows, Projectiles, Pickups

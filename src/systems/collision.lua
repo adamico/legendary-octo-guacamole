@@ -55,19 +55,19 @@ local function for_each_tile(hb, callback)
     end
 end
 
-local function is_solid(x, y, w, h)
-    return for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
-        if tile and fget(tile, SOLID_FLAG) then return true end
-    end) or false
-end
-
-Collision.is_solid = is_solid
-
 local function find_solid_tile(x, y, w, h)
     return for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
         if tile and fget(tile, SOLID_FLAG) then return tx, ty end
     end)
 end
+
+Collision.find_solid_tile = find_solid_tile
+
+local function is_solid(x, y, w, h)
+    return find_solid_tile(x, y, w, h) ~= nil
+end
+
+Collision.is_solid = is_solid
 
 local function get_guidance(tx, ty, axis)
     -- Check 4 neighbors for an open door

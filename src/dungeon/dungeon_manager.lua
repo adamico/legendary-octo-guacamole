@@ -108,8 +108,6 @@ function DungeonManager.generate()
    DungeonManager.clear_map()
    for key, room in pairs(DungeonManager.rooms) do
       DungeonManager.carve_room(room)
-      Log.trace("Room "..
-         key.." at pixels ("..room.pixels.x..","..room.pixels.y..") size ("..room.pixels.w..","..room.pixels.h..")")
    end
 
    -- Phase 6: Carve corridors (after all rooms, so they pierce through margin walls)
@@ -149,13 +147,7 @@ function DungeonManager.apply_door_sprites(room)
    for dir, door in pairs(room.doors) do
       local pos = room:get_door_tile(dir)
       if pos then
-         -- Blocked doors (sprite 6) are drawn manually with rotation,
-         -- so we set the tile to 0 to avoid double-drawing
-         if door.sprite == SPRITE_DOOR_BLOCKED then
-            mset(pos.tx, pos.ty, 0)
-         else
-            mset(pos.tx, pos.ty, door.sprite)
-         end
+         mset(pos.tx, pos.ty, door.sprite)
       end
    end
 end
