@@ -57,15 +57,16 @@ drive/src/
 ├── constants.lua         # Game configuration (sprites, player stats, controls)
 ├── dungeon/              # World management module
 │   ├── dungeon_manager.lua # World generation, map carving, room grid management
-│   ├── room_manager.lua    # Room state machine (Exploring, Scrolling, Settling)
-│   └── room.lua            # Room class (stores bounds, types, and logic)
+│   ├── camera_manager.lua  # Camera following, room centering, and transitions
+│   └── room.lua            # Room class (stores bounds, types, and lifecycle FSM)
 ├── entities/             # Entity factory modules
 │   ├── init.lua          # Aggregates all entity factories
 │   ├── utils.lua         # Shared helpers: spawning, direction conversion
 │   ├── player.lua        # Player entity with movement, health, shooting
-│   ├── enemy.lua         # Type Object factory for Skulker, Shooter, Skull
+│   ├── enemy.lua         # Type Object factory for Skulker, Shooter, Dasher
 │   ├── projectile.lua    # Type Object factory for all bullets
-│   └── pickup.lua        # Type Object factory for all collectibles
+│   ├── pickup.lua        # Type Object factory for all collectibles
+│   └── shadow.lua        # Shadow entity factory
 ├── systems/              # ECS system modules
 │   ├── init.lua          # Aggregates all systems
 │   ├── spawner.lua       # Enemy population and skull timer management
@@ -73,8 +74,11 @@ drive/src/
 │   ├── collision.lua     # Entity-entity and entity-map collision resolution
 │   ├── handlers.lua      # Collision response handlers (entity-entity, map, tile)
 │   ├── combat.lua        # Shooter, health_regen, invulnerability_tick, health_manager
-│   ├── ai.lua            # Enemy AI (chase player)
-│   ├── rendering.lua     # Sprite drawing, spotlight/shadow, palette lighting, health bars
+│   ├── ai.lua            # Enemy AI (chase, shoot, dash)
+│   ├── animation.lua     # FSM-based animation logic
+│   ├── input.lua         # Input reading system
+│   ├── rendering.lua     # Sprite drawing, spotlight/shadow, health bars, doors
+│   ├── sprite_rotator.lua # Dynamic sprite rotation utility
 │   └── effects.lua       # Screen shake, sprite flash, particles, knockback
 └── scenes/               # Game scenes (states)
     ├── title.lua         # Title screen
@@ -107,8 +111,8 @@ Created via factory functions, each entity is a table with:
 | Player | `player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,shadow,middleground` |
 | Enemy | `enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground` |
 | Skull | `skull,enemy,velocity,collidable,health,drawable,sprite,shadow,middleground` |
-| Projectile | `projectile,velocity,map_collidable,collidable,drawable,animatable,shadow,middleground` |
-| Pickup | `collidable,drawable,sprite,background` |
+| Projectile | `projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,shadow,middleground` |
+| Pickup | `pickup,collidable,drawable,sprite,background` |
 | Shadow | `shadow_entity,drawable_shadow,background` |
 
 ### Systems
@@ -123,15 +127,18 @@ Systems are functions called per-entity based on tag matching:
 | `resolve_map` | map_collidable,velocity | Stop entities at solid tiles (flag 0) |
 | `resolve_entities` | collidable | Detect overlaps, dispatch to handlers |
 | `enemy_spawner` | (room hook) | Handle initial population and skull pressure timer |
-| `enemy_ai` | enemy | Handle entity behavior (Skulker, Shooter, Skull) |
-| `animate` | animatable | Calculate sprite from animation config (indices, durations, composite) |
-| `shooter` | shooter | Handle projectile firing and ammo cost (input moved to `read_input`) |
+| `enemy_ai` | enemy | Handle entity behavior (Skulker, Shooter, Dasher, Skull) |
+| `update_fsm` | animatable | Manage animation state transitions |
+| `animate` | animatable | Calculate sprite from animation config (indices, durations, composite, flips) |
+| `shooter` | shooter | Handle projectile firing and ammo cost |
 | `health_regen` | health | Passive HP recovery over time |
 | `invulnerability_tick` | player | Decrement `invuln_timer` after taking damage |
 | `health_manager` | health | Check for `hp <= 0`, handle death effects |
+| `sync_shadows` | shadow_entity | Update shadow position and dimensions to match parent |
 | `draw_spotlight` | spotlight | Render localized lighting (uses extended palette) |
 | `draw_shadow` | drawable_shadow | Render oval shadow beneath entities |
 | `draw_layer` | (drawable) | Render entities with sorting options (handles flash) |
+| `draw_doors` | (room hook) | Render rotated and stretched blocked door sprites |
 | `draw_health_bar` | health | Render segmented 3-state health/ammo bar |
 
 ## Animation System
@@ -161,6 +168,7 @@ The game uses **palette-aware lighting**:
 - **Extended Palette**: Colors 32-63 are initialized as lighter/darker variants of 0-15.
 - **Spotlight System**: Uses a custom color table (`0x8000`) to remap background colors to their lighter variants within a radius.
 - **Flash Effect**: Replaces all colors with white (7) for a brief duration upon impact.
+- **Rotated Door Sprites**: Blocked doors are drawn using `Rendering.draw_doors()` with direction-based rotation (via `sprite_rotator`) and stretching (via `sspr`) to seamlessly connect walls to the room floor.
 
 ## Collision System
 
@@ -171,12 +179,12 @@ Uses handler registries for decoupled collision responses:
 
 ## Game Loop (Play Scene)
 
-The Play scene (`src/scenes/play.lua`) uses a `RoomManager` state machine to manage room transitions.
+The Play scene (`src/scenes/play.lua`) manages the game loop and room transitions via `DungeonManager` and `CameraManager`.
 
 ### Update Phase
 
-1. **Room State Management**: `room_manager:update()` delegates to current state
-2. **Gameplay Systems** (only when `isExploring()`):
+1. **Camera & Spawning**: `camera_manager:update()`, `Systems.Spawner.update()`
+2. **Gameplay Systems**:
    - Input & Physics: `read_input` → `acceleration` → `resolve_map` → `velocity`
    - Animation: `update_fsm` → `change_sprite` → `animate`
    - Combat: `projectile_fire` → `enemy_ai` → `resolve_entities`
@@ -185,7 +193,7 @@ The Play scene (`src/scenes/play.lua`) uses a `RoomManager` state machine to man
 
 ### Draw Phase
 
-1. **Camera Setup**: Apply scroll offset from `room_manager:getCameraOffset()`
+1. **Camera Setup**: Apply scroll offset from `camera_manager:get_offset()`
 2. **Screen-Space Clip**: Convert room world coordinates to screen coordinates for `clip()`
 3. **Layered Rendering**:
    - Background: Shadows, pickups
@@ -222,27 +230,19 @@ The game uses a dual-manager system for handling its world:
 
 - **Grid-based Layout**: Manages a logical "grid" of rooms (e.g., `0,0`, `-1,0`).
 - **Map Carving**: Writes tiles directly to a custom Picotron `userdata` map.
-- **World Positioning**: Calculates where rooms sit on the absolute 80x48 map.
+- **World Positioning**: Calculates where rooms sit on the absolute world map.
 - **Spawn Logic**: Calculates precise world coordinates for player teleportation between doors.
 
-### RoomManager (State Machine)
+### CameraManager
 
-- **Exploring**: Normal gameplay state.
-- **Scrolling**: Interpolates the camera between rooms and handles temporary visual offsets.
-- **Settling**: Briefly cleans up and prepares the next room for gameplay.
-
-### Single Source of Truth: World Coordinates
-
-To prevent rendering and collision bugs, the game uses **Absolute World Coordinates**:
-
-- `Room.tiles.x/y` refers to the absolute tile on the 80x48 map.
-- `Entity.x/y` refers to the absolute pixel in the world.
-- Camera `(0,0)` corresponds to the top-left of the world.
-- Transitions work by moving the camera to the target room's absolute position.
+- **Smoothing & Transitions**: Handles camera movement and player repositioning during room transitions.
+- **Centering**: Automatically centers rooms smaller than the screen.
+- **Transition Hook**: Dispatches `on_transition` events to clean up entities (projectiles, pickups) when moving between rooms.
 
 ## Technical Details
 
-- **Extended Map**: A `userdata("i16", 80, 48)` is used as the map memory, providing a larger canvas than the screen (30x16) to allow for layout flexibility and room "peek" effects during transitions.
-- **Zelda-style Transitions**: When the player touches the `TRANSITION_TRIGGER_TILE` (index 24) in the middle of a 1x3 corridor, the `RoomManager` enters the `Scrolling` state, freezes the player, and pans the camera relative to the absolute world coordinates.
-- **1x3 Corridors**: Rooms are separated by 3-tile long corridors. These corridors are carved with walls and dynamically colored to match the floor when the room is unlocked.
+- **Extended Map**: A `userdata("i16", 256, 256)` is used as the map memory, providing a massive persistent world where rooms are carved at their absolute coordinates.
+- **Room Transitions**: When the player's world position exits the current room's pixel bounds (e.g., by entering a door opening), the `CameraManager` calculates the target room based on the player's center position, teleports them to the corresponding entrance, and updates the active room bounds.
+- **Room Lifecycle**: Each room has an internal FSM (`populated`, `spawning`, `active`, `cleared`) that controls enemy spawning and door status.
+- **Directly Adjacent Rooms**: Following the *The Binding of Isaac* style, rooms are carved at contiguous grid positions (e.g., Room 1 at grid `0,0` and Room 2 at `1,0`). This results in a 2-tile thick wall boundary between rooms, which is pierced by clearing the door tiles in both rooms when they are connected.
 - **Skull Pressure Mechanic**: Cleared combat rooms initialize a `SKULL_SPAWN_TIMER` (in `constants.lua`). If the player remains in a cleared room while below max health, a projectile-immune "skull" enemy spawns offscreen at the farthest corner to force progression. The skull can pass through walls (`collidable` but not `map_collidable`).

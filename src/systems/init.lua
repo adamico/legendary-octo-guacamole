@@ -48,6 +48,7 @@ Systems.draw_spotlight = Rendering.draw_spotlight
 Systems.draw_health_bar = Rendering.draw_health_bar
 Systems.draw_hitbox = Rendering.draw_hitbox
 Systems.palette_swappable = Rendering.palette_swappable
+Systems.draw_doors = Rendering.draw_doors
 
 
 -- Animation FSM systems

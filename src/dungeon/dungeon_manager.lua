@@ -1,7 +1,7 @@
 local Room = require("room")
 
 -- Constants for procedural generation
-local ROOM_TILES_W = 30 -- Fixed room width in tiles
+local ROOM_TILES_W = 29 -- Fixed room width in tiles
 local ROOM_TILES_H = 16 -- Fixed room height in tiles
 local MIN_ENEMIES_PER_ROOM = 2
 local MAX_ENEMIES_PER_ROOM = 5
@@ -112,6 +112,11 @@ function DungeonManager.generate()
          key.." at pixels ("..room.pixels.x..","..room.pixels.y..") size ("..room.pixels.w..","..room.pixels.h..")")
    end
 
+   -- Phase 6: Carve corridors (after all rooms, so they pierce through margin walls)
+   for _, room in pairs(DungeonManager.rooms) do
+      DungeonManager.carve_corridors(room)
+   end
+
    -- Set initial state
    DungeonManager.current_grid_x = 0
    DungeonManager.current_grid_y = 0
@@ -144,7 +149,13 @@ function DungeonManager.apply_door_sprites(room)
    for dir, door in pairs(room.doors) do
       local pos = room:get_door_tile(dir)
       if pos then
-         mset(pos.tx, pos.ty, door.sprite)
+         -- Blocked doors (sprite 6) are drawn manually with rotation,
+         -- so we set the tile to 0 to avoid double-drawing
+         if door.sprite == SPRITE_DOOR_BLOCKED then
+            mset(pos.tx, pos.ty, 0)
+         else
+            mset(pos.tx, pos.ty, door.sprite)
+         end
       end
    end
 end
@@ -153,24 +164,20 @@ function DungeonManager.carve_corridors(room)
    if not room.doors then return end
 
    for dir, door in pairs(room.doors) do
+      -- Get door position in current room
       local pos = room:get_door_tile(dir)
       if pos then
-         local dx, dy = DungeonManager.get_direction_delta(dir)
-         for i = 1, CORRIDOR_LENGTH do
-            local ctx = pos.tx + dx * i
-            local cty = pos.ty + dy * i
+         -- Clear the door tile in current room
+         mset(pos.tx, pos.ty, 0)
 
-            -- Place trigger in the middle of the corridor (i=2)
-            local tile = (i == 2) and TRANSITION_TRIGGER_TILE or 0
-            mset(ctx, cty, tile) -- Carve floor or trigger
-
-            -- Carve walls around the corridor (1 tile width)
-            if dx ~= 0 then
-               mset(ctx, cty - 1, 1) -- Top wall
-               mset(ctx, cty + 1, 1) -- Bottom wall
-            else
-               mset(ctx - 1, cty, 1) -- Left wall
-               mset(ctx + 1, cty, 1) -- Right wall
+         -- Get adjacent room and clear its corresponding door tile
+         local neighbor_key = door.target_gx..","..door.target_gy
+         local neighbor = DungeonManager.rooms[neighbor_key]
+         if neighbor then
+            local opposite_dir = ({north = "south", south = "north", east = "west", west = "east"})[dir]
+            local neighbor_pos = neighbor:get_door_tile(opposite_dir)
+            if neighbor_pos then
+               mset(neighbor_pos.tx, neighbor_pos.ty, 0)
             end
          end
       end
@@ -180,17 +187,39 @@ end
 function DungeonManager.carve_room(room, wall_options)
    wall_options = wall_options or {1, 2}
 
+   -- Calculate margin needed for screen centering (tiles visible beyond room bounds)
+   -- When room is smaller than screen, camera centers it, exposing tiles outside room.
+   local room_px_w = room.tiles.w * GRID_SIZE
+   local room_px_h = room.tiles.h * GRID_SIZE
+   local margin_x = 0
+   local margin_y = 0
+
+   if room_px_w < SCREEN_WIDTH then
+      local gap_x = (SCREEN_WIDTH - room_px_w) / 2
+      margin_x = ceil(gap_x / GRID_SIZE)
+   end
+   if room_px_h < SCREEN_HEIGHT then
+      local gap_y = (SCREEN_HEIGHT - room_px_h) / 2
+      margin_y = ceil(gap_y / GRID_SIZE)
+   end
+
    local bounds = room:get_bounds()
-   for ty = bounds.y1, bounds.y2 do
-      for tx = bounds.x1, bounds.x2 do
-         local sprite = wall_options[1]
-         if #wall_options > 1 and rnd() < 0.1 then
-            sprite = wall_options[flr(rnd(#wall_options - 1)) + 2]
+
+   -- Carve walls including margin area around the room
+   for ty = bounds.y1 - margin_y, bounds.y2 + margin_y do
+      for tx = bounds.x1 - margin_x, bounds.x2 + margin_x do
+         -- Only carve if within extended map bounds
+         if tx >= 0 and ty >= 0 and tx < EXT_MAP_W and ty < EXT_MAP_H then
+            local sprite = wall_options[1]
+            if #wall_options > 1 and rnd() < 0.1 then
+               sprite = wall_options[flr(rnd(#wall_options - 1)) + 2]
+            end
+            mset(tx, ty, sprite)
          end
-         mset(tx, ty, sprite)
       end
    end
 
+   -- Carve floor (inside walls)
    local floor = room:get_inner_bounds()
    for ty = floor.y1, floor.y2 do
       for tx = floor.x1, floor.x2 do

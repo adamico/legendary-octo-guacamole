@@ -92,12 +92,15 @@ function Play:draw()
 
    local sx, sy = camera_manager:get_offset()
    local shake = Systems.Effects.get_shake_offset()
-   camera(sx + shake.x, sy - 7 + shake.y)
+   -- CameraManager already centers rooms on screen automatically.
+   local cam_x = sx + shake.x
+   local cam_y = sy + shake.y
+   camera(cam_x, cam_y)
 
    local room_pixels = current_room.pixels
    local clip_square = {
-      x = room_pixels.x - sx,
-      y = room_pixels.y - (sy - 7),
+      x = room_pixels.x - cam_x,
+      y = room_pixels.y - cam_y,
       w = room_pixels.w,
       h = room_pixels.h
    }
@@ -105,6 +108,7 @@ function Play:draw()
    Systems.reset_spotlight()
    current_room:draw()
    map()
+   Systems.draw_doors(current_room)
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, clip_square) end)()
 
    -- 1. Background Layer: Shadows, Projectiles, Pickups

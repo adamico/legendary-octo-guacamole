@@ -102,11 +102,12 @@ function Room:identify_door(tx, ty)
 end
 
 function Room:draw()
-    -- Draw floor background
-    local rx = self.pixels.x
-    local ry = self.pixels.y
-    local rx2 = rx + self.pixels.w - 1
-    local ry2 = ry + self.pixels.h - 1
+    -- Draw floor background (inner area only, excluding walls)
+    local inner = self:get_inner_bounds()
+    local rx = inner.x1 * GRID_SIZE
+    local ry = inner.y1 * GRID_SIZE
+    local rx2 = (inner.x2 + 1) * GRID_SIZE - 1
+    local ry2 = (inner.y2 + 1) * GRID_SIZE - 1
     rectfill(rx, ry, rx2, ry2, self.floor_color)
 end
 

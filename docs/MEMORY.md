@@ -144,3 +144,16 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Consumers Updated**: `RoomManager`, `Spawner`, and `Handlers` now use `room.lifecycle:is()` / `room.lifecycle:can()` instead of flags.
 - **Fixed Player Stuck Behind Door Bug**: Adjusted player spawn position calculations in `CameraManager` during room transitions. Now accounts for player width/height when entering from East/South to prevent spawning inside walls/doors (ensures an 8px safe gap).
 - **Code Cleanup**: Removed duplicated directions table in `DungeonManager.generate` in favor of the `DIRECTIONS` constant. Removed redundant `is_safe`, `enemy_positions`, and `spawn_timer` initializations in `DungeonManager` as they are now handled by the Lifecycle FSM and `Spawner` system.
+- **Implemented Room Screen Centering**:
+  - `CameraManager` now automatically centers rooms smaller than the screen.
+  - Room dimensions adjusted to 29x16 tiles (464x256 pixels) to create balanced margins.
+  - `Room:draw()` now only fills the inner floor bounds (excluding walls) to prevent floor bleed.
+  - `DungeonManager.carve_room()` carves extra wall tiles in the margin area (calculated from screen gap) to fill visible space beyond room bounds.
+  - `DungeonManager.carve_corridors()` simplified to pierce door tiles in both current and adjacent rooms.
+  - Removed manual `MAP_DRAWING_OFFSET` from camera calculation; centering is now fully automatic.
+- **Implemented Rotated and Stretched Door Sprites**:
+  - Blocked door sprites (sprite 6) are now drawn with rotation so the bottom of the sprite faces the room center.
+  - Added `Rendering.draw_doors(room)` function that uses the `sprite_rotator` module to apply direction-based rotation.
+  - Rotation angles: North doors: 0°, South doors: 180°, East doors: 90°, West doors: 270°.
+  - Doors are stretched using `sspr` to span 1.5 tiles (24 pixels) to cover the gap between wall and floor.
+  - `DungeonManager.apply_door_sprites()` sets blocked door tiles to 0 (empty) in the map, allowing manual drawing with rotation and stretching.

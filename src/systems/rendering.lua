@@ -2,7 +2,7 @@ local GameConstants = require("constants")
 local Collision = require("collision")
 local qsort = require("qsort")
 local Effects = require("effects")
-local Rotator = require("systems/sprite_rotator")
+local Rotator = require("sprite_rotator")
 
 local Rendering = {}
 
@@ -363,6 +363,56 @@ function Rendering.palette_swappable(entity)
 
     for _, swap in ipairs(entity.palette_swaps) do
         pal(swap.from, swap.to)
+    end
+end
+
+-- Door rotation angles based on direction (bottom of sprite faces room center)
+-- The door sprite (6) has its bottom naturally facing south (down)
+local DOOR_ROTATION = {
+    north = 0,   -- Bottom faces south (toward room center) - no rotation needed
+    south = 180, -- Bottom faces north (toward room center)
+    east = 90,   -- Bottom faces west (toward room center)
+    west = 270   -- Bottom faces east (toward room center)
+}
+
+-- Door stretch configuration: stretch doors to span 2 tiles to cover the gap
+-- offset_x/y: where to start drawing (relative to tile position)
+-- dw/dh: destination width/height (stretched size)
+local DOOR_STRETCH = {
+    north = {offset_x = 0, offset_y = -8, dw = GRID_SIZE, dh = GRID_SIZE * 1.5}, -- Stretch down
+    south = {offset_x = 0, offset_y = 0, dw = GRID_SIZE, dh = GRID_SIZE * 1.5},  -- Stretch up (offset to reach into room)
+    east = {offset_x = 0, offset_y = 0, dw = GRID_SIZE * 1.5, dh = GRID_SIZE},   -- Stretch left (offset to reach into room)
+    west = {offset_x = -8, offset_y = 0, dw = GRID_SIZE * 1.5, dh = GRID_SIZE}   -- Stretch right
+}
+
+-- Draw rotated door sprites for a room
+function Rendering.draw_doors(room)
+    if not room.doors then return end
+
+    for dir, door in pairs(room.doors) do
+        -- Only draw if the door has a blocked sprite (sprite 6)
+        -- Open doors (sprite 3) don't need rotation as they're just passages
+        if door.sprite and door.sprite == SPRITE_DOOR_BLOCKED then
+            local pos = room:get_door_tile(dir)
+            if pos then
+                local angle = DOOR_ROTATION[dir] or 0
+                local rotated = Rotator.get(door.sprite, angle)
+                local stretch = DOOR_STRETCH[dir]
+
+                local px = pos.tx * GRID_SIZE + stretch.offset_x
+                local py = pos.ty * GRID_SIZE + stretch.offset_y
+
+                -- sspr(sprite, sx, sy, sw, sh, dx, dy, dw, dh)
+                -- Source: entire rotated sprite (0, 0, size, size)
+                -- For 90/270 rotation, dimensions are swapped
+                local sw, sh = GRID_SIZE, GRID_SIZE
+                if angle == 90 or angle == 270 then
+                    sw, sh = GRID_SIZE, GRID_SIZE -- Rotator already handles the swap
+                end
+
+                sspr(rotated, 0, 0, sw, sh, px, py, stretch.dw, stretch.dh)
+            end
+        end
     end
 end
 
