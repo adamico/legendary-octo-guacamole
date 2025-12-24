@@ -326,7 +326,7 @@ function Rendering.draw_spotlight(entity, clip_square)
 end
 
 function Rendering.draw_health_bar(entity)
-    if not entity.hp then return end
+    if not entity.hp or entity.type == "Skull" then return end
 
     local shot_cost = entity.shot_cost or 20
     local segments = ceil(entity.max_hp / shot_cost)

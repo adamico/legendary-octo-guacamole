@@ -6,6 +6,7 @@ SPRITE_DOOR_OPEN = 0
 SPRITE_DOOR_BLOCKED = 6
 TRANSITION_TRIGGER_TILE = 24
 SKULL_SPAWN_TIMER = 420
+SKULL_SPAWN_LOCKED_TIMER = 1800
 
 local GameConstants = {
    Player = {
@@ -266,7 +267,7 @@ local GameConstants = {
          hp = 60,                    -- Higher HP (tank)
          speed = 0.2,                -- Very slow base speed
          contact_damage = 15,
-         vision_range = 100,         -- Same as Shooter's target distance
+         vision_range = 150,         -- Increased by 50% (was 100)
          windup_duration = 60,       -- Frames before dash
          stun_duration = 120,        -- Frames of stun after collision
          dash_speed_multiplier = 10, -- 10x base speed during dash

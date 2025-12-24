@@ -57,6 +57,7 @@ function Play:update()
    -- Check room clear
    if current_room.lifecycle:is("active") then
       local enemy_count = 0
+      current_room.combat_timer += 1
       world.sys("enemy", function(e)
          if not e.dead then enemy_count += 1 end
       end)()
@@ -175,6 +176,15 @@ function Play:draw()
 
    -- Reset camera for global UI
    camera()
+
+   -- draw combat timer
+   if current_room.combat_timer and current_room.combat_timer >= 0 then
+      local timer = current_room.combat_timer
+      local minutes = math.floor(timer / 60)
+      local seconds = timer % 60
+      local timer_str = string.format("%02d:%02d", minutes, seconds)
+      print(timer_str, 8, 8, 7)
+   end
 end
 
 function Play:exitedState()

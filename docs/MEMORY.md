@@ -79,6 +79,13 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Refactored Entity Rendering**: Moved `draw_entity` from `play.lua` to `Systems.draw_entity_with_flash` in `src/systems/rendering.lua` to sanitize the Play scene loop and centralize rendering logic.
 - **Accurate Player/Enemy Positioning**: Ensured that the player and enemies spawn correctly within the world coordinate space of each room, fixing rendering bugs after transitions.
 - **Code Quality & Linting**: Established pattern of declaring manager instances (e.g., `room_manager` in `play.lua`) as `local` variables rather than globals. This resolves "Undefined field" linting ambiguities and matches the `SceneManager` pattern in `main.lua`.
+- **Enhanced Skull Pressure Mechanic**:
+  - Skulls now spawn in **locked combat rooms** after a 30-second delay (`SKULL_SPAWN_LOCKED_TIMER = 1800`), adding pressure during combat.
+  - Skulls ignore the health check in locked rooms but respect it in cleared rooms (only spawn if player is hurt).
+  - Skulls no longer display a health bar (`Rendering.draw_health_bar` skips entities with `skull` tag).
+  - Implemented via `onenteractive` and `onentercleared` callbacks in the Room lifecycle FSM.
+- **Improved Enemy Balance**:
+  - Increased `Dasher` (Snail) vision range by 50% (from 100 to 150) to make it more aggressive in spotting the player.
 - **Fixed Spotlight and Shadow Rendering**: The `clip()` function operates in screen coordinates, not world coordinates. When camera offsets are applied, the room's world-space `pixels` must be converted to screen-space by subtracting the camera scroll. This fix ensures spotlights and shadows render correctly regardless of camera position.
 - **Implemented Skull Pressure Mechanic**:
   - Introduced a "skull" enemy that spawns in cleared combat rooms after a configurable timer (`SKULL_SPAWN_TIMER = 420` frames/7 seconds).

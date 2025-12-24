@@ -17,12 +17,15 @@ function Spawner.update(world, room)
         end
     end
 
-    -- Skull timer and spawning (only for cleared combat rooms)
+    -- Skull timer and spawning (for both active/locked and cleared combat rooms)
     if room and room.skull_timer and not room.skull_spawned then
         room.skull_timer -= 1
         if room.skull_timer <= 0 then
-            Spawner.spawn_skull(world, room)
-            room.skull_spawned = true
+            -- If room is active (locked), ignore health check to add pressure
+            local ignore_health = room.lifecycle:is("active")
+            if Spawner.spawn_skull(world, room, ignore_health) then
+                room.skull_spawned = true
+            end
         end
     end
 end
@@ -98,24 +101,25 @@ function Spawner.populate(room, player)
 end
 
 -- Spawn skull at farthest corner from player (outside screen)
-function Spawner.spawn_skull(world, room)
-    if not room then return end
+function Spawner.spawn_skull(world, room, ignore_health_check)
+    if not room then return false end
 
     -- Get player position
     local player_x, player_y
+    local player_entity
     world.sys("player", function(p)
         player_x = p.x
         player_y = p.y
+        player_entity = p
     end)()
 
     -- If no player, don't spawn
-    if not player_x then return end
+    if not player_x then return false end
 
     -- Don't spawn if player is at full health (no idle regeneration to punish)
-    local player_entity
-    world.sys("player", function(p) player_entity = p end)()
-    if player_entity and player_entity.hp >= player_entity.max_hp then
-        return
+    -- UNLESS we are ignoring the health check (e.g. pressure in locked room)
+    if not ignore_health_check and player_entity and player_entity.hp >= player_entity.max_hp then
+        return false
     end
 
     -- Calculate offscreen spawn positions (beyond screen edges relative to room center)
@@ -148,6 +152,7 @@ function Spawner.spawn_skull(world, room)
     -- Spawn skull at farthest corner
     local skull = Entities.spawn_enemy(world, spawn_pos.x, spawn_pos.y, "Skull")
     room.skull_entity = skull -- Track for cleanup
+    return true
 end
 
 return Spawner

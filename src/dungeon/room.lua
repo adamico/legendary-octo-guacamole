@@ -30,7 +30,15 @@ function Room:initialize(tx, ty, w, h, is_safe)
                     end
                 end
             end,
+            onenteractive = function()
+                room.combat_timer = 0
+                if room.room_type == "combat" then
+                    room.skull_timer = SKULL_SPAWN_LOCKED_TIMER
+                    room.skull_spawned = false
+                end
+            end,
             onentercleared = function()
+                room.combat_timer = -1
                 if room.doors then
                     for _, door in pairs(room.doors) do
                         door.sprite = SPRITE_DOOR_OPEN
