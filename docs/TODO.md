@@ -1,4 +1,4 @@
 # TODO
 
 - fix player projectiles pass through unlocked doors [PENDING]
-- fix player not gaining health when colliding with health pickup [PENDING]
+- allow the player to slide on the walls near a door to make it easy to pass through [PENDING]

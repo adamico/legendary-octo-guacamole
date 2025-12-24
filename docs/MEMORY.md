@@ -126,3 +126,4 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - Updated `ARCHITECTURE.md` to reflect unified factory patterns and data-driven shadows.
   - Updated `TODO.md` status for procedural generation and combat fixes.
 - **Refactoring**: Extracted collision handlers from `collision.lua` to `src/systems/handlers.lua` to improve code organization and maintainability.
+- **Simplification**: Refactored `src/systems/ai.lua` to use the built-in `sgn()` function for calculating entity directions, replacing complex ternary logic.

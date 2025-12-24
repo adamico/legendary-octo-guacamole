@@ -1,5 +1,7 @@
 local AI = {}
 local Entities = require("entities")
+local Utils = require("utils")
+local machine = require("lua-state-machine/statemachine")
 
 -- Enemy AI system: simple chase behavior
 local function chaser_behavior(entity, player)
@@ -10,8 +12,8 @@ local function chaser_behavior(entity, player)
    if dist > 0 then
       entity.vel_x = (dx / dist) * entity.speed
       entity.vel_y = (dy / dist) * entity.speed
-      entity.dir_x = dx > 0 and 1 or -1
-      entity.dir_y = dy > 0 and 1 or (dy < 0 and -1 or 0)
+      entity.dir_x = sgn(dx)
+      entity.dir_y = sgn(dy)
    end
 end
 
@@ -35,8 +37,8 @@ local function shooter_behavior(entity, player)
    end
 
    if dist > 0 then
-      entity.dir_x = dx > 0 and 1 or -1
-      entity.dir_y = dy > 0 and 1 or (dy < 0 and -1 or 0)
+      entity.dir_x = sgn(dx)
+      entity.dir_y = sgn(dy)
    end
 
    -- Shooting logic
@@ -88,8 +90,6 @@ end
 
 -- Initialize Dasher FSM on entity
 local function init_dasher_fsm(entity)
-   local machine = require("lua-state-machine/statemachine")
-
    -- Pick initial random direction
    local initial_dir = CARDINAL_DIRS[flr(rnd(4)) + 1]
    entity.patrol_dir_x = initial_dir[1]
@@ -187,11 +187,10 @@ local function dasher_behavior(entity, player)
          entity.dash_target_dy = dy / dist
 
          -- Update facing direction to match target so animation rotates correctly
-         entity.dir_x = entity.dash_target_dx > 0 and 1 or (entity.dash_target_dx < 0 and -1 or 0)
-         entity.dir_y = entity.dash_target_dy > 0 and 1 or (entity.dash_target_dy < 0 and -1 or 0)
+         entity.dir_x = sgn(entity.dash_target_dx)
+         entity.dir_y = sgn(entity.dash_target_dy)
 
          -- Force update current_direction for animation system (since vel is 0)
-         local Utils = require("entities/utils")
          entity.current_direction = Utils.get_direction_name(entity.dash_target_dx, entity.dash_target_dy,
             entity.current_direction)
       end
@@ -205,8 +204,8 @@ local function dasher_behavior(entity, player)
       local dash_speed = entity.speed * entity.dash_speed_multiplier
       entity.vel_x = entity.dash_target_dx * dash_speed
       entity.vel_y = entity.dash_target_dy * dash_speed
-      entity.dir_x = entity.dash_target_dx > 0 and 1 or (entity.dash_target_dx < 0 and -1 or 0)
-      entity.dir_y = entity.dash_target_dy > 0 and 1 or (entity.dash_target_dy < 0 and -1 or 0)
+      entity.dir_x = sgn(entity.dash_target_dx)
+      entity.dir_y = sgn(entity.dash_target_dy)
 
       -- Rotate sprite
       entity.rotation_timer = (entity.rotation_timer or 0) + 1
