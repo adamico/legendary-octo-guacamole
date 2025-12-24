@@ -26,14 +26,14 @@ function Exploring:update(world)
    local player = self.player
 
    -- Check room clear
-   if not room.cleared and room.is_locked and room.spawned then
+   if room.lifecycle:is("active") then
       local enemy_count = 0
       world.sys("enemy", function(e)
          if not e.dead then enemy_count += 1 end
       end)()
 
       if enemy_count == 0 then
-         room:unlock()
+         room.lifecycle:clear()
          DungeonManager.apply_door_sprites(room)
       end
    end
@@ -209,14 +209,14 @@ function RoomManager:setupRoom()
    local room = self.room
    Systems.Spawner.populate(room, self.player)
 
-   -- If enemies spawned and room not yet cleared, lock it
-   if #room.enemy_positions > 0 and not room.cleared then
-      room:lock()
+   -- If enemies assigned and room is populated, trigger enter to lock doors
+   if #room.enemy_positions > 0 and room.lifecycle:can("enter") then
+      room.lifecycle:enter()
       DungeonManager.apply_door_sprites(room)
    end
 
    -- Restart skull timer if entering a cleared combat room
-   if room.cleared and room.room_type == "combat" then
+   if room.lifecycle:is("cleared") and room.room_type == "combat" then
       room.skull_timer = SKULL_SPAWN_TIMER
       room.skull_spawned = false
    end

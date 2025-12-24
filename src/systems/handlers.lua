@@ -29,7 +29,11 @@ local function handle_pickup_collection(player, pickup)
 end
 
 Handlers.tile["Player,Door"] = function(player, tx, ty, tile, room)
-    if not room or room.is_locked then return nil end
+    if not room then return nil end
+    -- Doors are blocked during spawning and active combat
+    if room.lifecycle:is("spawning") or room.lifecycle:is("active") then
+        return nil
+    end
 
     return room:identify_door(tx, ty)
 end

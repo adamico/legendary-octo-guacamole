@@ -6,14 +6,14 @@ local Spawner = {}
 Spawner.indicator_sprite = 207
 
 function Spawner.update(world, room)
-    -- Regular enemy spawning
-    if room and not room.spawned then
+    -- Regular enemy spawning (room is in spawning state)
+    if room and room.lifecycle:is("spawning") then
         room.spawn_timer -= 1
         if room.spawn_timer <= 0 then
             for _, pos in ipairs(room.enemy_positions) do
                 Entities.spawn_enemy(world, pos.x, pos.y, pos.type)
             end
-            room.spawned = true
+            room.lifecycle:spawn()
         end
     end
 
@@ -28,7 +28,7 @@ function Spawner.update(world, room)
 end
 
 function Spawner.draw(room)
-    if not room or room.spawned then return end
+    if not room or not room.lifecycle:is("spawning") then return end
 
     -- Blinking effect: toggle visibility every 15 frames, visible for 8
     if room.spawn_timer % 15 < 8 then
@@ -51,8 +51,8 @@ end
 -- Populate room with enemies based on configuration
 -- config: { enemies = { count = N, min_dist = D, types = {...} } }
 function Spawner.populate(room, player)
-    -- Early exit if already spawned or no config
-    if not room or room.spawned or not room.contents_config then return end
+    -- Early exit if not in populated state or no config
+    if not room or not room.lifecycle:is("populated") or not room.contents_config then return end
 
     local enemy_config = room.contents_config.enemies
     if not enemy_config or not enemy_config.count or enemy_config.count <= 0 then return end
@@ -94,9 +94,6 @@ function Spawner.populate(room, player)
 
     if #room.enemy_positions > 0 then
         room.spawn_timer = 60 -- Default spawn delay
-        room.spawned = false  -- Will set to true after timer
-    else
-        room.spawned = true   -- No enemies, consider spawned immediately
     end
 end
 

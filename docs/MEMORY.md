@@ -137,3 +137,8 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Transition Trigger**: Since doors are now empty, an invisible `TRANSITION_TRIGGER_TILE` (index 24) is placed in the middle of each 1x3 corridor to trigger room transitions.
   - **Dynamic Corridor Coloring**: Corridors now match the floor color of the room when it is unlocked, remaining black (background color) while the room is locked.
   - **Stateful Compatibility**: Updated `RoomManager` to use `getStateStackDebugInfo()` for state checks, maintaining compatibility with the third-party `Stateful` library without modification.
+- **Implemented Room Lifecycle FSM**: Replaced scattered boolean flags (`spawned`, `is_locked`, `cleared`) with a single `lua-state-machine` FSM on the Room object.
+  - **States**: `empty` (safe rooms), `populated` (has enemy config), `spawning` (countdown active), `active` (combat in progress), `cleared` (all enemies dead).
+  - **Transitions**: `enter` (populated→spawning), `spawn` (spawning→active), `clear` (active→cleared).
+  - **Door Updates**: FSM callbacks handle door sprite changes automatically on state entry.
+  - **Consumers Updated**: `RoomManager`, `Spawner`, and `Handlers` now use `room.lifecycle:is()` / `room.lifecycle:can()` instead of flags.

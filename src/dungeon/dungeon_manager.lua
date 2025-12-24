@@ -153,17 +153,14 @@ function DungeonManager.create_room(gx, gy, is_safe)
    local world_tx = BASE_OFFSET_X + local_tx
    local world_ty = BASE_OFFSET_Y + local_ty
 
-   local room = Room:new(world_tx, world_ty, w, h)
+   local room = Room:new(world_tx, world_ty, w, h, is_safe)
 
-   -- Initialize state
+   -- Initialize room metadata
    room.enemy_positions = {}
    room.spawn_timer = 60
-   room.spawned = false
    room.is_safe = is_safe
    room.grid_x = gx
    room.grid_y = gy
-   room.is_locked = false
-   room.cleared = false
 
    return room
 end

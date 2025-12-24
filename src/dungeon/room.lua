@@ -1,6 +1,7 @@
+local machine = require("lua-state-machine/statemachine")
 local Room = Class("Room")
 
-function Room:initialize(tx, ty, w, h)
+function Room:initialize(tx, ty, w, h, is_safe)
     self.tiles = {x = tx, y = ty, w = w, h = h}
     self.pixels = {
         x = tx * GRID_SIZE,
@@ -10,33 +11,37 @@ function Room:initialize(tx, ty, w, h)
     }
 
     self.floor_color = 5
-end
 
-function Room:lock()
-    self.is_locked = true
-    if self.doors then
-        for _, door in pairs(self.doors) do door.sprite = SPRITE_DOOR_BLOCKED end
-    end
-end
-
-function Room:unlock()
-    self.is_locked = false
-    self.cleared = true
-    if self.doors then
-        for _, door in pairs(self.doors) do door.sprite = SPRITE_DOOR_OPEN end
-    end
-
-    -- Start skull timer for combat rooms (18 seconds = 1080 frames at 60fps)
-    if self.room_type == "combat" then
-        self.skull_timer = SKULL_SPAWN_TIMER
-        self.skull_spawned = false
-    end
-end
-
-function Room:check_clear()
-    if self.is_locked and #self.enemy_positions == 0 then
-        self:unlock()
-    end
+    -- Lifecycle FSM
+    local room = self
+    self.lifecycle = machine.create({
+        initial = is_safe and "empty" or "populated",
+        events = {
+            {name = "enter", from = "populated", to = "spawning"},
+            {name = "spawn", from = "spawning",  to = "active"},
+            {name = "clear", from = "active",    to = "cleared"},
+        },
+        callbacks = {
+            onenterspawning = function()
+                if room.doors then
+                    for _, door in pairs(room.doors) do
+                        door.sprite = SPRITE_DOOR_BLOCKED
+                    end
+                end
+            end,
+            onentercleared = function()
+                if room.doors then
+                    for _, door in pairs(room.doors) do
+                        door.sprite = SPRITE_DOOR_OPEN
+                    end
+                end
+                if room.room_type == "combat" then
+                    room.skull_timer = SKULL_SPAWN_TIMER
+                    room.skull_spawned = false
+                end
+            end,
+        }
+    })
 end
 
 function Room:get_bounds()
@@ -80,7 +85,6 @@ function Room:identify_door(tx, ty)
     for _, dir in ipairs({"north", "south", "east", "west"}) do
         local door_pos = self:get_door_tile(dir)
         if door_pos then
-            -- Calculate trigger position (middle of 1x3 corridor extension)
             local dx, dy = 0, 0
             if dir == "east" then dx = 2 end
             if dir == "west" then dx = -2 end
@@ -98,7 +102,7 @@ end
 
 function Room:draw(ox, oy)
     self:draw_floor(ox, oy)
-    if not self.is_locked then
+    if self.lifecycle:is("cleared") or self.lifecycle:is("empty") then
         self:draw_corridors(ox, oy)
     end
 end
@@ -129,19 +133,14 @@ function Room:draw_corridors(ox, oy)
 
             local cx = pos.tx * GRID_SIZE + ox
             local cy = pos.ty * GRID_SIZE + oy
-            local cw = GRID_SIZE
-            local ch = GRID_SIZE
 
-            -- Draw rectangle for corridor length
             if dx ~= 0 then
-                -- Horizontal corridor
                 local x1 = cx + (dx > 0 and GRID_SIZE or -CORRIDOR_LENGTH * GRID_SIZE)
                 local y1 = cy
                 local x2 = x1 + CORRIDOR_LENGTH * GRID_SIZE - 1
                 local y2 = y1 + GRID_SIZE - 1
                 rectfill(x1, y1, x2, y2, self.floor_color)
             else
-                -- Vertical corridor
                 local x1 = cx
                 local y1 = cy + (dy > 0 and GRID_SIZE or -CORRIDOR_LENGTH * GRID_SIZE)
                 local x2 = x1 + GRID_SIZE - 1
