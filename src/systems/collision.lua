@@ -1,5 +1,6 @@
--- Collision detection and resolution systems
 local Collision = {}
+
+require("constants")
 
 -- Get hitbox bounds in world space
 -- Returns {x, y, w, h} for collision detection
@@ -38,40 +39,34 @@ Collision.get_hitbox = get_hitbox
 
 Collision.CollisionHandlers = require("handlers")
 
-local function is_solid(x, y, w, h)
-    local x1 = flr(x / GRID_SIZE)
-    local y1 = flr(y / GRID_SIZE)
-    local x2 = flr((x + w - 0.001) / GRID_SIZE)
-    local y2 = flr((y + h - 0.001) / GRID_SIZE)
+-- Helper: Iterate over tiles overlapping a hitbox
+local function for_each_tile(hb, callback)
+    local x1 = flr(hb.x / GRID_SIZE)
+    local y1 = flr(hb.y / GRID_SIZE)
+    local x2 = flr((hb.x + hb.w - 0.001) / GRID_SIZE)
+    local y2 = flr((hb.y + hb.h - 0.001) / GRID_SIZE)
 
     for tx = x1, x2 do
         for ty = y1, y2 do
             local tile = mget(tx, ty)
-            if tile and fget(tile, SOLID_FLAG) then
-                return true
-            end
+            local r1, r2, r3 = callback(tx, ty, tile)
+            if r1 ~= nil then return r1, r2, r3 end
         end
     end
-    return false
+end
+
+local function is_solid(x, y, w, h)
+    return for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
+        if tile and fget(tile, SOLID_FLAG) then return true end
+    end) or false
 end
 
 Collision.is_solid = is_solid
 
 local function find_solid_tile(x, y, w, h)
-    local x1 = flr(x / GRID_SIZE)
-    local y1 = flr(y / GRID_SIZE)
-    local x2 = flr((x + w - 0.001) / GRID_SIZE)
-    local y2 = flr((y + h - 0.001) / GRID_SIZE)
-
-    for tx = x1, x2 do
-        for ty = y1, y2 do
-            local tile = mget(tx, ty)
-            if tile and fget(tile, SOLID_FLAG) then
-                return tx, ty
-            end
-        end
-    end
-    return nil, nil
+    return for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
+        if tile and fget(tile, SOLID_FLAG) then return tx, ty end
+    end)
 end
 
 local function get_guidance(tx, ty, axis)
@@ -91,52 +86,29 @@ local function get_guidance(tx, ty, axis)
     return 0, 0
 end
 
-local function get_flagged_tile(x, y, w, h, flag)
-    local x1 = flr(x / GRID_SIZE)
-    local y1 = flr(y / GRID_SIZE)
-    local x2 = flr((x + w - 0.001) / GRID_SIZE)
-    local y2 = flr((y + h - 0.001) / GRID_SIZE)
-
-    for tx = x1, x2 do
-        for ty = y1, y2 do
-            local tile = mget(tx, ty)
-            if tile and fget(tile, flag) then
-                return tx, ty, tile
-            end
-        end
-    end
-    return nil
-end
-
-Collision.get_flagged_tile = get_flagged_tile
-Collision.DOOR_FLAG = DOOR_FLAG
-
-function Collision.check_door_trigger(entity, room)
-    local hb = get_hitbox(entity)
-    local tx, ty, tile = get_flagged_tile(hb.x, hb.y, hb.w, hb.h, DOOR_FLAG)
-
-    if tx then
-        local handler = Collision.CollisionHandlers.tile["Player,Door"]
-        if handler then
-            return handler(entity, tx, ty, tile, room)
-        end
-    end
-
-    return nil
-end
-
 function Collision.get_overlapping_tile(x, y, w, h, target_sprite)
-    local x1 = flr(x / GRID_SIZE)
-    local y1 = flr(y / GRID_SIZE)
-    local x2 = flr((x + w - 0.001) / GRID_SIZE)
-    local y2 = flr((y + h - 0.001) / GRID_SIZE)
+    return for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
+        if tile == target_sprite then return tx, ty, tile end
+    end)
+end
 
-    for tx = x1, x2 do
-        for ty = y1, y2 do
-            local tile = mget(tx, ty)
-            if tile == target_sprite then
-                return tx, ty, tile
-            end
+function Collision.check_trigger(entity, camera_manager)
+    -- Isaac style: transition when player exits current room bounds
+    local room = camera_manager.current_room
+    if not room then return nil end
+
+    local rpx = room.pixels
+    local ex = entity.x
+    local ey = entity.y
+
+    -- Check if player center is outside room bounds
+    local outside = ex < rpx.x or ex >= rpx.x + rpx.w or
+       ey < rpx.y or ey >= rpx.y + rpx.h
+
+    if outside then
+        local handler = Collision.CollisionHandlers.tile["Player,Transition"]
+        if handler then
+            return handler(entity, 0, 0, 0, camera_manager)
         end
     end
     return nil
@@ -157,7 +129,7 @@ function Collision.resolve_entities(entity1)
     end)()
 end
 
-function Collision.resolve_map(entity, room)
+function Collision.resolve_map(entity, room, camera_manager)
     if entity.ignore_map_collision then
         return
     end
@@ -202,7 +174,12 @@ function Collision.resolve_map(entity, room)
     end
 
     local mx = check("x", 0, 0)
-    check("y", entity.sub_x == 0 and 0 or mx, 0)
+    check("y", (entity.sub_x or 0) == 0 and 0 or mx, 0)
+
+    -- Trigger check integrated into map resolution
+    if entity.type == "Player" and camera_manager then
+        Collision.check_trigger(entity, camera_manager)
+    end
 end
 
 function Collision.check_overlap(entity1, entity2)

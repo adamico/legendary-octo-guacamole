@@ -142,4 +142,5 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Transitions**: `enter` (populated→spawning), `spawn` (spawning→active), `clear` (active→cleared).
   - **Door Updates**: FSM callbacks handle door sprite changes automatically on state entry.
   - **Consumers Updated**: `RoomManager`, `Spawner`, and `Handlers` now use `room.lifecycle:is()` / `room.lifecycle:can()` instead of flags.
+- **Fixed Player Stuck Behind Door Bug**: Adjusted player spawn position calculations in `CameraManager` during room transitions. Now accounts for player width/height when entering from East/South to prevent spawning inside walls/doors (ensures an 8px safe gap).
 - **Code Cleanup**: Removed duplicated directions table in `DungeonManager.generate` in favor of the `DIRECTIONS` constant. Removed redundant `is_safe`, `enemy_positions`, and `spawn_timer` initializations in `DungeonManager` as they are now handled by the Lifecycle FSM and `Spawner` system.

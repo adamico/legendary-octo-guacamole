@@ -11,6 +11,7 @@ function Room:initialize(tx, ty, w, h, is_safe)
     }
 
     self.floor_color = 5
+    self.enemy_positions = {}
 
     -- Lifecycle FSM
     local room = self
@@ -100,55 +101,13 @@ function Room:identify_door(tx, ty)
     return nil
 end
 
-function Room:draw(ox, oy)
-    self:draw_floor(ox, oy)
-    if self.lifecycle:is("cleared") or self.lifecycle:is("empty") then
-        self:draw_corridors(ox, oy)
-    end
-end
-
-function Room:draw_floor(ox, oy)
-    ox = ox or 0
-    oy = oy or 0
-    local rx = self.pixels.x + ox
-    local ry = self.pixels.y + oy
+function Room:draw()
+    -- Draw floor background
+    local rx = self.pixels.x
+    local ry = self.pixels.y
     local rx2 = rx + self.pixels.w - 1
     local ry2 = ry + self.pixels.h - 1
     rectfill(rx, ry, rx2, ry2, self.floor_color)
-end
-
-function Room:draw_corridors(ox, oy)
-    if not self.doors then return end
-    ox = ox or 0
-    oy = oy or 0
-
-    for dir, _ in pairs(self.doors) do
-        local pos = self:get_door_tile(dir)
-        if pos then
-            local dx, dy = 0, 0
-            if dir == "east" then dx = 1 end
-            if dir == "west" then dx = -1 end
-            if dir == "north" then dy = -1 end
-            if dir == "south" then dy = 1 end
-
-            local cx = pos.tx * GRID_SIZE + ox
-            local cy = pos.ty * GRID_SIZE + oy
-
-            if dx ~= 0 then
-                local x1 = cx + (dx > 0 and GRID_SIZE or -CORRIDOR_LENGTH * GRID_SIZE)
-                local y1 = cy
-                local x2 = x1 + CORRIDOR_LENGTH * GRID_SIZE - 1
-                local y2 = y1 + GRID_SIZE - 1
-                rectfill(x1, y1, x2, y2, self.floor_color)
-            else
-                local x1 = cx
-                local y1 = cy + (dy > 0 and GRID_SIZE or -CORRIDOR_LENGTH * GRID_SIZE)
-                local x2 = x1 + GRID_SIZE - 1
-                local y2 = y1 + CORRIDOR_LENGTH * GRID_SIZE - 1
-                rectfill(x1, y1, x2, y2, self.floor_color)
-            end
-        end
-    end
 end
 
 return Room

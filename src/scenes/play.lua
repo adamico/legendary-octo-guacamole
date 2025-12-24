@@ -1,6 +1,6 @@
 local DungeonManager = require("dungeon_manager")
+local CameraManager = require("camera_manager")
 local Entities = require("entities")
-local RoomManager = require("room_manager")
 local Systems = require("systems")
 
 local SceneManager = require("scene_manager")
@@ -9,7 +9,8 @@ local Play = SceneManager:addState("Play")
 
 world = eggs()
 local player
-local room_manager
+local camera_manager
+local current_room
 
 function Play:enteredState()
    Log.trace("Entered Play scene")
@@ -22,32 +23,64 @@ function Play:enteredState()
    local px = room.pixels.x + room.pixels.w / 2
    local py = room.pixels.y + room.pixels.h / 2
    player = Entities.spawn_player(world, px, py)
-   room_manager = RoomManager:new(world, player)
+
+   -- Initialize camera
+   camera_manager = CameraManager:new(player)
+   current_room = room
+   camera_manager:set_room(current_room)
+
+   -- Define transition behavior
+   camera_manager.on_transition = function(new_room)
+      current_room = new_room
+      setupRoom(current_room, player)
+      world.sys("projectile", function(e) world.del(e) end)()
+      world.sys("pickup", function(e) world.del(e) end)()
+      world.sys("skull", function(e) world.del(e) end)()
+   end
+
+   -- Setup initial room
+   setupRoom(current_room, player)
 end
 
 function Play:update()
-   room_manager:update(world, player)
+   -- Update camera
+   camera_manager:update()
 
-   if room_manager:isExploring() then
-      world.sys("controllable", Systems.read_input)()
-      world.sys("acceleration", Systems.acceleration)()
-      world.sys("map_collidable,velocity", function(e)
-         Systems.resolve_map(e, DungeonManager.current_room)
+   -- Update spawner
+   Systems.Spawner.update(world, current_room)
+
+   -- Check room clear
+   if current_room.lifecycle:is("active") then
+      local enemy_count = 0
+      world.sys("enemy", function(e)
+         if not e.dead then enemy_count += 1 end
       end)()
-      world.sys("velocity", Systems.velocity)()
-      world.sys("animatable", Systems.update_fsm)()
-      world.sys("sprite", Systems.change_sprite)()
-      world.sys("animatable", Systems.animate)()
-      world.sys("shooter", Systems.projectile_fire)()
-      world.sys("enemy", Systems.enemy_ai)()
-      world.sys("collidable", Systems.resolve_entities)()
-      world.sys("health", Systems.health_regen)()
-      world.sys("player", Systems.invulnerability_tick)()
-      world.sys("health", Systems.health_manager)()
-      world.sys("shadow_entity", Systems.sync_shadows)()
 
-      Systems.Effects.update_shake()
+      if enemy_count == 0 then
+         current_room.lifecycle:clear()
+         DungeonManager.apply_door_sprites(current_room)
+      end
    end
+
+   -- Game systems
+   world.sys("controllable", Systems.read_input)()
+   world.sys("acceleration", Systems.acceleration)()
+   world.sys("map_collidable,velocity", function(e)
+      Systems.resolve_map(e, current_room, camera_manager)
+   end)()
+   world.sys("velocity", Systems.velocity)()
+   world.sys("animatable", Systems.update_fsm)()
+   world.sys("sprite", Systems.change_sprite)()
+   world.sys("animatable", Systems.animate)()
+   world.sys("shooter", Systems.projectile_fire)()
+   world.sys("enemy", Systems.enemy_ai)()
+   world.sys("collidable", Systems.resolve_entities)()
+   world.sys("health", Systems.health_regen)()
+   world.sys("player", Systems.invulnerability_tick)()
+   world.sys("health", Systems.health_manager)()
+   world.sys("shadow_entity", Systems.sync_shadows)()
+
+   Systems.Effects.update_shake()
 
    if keyp("f3") then
       GameConstants.cheats.godmode = not GameConstants.cheats.godmode
@@ -57,11 +90,11 @@ end
 function Play:draw()
    cls(0)
 
-   local sx, sy = room_manager:getCameraOffset()
+   local sx, sy = camera_manager:get_offset()
    local shake = Systems.Effects.get_shake_offset()
    camera(sx + shake.x, sy - 7 + shake.y)
 
-   local room_pixels = DungeonManager.current_room.pixels
+   local room_pixels = current_room.pixels
    local clip_square = {
       x = room_pixels.x - sx,
       y = room_pixels.y - (sy - 7),
@@ -70,7 +103,7 @@ function Play:draw()
    }
 
    Systems.reset_spotlight()
-   room_manager:drawRooms()
+   current_room:draw()
    map()
    world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, clip_square) end)()
 
@@ -84,23 +117,39 @@ function Play:draw()
 
    -- 3. Global Effects & Debug
    world.sys("palette_swappable", Systems.palette_swappable)()
-   Systems.Spawner.draw(DungeonManager.current_room)
+   Systems.Spawner.draw(current_room)
 
    pal()
 
    -- 4. Foreground Layer: Entity UI (Health Bars, Hitboxes)
-   -- These must be drawn while world camera is active to track entities correctly
    world.sys("health", Systems.draw_health_bar)()
    if key("f2") then
       world.sys("collidable", Systems.draw_hitbox)()
    end
 
-   -- Reset camera for global UI (HUD, etc.)
+   -- Reset camera for global UI
    camera()
 end
 
 function Play:exitedState()
    Log.trace("Exited Play scene")
+end
+
+-- Helper: Setup a room upon entry
+function setupRoom(room, player)
+   Systems.Spawner.populate(room, player)
+
+   -- If enemies assigned and room is populated, trigger enter to lock doors
+   if #room.enemy_positions > 0 and room.lifecycle:can("enter") then
+      room.lifecycle:enter()
+      DungeonManager.apply_door_sprites(room)
+   end
+
+   -- Restart skull timer if entering a cleared combat room
+   if room.lifecycle:is("cleared") and room.room_type == "combat" then
+      room.skull_timer = SKULL_SPAWN_TIMER
+      room.skull_spawned = false
+   end
 end
 
 return Play

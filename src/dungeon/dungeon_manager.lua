@@ -1,21 +1,19 @@
 local Room = require("room")
 
 -- Constants for procedural generation
-local MIN_ROOM_W = 10
-local MAX_ROOM_W = 22
-local MIN_ROOM_H = 8
-local MAX_ROOM_H = 14
+local ROOM_TILES_W = 30 -- Fixed room width in tiles
+local ROOM_TILES_H = 16 -- Fixed room height in tiles
 local MIN_ENEMIES_PER_ROOM = 2
-local MAX_ENEMIES_PER_ROOM = 4
+local MAX_ENEMIES_PER_ROOM = 5
 local ENEMY_DENSITY_DIVISOR = 100   -- Tiles per enemy
 local DEFAULT_ENEMY_MIN_DIST = 80   -- Minimum pixels from player
 local MAP_MEMORY_ADDRESS = 0x100000 -- Picotron Extended Map Address
-local SCREEN_TILES_W = 30           -- SCREEN_WIDTH / GRID_SIZE
-local SCREEN_TILES_H = 16           -- Playable area height in tiles
-local EXT_MAP_W = 80                -- MAX_ROOM_W * 2 + SCREEN_TILES_W + buffer
-local EXT_MAP_H = 48                -- MAX_ROOM_H * 2 + SCREEN_TILES_H + buffer
-local BASE_OFFSET_X = MAX_ROOM_W    -- 22 tiles left margin
-local BASE_OFFSET_Y = MAX_ROOM_H    -- 14 tiles top margin
+local EXT_MAP_W = 256               -- Large static world map
+local EXT_MAP_H = 256               -- Large static world map
+local GRID_STRIDE_X = ROOM_TILES_W  -- Rooms are directly adjacent (Isaac style)
+local GRID_STRIDE_Y = ROOM_TILES_H  -- Rooms are directly adjacent (Isaac style)
+local BASE_OFFSET_X = 64            -- Center offset for grid 0,0
+local BASE_OFFSET_Y = 64            -- Center offset for grid 0,0
 local TARGET_ROOM_COUNT = 8
 local DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 
@@ -106,35 +104,30 @@ function DungeonManager.generate()
    -- Phase 4: Connection (Connect Neighbor Rooms with corridor)
    DungeonManager.connect_neighbor_rooms()
 
+   -- Phase 5: Carve entire dungeon into map
+   DungeonManager.clear_map()
+   for key, room in pairs(DungeonManager.rooms) do
+      DungeonManager.carve_room(room)
+      Log.trace("Room "..
+         key.." at pixels ("..room.pixels.x..","..room.pixels.y..") size ("..room.pixels.w..","..room.pixels.h..")")
+   end
+
    -- Set initial state
    DungeonManager.current_grid_x = 0
    DungeonManager.current_grid_y = 0
    DungeonManager.current_room = start_room
 
-   -- Carve initial room
-   DungeonManager.clear_map()
-   DungeonManager.carve_room(start_room)
-   DungeonManager.carve_corridors(start_room)
-
    Log.info("Generated dungeon with "..#DungeonManager.get_all_rooms().." rooms")
 end
 
 function DungeonManager.create_room(gx, gy, is_safe)
-   -- Random dimensions
-   local w = flr(rnd(MAX_ROOM_W - MIN_ROOM_W + 1)) + MIN_ROOM_W
-   local h = flr(rnd(MAX_ROOM_H - MIN_ROOM_H + 1)) + MIN_ROOM_H
+   -- Fixed room dimensions (Isaac style - fills screen)
+   local w = ROOM_TILES_W
+   local h = ROOM_TILES_H
 
-   -- Force parity to match screen (Even Width 30, Even Height 16)
-   w = w - (w % 2)
-   h = h - (h % 2)
-
-   -- Local position within a "virtual" screen cell
-   local local_tx = flr((SCREEN_TILES_W - w) / 2)
-   local local_ty = flr((SCREEN_TILES_H - h) / 2)
-
-   -- Absolute World Position (Base Offset + Local)
-   local world_tx = BASE_OFFSET_X + local_tx
-   local world_ty = BASE_OFFSET_Y + local_ty
+   -- Grid-based absolute position (rooms directly adjacent)
+   local world_tx = BASE_OFFSET_X + (gx * GRID_STRIDE_X)
+   local world_ty = BASE_OFFSET_Y + (gy * GRID_STRIDE_Y)
 
    local room = Room:new(world_tx, world_ty, w, h, is_safe)
 
@@ -145,32 +138,27 @@ function DungeonManager.create_room(gx, gy, is_safe)
    return room
 end
 
-function DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
+function DungeonManager.apply_door_sprites(room)
    if not room.doors then return end
-
-   tx_offset = tx_offset or 0
-   ty_offset = ty_offset or 0
 
    for dir, door in pairs(room.doors) do
       local pos = room:get_door_tile(dir)
       if pos then
-         mset(pos.tx + tx_offset, pos.ty + ty_offset, door.sprite)
+         mset(pos.tx, pos.ty, door.sprite)
       end
    end
 end
 
-function DungeonManager.carve_corridors(room, tx_offset, ty_offset)
+function DungeonManager.carve_corridors(room)
    if not room.doors then return end
-   tx_offset = tx_offset or 0
-   ty_offset = ty_offset or 0
 
    for dir, door in pairs(room.doors) do
       local pos = room:get_door_tile(dir)
       if pos then
          local dx, dy = DungeonManager.get_direction_delta(dir)
          for i = 1, CORRIDOR_LENGTH do
-            local ctx = pos.tx + tx_offset + dx * i
-            local cty = pos.ty + ty_offset + dy * i
+            local ctx = pos.tx + dx * i
+            local cty = pos.ty + dy * i
 
             -- Place trigger in the middle of the corridor (i=2)
             local tile = (i == 2) and TRANSITION_TRIGGER_TILE or 0
@@ -189,10 +177,8 @@ function DungeonManager.carve_corridors(room, tx_offset, ty_offset)
    end
 end
 
-function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
+function DungeonManager.carve_room(room, wall_options)
    wall_options = wall_options or {1, 2}
-   tx_offset = tx_offset or 0
-   ty_offset = ty_offset or 0
 
    local bounds = room:get_bounds()
    for ty = bounds.y1, bounds.y2 do
@@ -201,18 +187,18 @@ function DungeonManager.carve_room(room, wall_options, tx_offset, ty_offset)
          if #wall_options > 1 and rnd() < 0.1 then
             sprite = wall_options[flr(rnd(#wall_options - 1)) + 2]
          end
-         mset(tx + tx_offset, ty + ty_offset, sprite)
+         mset(tx, ty, sprite)
       end
    end
 
    local floor = room:get_inner_bounds()
    for ty = floor.y1, floor.y2 do
       for tx = floor.x1, floor.x2 do
-         mset(tx + tx_offset, ty + ty_offset, 0)
+         mset(tx, ty, 0)
       end
    end
 
-   DungeonManager.apply_door_sprites(room, tx_offset, ty_offset)
+   DungeonManager.apply_door_sprites(room)
 end
 
 function DungeonManager.assign_enemies(room, num_enemies, min_dist, types)
@@ -312,7 +298,7 @@ function DungeonManager.clear_map()
    end
 end
 
-function DungeonManager.enter_door(direction, skip_carve)
+function DungeonManager.enter_door(direction)
    local dx, dy = DungeonManager.get_direction_delta(direction)
 
    local target_gx = DungeonManager.current_grid_x + dx
@@ -326,13 +312,6 @@ function DungeonManager.enter_door(direction, skip_carve)
       DungeonManager.current_grid_y = target_gy
       DungeonManager.current_room = next_room
 
-      -- Single-Screen transition: Clear previous room, carve new room
-      if not skip_carve then
-         DungeonManager.clear_map()
-         DungeonManager.carve_room(next_room)
-         DungeonManager.carve_corridors(next_room)
-      end
-
       return next_room
    end
    return nil
@@ -342,13 +321,6 @@ function DungeonManager.init()
    DungeonManager.map_data = userdata("i16", EXT_MAP_W, EXT_MAP_H)
    memmap(DungeonManager.map_data, MAP_MEMORY_ADDRESS)
    DungeonManager.generate()
-end
-
-function DungeonManager.get_base_camera_offset()
-   return {
-      x = BASE_OFFSET_X * GRID_SIZE,
-      y = BASE_OFFSET_Y * GRID_SIZE
-   }
 end
 
 -- Helper: Get vector delta for a direction string
