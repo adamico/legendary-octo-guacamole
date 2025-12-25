@@ -1,5 +1,4 @@
-local GameConstants = require("constants")
-local Collision = require("collision")
+local HitboxUtils = require("hitbox_utils")
 local qsort = require("qsort")
 local Effects = require("effects")
 local Rotator = require("sprite_rotator")
@@ -277,7 +276,7 @@ function Rendering.draw_shadow_entity(shadow, clip_square)
     if not parent or not world.msk(parent) then return end
 
     local dir = parent.direction or parent.current_direction
-    local hb = Collision.get_hitbox(parent)
+    local hb = HitboxUtils.get_hitbox(parent)
 
     local sw = shadow.shadow_width
     if shadow.shadow_widths and dir and shadow.shadow_widths[dir] then
@@ -354,7 +353,7 @@ function Rendering.draw_health_bar(entity)
 end
 
 function Rendering.draw_hitbox(entity)
-    local hb = Collision.get_hitbox(entity)
+    local hb = HitboxUtils.get_hitbox(entity)
     rect(hb.x, hb.y, hb.x + hb.w, hb.y + hb.h, 8)
 end
 

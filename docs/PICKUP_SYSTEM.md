@@ -24,7 +24,7 @@ All pickups must have:
 
 ### 2. Effect Registry
 
-Located in `src/systems/collision.lua`, the `PickupEffects` registry maps `pickup_type` to handler functions:
+Located in `src/physics/handlers.lua`, the `PickupEffects` registry maps `pickup_type` to handler functions:
 
 ```lua
 local PickupEffects = {}
@@ -49,7 +49,7 @@ The unified `handle_pickup_collection` function:
 
 ### Example: Speed Boost Pickup
 
-#### 1. Add Effect Handler (`src/systems/collision.lua`)
+#### 1. Add Effect Handler (`src/physics/handlers.lua`)
 
 ```lua
 PickupEffects.speed_boost = function(player, pickup)

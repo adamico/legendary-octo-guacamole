@@ -54,12 +54,17 @@ graph TB
 drive/src/
 ├── main.lua              # Entry point, game loop, scene initialization
 ├── scene_manager.lua     # State machine for scene transitions
-├── constants.lua         # Game configuration (sprites, player stats, controls)
-├── dungeon/              # World management module
+├── constants.lua         # Game configuration (sprites, player stats, controls, collision layers)
+├── world/                # World management module (renamed from dungeon/)
 │   ├── dungeon_manager.lua # World generation, map carving, room grid, room lifecycle
 │   ├── camera_manager.lua  # Camera following, room centering, and transitions
 │   ├── room.lua            # Room class (stores bounds, types, and lifecycle FSM)
 │   └── room_renderer.lua   # Room rendering: door masking, void coverage, adjacent room hiding
+├── physics/              # Physics & collision module (moved from systems/)
+│   ├── collision.lua     # Main collision detection and resolution
+│   ├── spatial_grid.lua  # SpatialGrid class for broad-phase collision (64px cells)
+│   ├── collision_filter.lua # CollisionFilter class for bitmasking layer checks
+│   └── handlers.lua      # Collision response handlers (entity-entity, map, tile)
 ├── ai/                   # Individual enemy AI behaviors
 │   ├── chaser.lua        # Chase behavior (Skulker, Skull)
 │   ├── shooter.lua       # Ranged behavior (Shooter)
@@ -72,18 +77,20 @@ drive/src/
 │   ├── projectile.lua    # Type Object factory for all bullets
 │   ├── pickup.lua        # Type Object factory for all collectibles
 │   └── shadow.lua        # Shadow entity factory
+├── utils/                # Reusable utilities
+│   └── hitbox_utils.lua  # Hitbox calculation (used by collision, AI, rendering)
 ├── systems/              # ECS system modules
 │   ├── init.lua          # Aggregates all systems
 │   ├── spawner.lua       # Enemy population and skull timer management
 │   ├── physics.lua       # Movement: controllable, acceleration, velocity (sub-pixel)
-│   ├── collision.lua     # Entity-entity and entity-map collision resolution
-│   ├── handlers.lua      # Collision response handlers (entity-entity, map, tile)
 │   ├── combat.lua        # Shooter, health_regen, invulnerability_tick, health_manager
 │   ├── ai.lua            # AI system dispatcher (delegates to src/ai/)
+│   ├── lifecycle.lua     # FSM state management
 │   ├── animation.lua     # FSM-based animation logic
 │   ├── input.lua         # Input reading system
 │   ├── rendering.lua     # Sprite drawing, spotlight/shadow, health bars, doors
 │   ├── sprite_rotator.lua # Dynamic sprite rotation utility
+│   ├── emotions.lua      # Enemy emotion display system
 │   └── effects.lua       # Screen shake, sprite flash, particles, knockback
 └── scenes/               # Game scenes (states)
     ├── title.lua         # Title screen
@@ -251,4 +258,4 @@ The game uses a dual-manager system for handling its world:
 - **Room Lifecycle**: Each room has an internal FSM (`populated`, `spawning`, `active`, `cleared`) that controls enemy spawning and door status.
 - **Directly Adjacent Rooms**: Following the *The Binding of Isaac* style, rooms are carved at contiguous grid positions (e.g., Room 1 at grid `0,0` and Room 2 at `1,0`). This results in a 2-tile thick wall boundary between rooms, which is pierced by clearing the door tiles in both rooms when they are connected.
 - **Skull Pressure Mechanic**: Cleared combat rooms initialize a `SKULL_SPAWN_TIMER` (in `constants.lua`). If the player remains in a cleared room while below max health, a projectile-immune "skull" enemy spawns offscreen at the farthest corner to force progression. The skull can pass through walls (`collidable` but not `map_collidable`).
-- **Module Path Resolution**: The game uses a custom `require` implementation (see `lib/require.lua`) that allows loading modules by name without specifying their subdirectory. Root directories for module resolution (e.g., `src/systems/`, `src/ai/`) are configured in `src/main.lua` via `add_module_path()`. This keeps `require` statements clean and decoupled from the internal folder structure.
+- **Module Path Resolution**: The game uses a custom `require` implementation (see `lib/require.lua`) that allows loading modules by name without specifying their subdirectory. Root directories for module resolution (e.g., `src/systems/`, `src/ai/`, `src/physics/`, `src/utils/`, `src/world/`) are configured in `src/main.lua` via `add_module_path()`. This keeps `require` statements clean and decoupled from the internal folder structure.

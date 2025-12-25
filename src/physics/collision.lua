@@ -1,95 +1,14 @@
 local Collision = {}
 
-require("constants")
-local GameConstants = require("constants")
+local SpatialGrid = require("spatial_grid")
+local CollisionFilter = require("collision_filter")
+local HitboxUtils = require("hitbox_utils")
 
--- Spatial grid for broad-phase collision detection
-local function create_spatial_grid()
-    return {}
-end
+-- Create persistent filter instance (doesn't change per frame)
+local collision_filter = CollisionFilter:new()
 
--- Get hitbox bounds in world space
--- Returns {x, y, w, h} for collision detection
--- Supports per-direction hitboxes via entity.hitbox[direction] table
--- Falls back to hitbox_* properties, then width/height
-local function get_hitbox(entity)
-    local w, h, ox, oy
-
-    -- Check for direction-based hitbox table
-    if entity.hitbox then
-        local dir = entity.direction or entity.current_direction
-        local dir_hb = dir and entity.hitbox[dir]
-        if dir_hb then
-            w = dir_hb.w
-            h = dir_hb.h
-            ox = dir_hb.ox or 0
-            oy = dir_hb.oy or 0
-        end
-    end
-
-    -- Fallback to simple hitbox properties
-    w = w or entity.hitbox_width or entity.width or 16
-    h = h or entity.hitbox_height or entity.height or 16
-    ox = ox or entity.hitbox_offset_x or 0
-    oy = oy or entity.hitbox_offset_y or 0
-
-    return {
-        x = entity.x + ox + (entity.sprite_offset_x or 0),
-        y = entity.y + oy + (entity.sprite_offset_y or 0),
-        w = w,
-        h = h
-    }
-end
-
-local function add_to_grid(grid, entity)
-    local hb = get_hitbox(entity)
-    -- Add entity to all cells it overlaps
-    local x1 = flr(hb.x / SPATIAL_GRID_CELL_SIZE)
-    local y1 = flr(hb.y / SPATIAL_GRID_CELL_SIZE)
-    local x2 = flr((hb.x + hb.w) / SPATIAL_GRID_CELL_SIZE)
-    local y2 = flr((hb.y + hb.h) / SPATIAL_GRID_CELL_SIZE)
-
-    for cx = x1, x2 do
-        for cy = y1, y2 do
-            local cell_key = cx..","..cy
-            if not grid[cell_key] then
-                grid[cell_key] = {}
-            end
-            table.insert(grid[cell_key], entity)
-        end
-    end
-end
-
-local function get_nearby_entities(grid, entity)
-    local hb = get_hitbox(entity)
-    local nearby = {}
-    local seen = {}
-
-    -- Check all cells entity overlaps
-    local x1 = flr(hb.x / SPATIAL_GRID_CELL_SIZE)
-    local y1 = flr(hb.y / SPATIAL_GRID_CELL_SIZE)
-    local x2 = flr((hb.x + hb.w) / SPATIAL_GRID_CELL_SIZE)
-    local y2 = flr((hb.y + hb.h) / SPATIAL_GRID_CELL_SIZE)
-
-    for cx = x1, x2 do
-        for cy = y1, y2 do
-            local cell_key = cx..","..cy
-            local cell = grid[cell_key]
-            if cell then
-                for _, other in ipairs(cell) do
-                    if not seen[other] and other ~= entity then
-                        seen[other] = true
-                        table.insert(nearby, other)
-                    end
-                end
-            end
-        end
-    end
-
-    return nearby
-end
-
-Collision.get_hitbox = get_hitbox
+-- Local reference for convenience within this module
+local get_hitbox = HitboxUtils.get_hitbox
 
 Collision.CollisionHandlers = require("handlers")
 
@@ -154,26 +73,6 @@ local function apply_door_guidance(entity, hb)
     end
 end
 
--- Check if two entities can collide based on collision layers (bitmasking)
-local function can_collide(entity1, entity2)
-    local type1 = entity1.type or ""
-    local type2 = entity2.type or ""
-
-    -- Get collision layers
-    local layer1 = GameConstants.EntityCollisionLayer[type1]
-    local layer2 = GameConstants.EntityCollisionLayer[type2]
-
-    -- If either entity has no layer defined, allow collision (backward compatibility)
-    if not layer1 or not layer2 then return true end
-
-    -- Get collision mask for entity1
-    local mask1 = GameConstants.CollisionMasks[layer1]
-    if not mask1 then return true end
-
-    -- Check if entity1's mask includes entity2's layer (bitwise AND)
-    return (mask1 & layer2) ~= 0
-end
-
 -- Check if player has exited room bounds and trigger transition
 function Collision.check_trigger(entity, camera_manager)
     local room = camera_manager.current_room
@@ -192,17 +91,20 @@ function Collision.check_trigger(entity, camera_manager)
 end
 
 function Collision.resolve_entities(entity1)
-    -- Build spatial grid for this frame
-    local grid = create_spatial_grid()
+    -- Create spatial grid for this frame
+    local grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
+
+    -- Populate grid with all collidable entities
     world.sys("collidable", function(e)
-        add_to_grid(grid, e)
+        grid:add(e, get_hitbox)
     end)()
 
-    -- Only check nearby entities (spatial partitioning)
-    local nearby = get_nearby_entities(grid, entity1)
+    -- Query nearby entities (spatial partitioning optimization)
+    local nearby = grid:get_nearby(entity1, get_hitbox)
+
     for _, entity2 in ipairs(nearby) do
         -- Check collision layers (bitmasking - very fast)
-        if can_collide(entity1, entity2) then
+        if collision_filter:can_collide(entity1, entity2) then
             -- Check overlap (narrow-phase AABB)
             if Collision.check_overlap(entity1, entity2) then
                 local type1 = entity1.type or ""
