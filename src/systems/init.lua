@@ -17,8 +17,6 @@ local Systems = {}
 Systems.CollisionHandlers = Collision.CollisionHandlers
 Systems.resolve_entities = Collision.resolve_entities
 Systems.resolve_map = Collision.resolve_map
-Systems.check_overlap = Collision.check_overlap
-Systems.is_solid = Collision.is_solid
 
 -- Physics systems
 Systems.read_input = LocalInput.read_input

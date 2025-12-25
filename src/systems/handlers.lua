@@ -27,12 +27,6 @@ local function handle_pickup_collection(player, pickup)
     Effects.pickup_collect(pickup)
     world.del(pickup)
 end
-Handlers.tile["Player,Transition"] = function(player, tx, ty, tile, camera_manager)
-    Log.trace("Handler: Player,Transition called at ("..tx..","..ty..")")
-    local result = camera_manager:on_trigger(player.x, player.y)
-    Log.trace("Handler: on_trigger returned", result)
-    return result
-end
 
 Handlers.entity["Player,ProjectilePickup"] = handle_pickup_collection
 Handlers.entity["Player,HealthPickup"] = handle_pickup_collection

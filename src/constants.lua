@@ -24,6 +24,12 @@ DOOR_FRAME_H_TOP = {77, 93, 123, 124, 148, 153}      -- Horizontal door top fram
 DOOR_FRAME_H_BOTTOM = {107, 108, 129, 132}           -- Horizontal door bottom frame
 DOOR_FRAME_V_LEFT = {117, 122, 138, 141, 146}        -- Vertical door left frame
 DOOR_FRAME_V_RIGHT = {114, 120, 136, 139, 144}       -- Vertical door right frame
+
+-- Collision system constants
+TILE_EDGE_TOLERANCE = 0.001    -- Small buffer to prevent floating-point edge cases when checking tile boundaries
+DOOR_GUIDANCE_MULTIPLIER = 1.5 -- Speed multiplier for nudging player toward nearby unlocked doors
+SPATIAL_GRID_CELL_SIZE = 64    -- Spatial partitioning cell size in pixels (4 tiles) for collision optimization
+
 SKULL_SPAWN_TIMER = 420
 SKULL_SPAWN_LOCKED_TIMER = 1800
 
@@ -392,6 +398,37 @@ GameConstants.controls = {
    shoot_down = GameConstants.buttons.down2,
    shoot_left = GameConstants.buttons.left2,
    shoot_right = GameConstants.buttons.right2,
+}
+
+-- Collision layers (bitmasking for fast collision filtering)
+GameConstants.CollisionLayers = {
+   PLAYER = 1,             -- 0b000001
+   ENEMY = 2,              -- 0b000010
+   PLAYER_PROJECTILE = 4,  -- 0b000100
+   ENEMY_PROJECTILE = 8,   -- 0b001000
+   PICKUP = 16,            -- 0b010000
+   WORLD = 32,             -- 0b100000
+}
+
+-- What each layer can collide with (bitmask)
+GameConstants.CollisionMasks = {
+   [1] = 2 + 8 + 16 + 32,  -- PLAYER: Enemy + EnemyProjectile + Pickup + World
+   [2] = 1 + 4 + 32,       -- ENEMY: Player + PlayerProjectile + World
+   [4] = 2 + 32,           -- PLAYER_PROJECTILE: Enemy + World
+   [8] = 1 + 32,           -- ENEMY_PROJECTILE: Player + World
+   [16] = 1,               -- PICKUP: Player only
+   [32] = 1 + 2 + 4 + 8,   -- WORLD: Everything except Pickup
+}
+
+-- Entity type to collision layer mapping
+GameConstants.EntityCollisionLayer = {
+   Player = GameConstants.CollisionLayers.PLAYER,
+   Enemy = GameConstants.CollisionLayers.ENEMY,
+   Skull = GameConstants.CollisionLayers.ENEMY,
+   Projectile = GameConstants.CollisionLayers.PLAYER_PROJECTILE,
+   EnemyProjectile = GameConstants.CollisionLayers.ENEMY_PROJECTILE,
+   ProjectilePickup = GameConstants.CollisionLayers.PICKUP,
+   HealthPickup = GameConstants.CollisionLayers.PICKUP,
 }
 
 return GameConstants
