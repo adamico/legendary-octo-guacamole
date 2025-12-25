@@ -155,20 +155,16 @@ function CameraManager:on_trigger(px, py)
         local p_h = GameConstants.Player.height or 16
 
         if dir_gx == 1 then
-            -- Entered from west, position at left side
+            -- Entered from west, position at left side (preserve Y)
             self.player.x = new_px.x + margin
-            self.player.y = new_px.y + new_px.h / 2
         elseif dir_gx == -1 then
-            -- Entered from east, position at right side
+            -- Entered from east, position at right side (preserve Y)
             self.player.x = new_px.x + new_px.w - margin - p_w
-            self.player.y = new_px.y + new_px.h / 2
         elseif dir_gy == 1 then
-            -- Entered from north, position at top
-            self.player.x = new_px.x + new_px.w / 2
+            -- Entered from north, position at top (preserve X)
             self.player.y = new_px.y + margin
         elseif dir_gy == -1 then
-            -- Entered from south, position at bottom
-            self.player.x = new_px.x + new_px.w / 2
+            -- Entered from south, position at bottom (preserve X)
             self.player.y = new_px.y + new_px.h - margin - p_h
         end
 
