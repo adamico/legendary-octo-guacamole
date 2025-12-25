@@ -220,6 +220,7 @@ local GameConstants = {
          speed = 0.3,
          contact_damage = 10,
          shoot_delay = 120,
+         vision_range = 200,
          is_shooter = true,
          sprite_index_offsets = {
             down = 225,

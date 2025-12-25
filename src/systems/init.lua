@@ -33,7 +33,7 @@ Systems.invulnerability_tick = Combat.invulnerability_tick
 Systems.DeathHandlers = Combat.DeathHandlers
 
 -- AI systems
-Systems.enemy_ai = AI.enemy_ai
+Systems.ai = AI.update
 
 -- Rendering systems
 Systems.init_extended_palette = Rendering.init_extended_palette

@@ -15,6 +15,9 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **AI Behavior Modularization**: Extracted individual AI behaviors from the monolithic `src/systems/ai.lua` into a new `src/ai/` directory (`chaser.lua`, `shooter.lua`, `dasher.lua`). Refactored `src/systems/ai.lua` into a clean dispatcher module.
+- **Renamed Redundant AI Function**: Renamed `AI.enemy_ai` to `AI.update` and updated its export in `Systems` to `Systems.ai` for better consistency with other systems.
+- **Implemented Shooter Vision Range**: Added a distance-based activation check to the Shooter AI. Shooters now remain idle until the player enters their `vision_range` (200 pixels).
 - **Implemented Isaac-Style Procedural Dungeon Generation**: Full implementation of PROCGEN.md phases:
   - **Expansion Loop**: Random walk algorithm with "Rule of One" constraint to prevent 2×2 room clusters. Configurable `TARGET_ROOM_COUNT = 8`.
   - **Specialization**: Distance-based room type assignment. Leaf nodes (1 neighbor) are assigned as BOSS (farthest), TREASURE, and SHOP. Remaining rooms become COMBAT with auto-assigned enemies.

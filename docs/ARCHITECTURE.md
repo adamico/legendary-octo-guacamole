@@ -59,6 +59,10 @@ drive/src/
 │   ├── dungeon_manager.lua # World generation, map carving, room grid management
 │   ├── camera_manager.lua  # Camera following, room centering, and transitions
 │   └── room.lua            # Room class (stores bounds, types, and lifecycle FSM)
+├── ai/                   # Individual enemy AI behaviors
+│   ├── chaser.lua        # Chase behavior (Skulker, Skull)
+│   ├── shooter.lua       # Ranged behavior (Shooter)
+│   └── dasher.lua        # FSM-based dashing behavior (Dasher)
 ├── entities/             # Entity factory modules
 │   ├── init.lua          # Aggregates all entity factories
 │   ├── utils.lua         # Shared helpers: spawning, direction conversion
@@ -74,7 +78,7 @@ drive/src/
 │   ├── collision.lua     # Entity-entity and entity-map collision resolution
 │   ├── handlers.lua      # Collision response handlers (entity-entity, map, tile)
 │   ├── combat.lua        # Shooter, health_regen, invulnerability_tick, health_manager
-│   ├── ai.lua            # Enemy AI (chase, shoot, dash)
+│   ├── ai.lua            # AI system dispatcher (delegates to src/ai/)
 │   ├── animation.lua     # FSM-based animation logic
 │   ├── input.lua         # Input reading system
 │   ├── rendering.lua     # Sprite drawing, spotlight/shadow, health bars, doors
@@ -127,7 +131,7 @@ Systems are functions called per-entity based on tag matching:
 | `resolve_map` | map_collidable,velocity | Stop entities at solid tiles (flag 0) |
 | `resolve_entities` | collidable | Detect overlaps, dispatch to handlers |
 | `enemy_spawner` | (room hook) | Handle initial population and skull pressure timer |
-| `enemy_ai` | enemy | Handle entity behavior (Skulker, Shooter, Dasher, Skull) |
+| `ai` | enemy | AI dispatcher (delegates to behaviors in `src/ai/`) |
 | `update_fsm` | animatable | Manage animation state transitions |
 | `animate` | animatable | Calculate sprite from animation config (indices, durations, composite, flips) |
 | `shooter` | shooter | Handle projectile firing and ammo cost |
@@ -187,7 +191,7 @@ The Play scene (`src/scenes/play.lua`) manages the game loop and room transition
 2. **Gameplay Systems**:
    - Input & Physics: `read_input` → `acceleration` → `resolve_map` → `velocity`
    - Animation: `update_fsm` → `change_sprite` → `animate`
-   - Combat: `projectile_fire` → `enemy_ai` → `resolve_entities`
+   - Combat: `projectile_fire` → `ai` → `resolve_entities`
    - Status: `health_regen` → `invulnerability_tick` → `health_manager` → `sync_shadows`
    - Effects: `update_shake()`
 
