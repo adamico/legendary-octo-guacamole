@@ -56,9 +56,10 @@ drive/src/
 ├── scene_manager.lua     # State machine for scene transitions
 ├── constants.lua         # Game configuration (sprites, player stats, controls)
 ├── dungeon/              # World management module
-│   ├── dungeon_manager.lua # World generation, map carving, room grid management
+│   ├── dungeon_manager.lua # World generation, map carving, room grid, room lifecycle
 │   ├── camera_manager.lua  # Camera following, room centering, and transitions
-│   └── room.lua            # Room class (stores bounds, types, and lifecycle FSM)
+│   ├── room.lua            # Room class (stores bounds, types, and lifecycle FSM)
+│   └── room_renderer.lua   # Room rendering: door masking, void coverage, adjacent room hiding
 ├── ai/                   # Individual enemy AI behaviors
 │   ├── chaser.lua        # Chase behavior (Skulker, Skull)
 │   ├── shooter.lua       # Ranged behavior (Shooter)

@@ -370,6 +370,45 @@ function DungeonManager.autotile_walls()
    end
 end
 
+--- Setup a room upon entry (spawning, lifecycle transitions, skull timer)
+-- @param room The room to setup
+-- @param player The player entity (for spawn distance calculations)
+-- @param world The ECS world instance
+function DungeonManager.setup_room(room, player, world)
+   local Systems = require("systems")
+   Systems.Spawner.populate(room, player)
+
+   -- If enemies assigned and room is populated, trigger enter to lock doors
+   if #room.enemy_positions > 0 and room.lifecycle:can("enter") then
+      room.lifecycle:enter()
+      DungeonManager.apply_door_sprites(room)
+   end
+
+   -- Restart skull timer if entering a cleared combat room
+   if room.lifecycle:is("cleared") and room.room_type == "combat" then
+      room.skull_timer = SKULL_SPAWN_TIMER
+      room.skull_spawned = false
+   end
+end
+
+--- Check if an active room has been cleared of enemies
+-- @param room The room to check
+-- @param world The ECS world instance
+function DungeonManager.check_room_clear(room, world)
+   if not room.lifecycle:is("active") then return end
+
+   local enemy_count = 0
+   room.combat_timer += 1
+   world.sys("enemy", function(e)
+      if not e.dead then enemy_count += 1 end
+   end)()
+
+   if enemy_count == 0 then
+      room.lifecycle:clear()
+      DungeonManager.apply_door_sprites(room)
+   end
+end
+
 function DungeonManager.init()
    DungeonManager.map_data = userdata("i16", EXT_MAP_W, EXT_MAP_H)
    memmap(DungeonManager.map_data, MAP_MEMORY_ADDRESS)

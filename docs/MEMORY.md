@@ -16,6 +16,9 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Extracted Room Renderer Module**: Refactored `src/scenes/play.lua` (358→152 lines, ~57% reduction) by extracting logic into appropriate modules:
+  - **New `src/dungeon/room_renderer.lua`**: Door visibility management, adjacent room floor masking, void area coverage, high-level draw helpers (`draw_scrolling()`, `draw_exploring()`)
+  - **Moved to `DungeonManager`**: `setup_room()` (room entry spawning/lifecycle), `check_room_clear()` (enemy count and room clear transition)
 - **Simplified Module Requires**: Added `src/ai/` to the module search path in `main.lua` and refactored all `require` statements to use simple filenames (e.g., `require("emotions")` instead of `require("systems/emotions")`). This follows the project's established convention for cleaner codebase organization.
 - **Unified Enemy AI to FSMs**: Refactored `chaser.lua` and `shooter.lua` to use `lua-state-machine` FSMs with emotion callbacks, matching the `dasher.lua` pattern:
   - **Chaser FSM**: States: `wandering`, `chasing`, `puzzled`. Callbacks trigger "alert" on spot and "confused" during puzzled pause before wandering.

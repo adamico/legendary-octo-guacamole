@@ -57,7 +57,6 @@ end
 local Scrolling = CameraManager:addState("Scrolling")
 
 function Scrolling:enteredState(new_room, dir_gx, dir_gy)
-    Log.info("CameraManager: Started Scrolling to room "..new_room.grid_x..","..new_room.grid_y)
     self.old_room = self.current_room
     self.new_room = new_room
     self.dir_gx = dir_gx
@@ -134,8 +133,6 @@ function CameraManager:on_trigger(px, py)
         dir_gy = dy > 0 and 1 or -1
     end
 
-    Log.trace("CameraManager:on_trigger dx="..dx.." dy="..dy.." -> dir_gx="..dir_gx.." dir_gy="..dir_gy)
-
     -- Calculate target grid position
     local target_gx = room.grid_x + dir_gx
     local target_gy = room.grid_y + dir_gy
@@ -144,8 +141,6 @@ function CameraManager:on_trigger(px, py)
     local new_room = DungeonManager.rooms[key]
 
     if new_room then
-        Log.trace("CameraManager: transitioning to room "..key)
-
         -- Reposition player to entry point (opposite side of new room)
         -- We do this BEFORE the scroll starts so they are in the right spot
         local new_px = new_room.pixels
