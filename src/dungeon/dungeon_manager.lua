@@ -21,8 +21,6 @@ local DungeonManager = {}
 
 DungeonManager.current_room = nil
 DungeonManager.rooms = {} -- Hash map: "x,y" -> Room
-DungeonManager.current_grid_x = 0
-DungeonManager.current_grid_y = 0
 DungeonManager.map_data = nil
 
 -- Helper: Count neighbors at a grid position
@@ -120,8 +118,6 @@ function DungeonManager.generate()
    end
 
    -- Set initial state
-   DungeonManager.current_grid_x = 0
-   DungeonManager.current_grid_y = 0
    DungeonManager.current_room = start_room
 
    Log.info("Generated dungeon with "..#DungeonManager.get_all_rooms().." rooms")

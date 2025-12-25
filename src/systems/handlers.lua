@@ -63,7 +63,7 @@ Handlers.entity["Projectile,Enemy"] = function(projectile, enemy)
 end
 
 Handlers.entity["Player,Enemy"] = function(player, enemy)
-    if enemy.enemy_type == "Dasher" and enemy.dasher_state == "dash" then
+    if enemy.enemy_type == "Dasher" and enemy.dasher_fsm and enemy.dasher_fsm:is("dash") then
         enemy.dasher_collision = true
     end
     if player.invuln_timer and player.invuln_timer > 0 then

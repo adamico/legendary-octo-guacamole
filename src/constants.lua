@@ -30,7 +30,6 @@ SKULL_SPAWN_LOCKED_TIMER = 1800
 local GameConstants = {
    Player = {
       invulnerable_time = 120, -- frames
-      move_speed = vec(1, 1),
       width = 16,
       height = 16,
       hitbox_width = 10,
@@ -342,9 +341,7 @@ local GameConstants = {
             }
          },
          shadow_offset = 2,
-         shadow_width = 12,
       },
-      drop_chance = 1.0,
    },
    Emotions = {
       alert = {text = "!", color = 8, duration = 60}, -- red "!" when spotting player
@@ -357,11 +354,8 @@ local GameConstants = {
       outline_color = 0, -- Black outline for visibility
    },
    title = "Pizak",
-   score = {
-   },
    debug = {
       show_hitboxes = false,
-      show_attributes = false,
    },
    cheats = {
       noclip = false,
