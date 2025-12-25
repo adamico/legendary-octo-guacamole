@@ -195,6 +195,12 @@ local GameConstants = {
          hp = 20,
          speed = 0.5,
          contact_damage = 10,
+         vision_range = 120,
+         -- Wandering configuration
+         wander_radius = 40,
+         wander_speed_mult = 0.6,
+         wander_pause_min = 20,
+         wander_pause_max = 60,
          sprite_index_offsets = {
             down = 231,
             right = 231,

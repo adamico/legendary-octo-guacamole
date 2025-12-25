@@ -2,6 +2,7 @@
 
 ## Ideas
 
+- brainstorm collectibles (keys? bombs? coins?)
 - brainstorm ways to make room/dungeon traversal more interesting and quick [PENDING]
 - should we scale the sprites up? 24x24? 32x32? [PENDING]
 - add enemy group patterns similar to the ones in The Binding of Isaac: Rebirth [PENDING]
