@@ -8,6 +8,7 @@ add_module_path("src/dungeon/")
 add_module_path("src/entities/")
 add_module_path("src/scenes/")
 add_module_path("src/systems/")
+add_module_path("src/ai/")
 
 Class = require("middleclass")
 Stateful = require("stateful")

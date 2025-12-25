@@ -2,6 +2,7 @@ local DungeonManager = require("dungeon_manager")
 local CameraManager = require("camera_manager")
 local Entities = require("entities")
 local Systems = require("systems")
+local Emotions = require("emotions")
 
 local SceneManager = require("scene_manager")
 
@@ -80,6 +81,7 @@ function Play:update()
    world.sys("animatable", Systems.animate)()
    world.sys("shooter", Systems.projectile_fire)()
    world.sys("enemy", Systems.ai)()
+   Emotions.update(world)
    world.sys("collidable", Systems.resolve_entities)()
    world.sys("health", Systems.health_regen)()
    world.sys("player", Systems.invulnerability_tick)()
@@ -161,6 +163,7 @@ function Play:draw()
 
    -- 2. Middleground Layer: Characters (Y-Sorted)
    Systems.draw_layer(world, "middleground,drawable", true)
+   Emotions.draw(world)
 
    -- 3. Global Effects & Debug
    world.sys("palette_swappable", Systems.palette_swappable)()

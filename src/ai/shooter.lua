@@ -1,5 +1,6 @@
 local Entities = require("entities")
-local wanderer = require("ai/wanderer")
+local wanderer = require("wanderer")
+local Emotions = require("emotions")
 
 local SHOOTER_VISION_RANGE = 200
 local SHOOTER_TARGET_DIST = 100
@@ -11,8 +12,20 @@ local function shooter_behavior(entity, player)
     local dist = sqrt(dx * dx + dy * dy)
     local vision_range = entity.vision_range or SHOOTER_VISION_RANGE
 
+    -- Track previous state to detect transitions
+    local was_engaging = entity.ai_state == "engaging"
+    local was_wandering = entity.ai_state == "wandering"
+
     if dist <= vision_range then
         -- Player spotted: reset wandering state and engage
+        local is_first_contact = entity.ai_state == nil
+        entity.ai_state = "engaging"
+
+        -- Transition: was wandering, now engaging -> alert
+        if was_wandering or is_first_contact then
+            Emotions.set(entity, "alert")
+        end
+
         wanderer.reset(entity)
 
         -- Maintain distance
@@ -46,6 +59,13 @@ local function shooter_behavior(entity, player)
         end
     else
         -- Out of vision range: wander randomly
+        entity.ai_state = "wandering"
+
+        -- Transition: was engaging, now wandering -> confused
+        if was_engaging then
+            Emotions.set(entity, "confused")
+        end
+
         wanderer.update(entity)
     end
 end

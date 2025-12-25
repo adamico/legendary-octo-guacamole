@@ -1,12 +1,13 @@
 local machine = require("lua-state-machine/statemachine")
 local Utils = require("utils")
+local Emotions = require("emotions")
 
 -- Cardinal directions for patrol: {dx, dy}
 local CARDINAL_DIRS = {
     {0,  -1}, -- up
-    {0,  1}, -- down
-    {-1, 0}, -- left
-    {1,  0}, -- right
+    {0,  1},  -- down
+    {-1, 0},  -- left
+    {1,  0},  -- right
 }
 
 -- Get orthogonal directions to current direction
@@ -46,13 +47,14 @@ local function init_dasher_fsm(entity)
         initial = "patrol",
         events = {
             {name = "spot",    from = "patrol", to = "windup"}, -- Player spotted, facing them
-            {name = "charge",  from = "windup", to = "dash"}, -- Windup complete
-            {name = "collide", from = "dash",   to = "stun"}, -- Hit wall or player
+            {name = "charge",  from = "windup", to = "dash"},   -- Windup complete
+            {name = "collide", from = "dash",   to = "stun"},   -- Hit wall or player
             {name = "recover", from = "stun",   to = "patrol"}, -- Stun timer finished
         },
         callbacks = {
             onenterwindup = function()
                 Log.trace("Dasher enters windup")
+                Emotions.set(entity, "alert")
                 entity.dasher_timer = entity.windup_duration
                 entity.vel_x = 0
                 entity.vel_y = 0
@@ -71,10 +73,16 @@ local function init_dasher_fsm(entity)
                 entity.dasher_collision = nil
                 entity.rotation_angle = 0
             end,
-            onenterpatrol = function()
+            onenterpatrol = function(self, event)
                 if entity.fsm and entity.fsm:is("attacking") and entity.fsm:can("finish") then
                     entity.fsm:finish()
                 end
+
+                -- Only show confused if coming from stun (recovering)
+                if event and event.name == "recover" then
+                    Emotions.set(entity, "confused")
+                end
+
                 local dir = CARDINAL_DIRS[flr(rnd(4)) + 1]
                 entity.patrol_dir_x = dir[1]
                 entity.patrol_dir_y = dir[2]

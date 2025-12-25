@@ -327,6 +327,15 @@ local GameConstants = {
       },
       drop_chance = 1.0,
    },
+   Emotions = {
+      alert = {text = "!", color = 8, duration = 60}, -- red "!" when spotting player
+      confused = {text = "?", color = 12, duration = 90}, -- cyan "?" when losing player
+      idle = {text = "♪", color = 11, duration = 120}, -- green "♪" when wandering
+      offset_y = -18, -- Vertical offset above entity (was -10)
+      bounce_speed = 0.15, -- Bounce animation speed
+      bounce_height = 2, -- Bounce amplitude in pixels
+      outline_color = 0, -- Black outline for visibility
+   },
    title = "Pizak",
    score = {
    },

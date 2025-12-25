@@ -1,7 +1,7 @@
 local AI = {}
-local chaser_behavior = require("ai/chaser")
-local shooter_behavior = require("ai/shooter")
-local dasher_behavior = require("ai/dasher")
+local chaser_behavior = require("chaser")
+local shooter_behavior = require("shooter")
+local dasher_behavior = require("dasher")
 
 -- Enemy AI system: simple chase behavior
 function AI.update(entity)

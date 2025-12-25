@@ -2,6 +2,7 @@
 -- Provides random wandering for enemies without a current target
 
 local Utils = require("utils")
+local Emotions = require("emotions")
 
 -- Pick a random destination within radius of current position
 local function pick_wander_target(entity)
@@ -78,6 +79,11 @@ local function wander_behavior(entity)
             entity.wander_timer = entity.wander_pause_duration
             entity.vel_x = 0
             entity.vel_y = 0
+
+            -- Show idle emotion when pausing (50% chance to avoid spam)
+            if rnd(1) > 0.5 then
+                Emotions.set(entity, "idle")
+            end
         end
     end
 end
