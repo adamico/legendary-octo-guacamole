@@ -163,8 +163,8 @@ function DungeonManager.carve_corridors(room)
       -- Get door position in current room
       local pos = room:get_door_tile(dir)
       if pos then
-         -- Set door tile to 0 (transparent) - actual door sprite drawn by rendering
-         mset(pos.tx, pos.ty, 0)
+         -- Set door tile to EMPTY_TILE (transparent) - actual door sprite drawn by rendering
+         mset(pos.tx, pos.ty, EMPTY_TILE)
 
          -- Place door frame tiles based on direction
          if dir == "north" or dir == "south" then
@@ -239,15 +239,12 @@ function DungeonManager.assign_room_types()
    -- Assign special types: farthest = boss, next = treasure, next = shop
    if #leaves >= 1 then
       leaves[1].room_type = "boss"
-      leaves[1].floor_color = 8 -- Red tint
    end
    if #leaves >= 2 then
       leaves[2].room_type = "treasure"
-      leaves[2].floor_color = 12 -- Cyan
    end
    if #leaves >= 3 then
       leaves[3].room_type = "shop"
-      leaves[3].floor_color = 10 -- Yellow
    end
 
    -- Remaining rooms are combat rooms with enemies
@@ -255,7 +252,6 @@ function DungeonManager.assign_room_types()
    for _, room in pairs(DungeonManager.rooms) do
       if not room.room_type then
          room.room_type = "combat"
-         room.floor_color = 5 -- Default gray
          DungeonManager.assign_enemies(room, nil, nil, combat_enemy_types)
       end
    end
@@ -286,7 +282,6 @@ function DungeonManager.connect_neighbor_rooms()
 end
 
 function DungeonManager.fill_map_with_walls()
-   -- Fill entire extended map with wall tiles
    for ty = 0, EXT_MAP_H - 1 do
       for tx = 0, EXT_MAP_W - 1 do
          mset(tx, ty, WALL_TILE)
@@ -294,7 +289,6 @@ function DungeonManager.fill_map_with_walls()
    end
 end
 
--- Helper: Check if a tile is a floor tile
 function DungeonManager.is_floor_tile(tx, ty)
    local tile = mget(tx, ty)
    if tile == 0 then return true end
@@ -304,10 +298,7 @@ function DungeonManager.is_floor_tile(tx, ty)
    return false
 end
 
--- Apply contextual autotiling to walls based on adjacent floor tiles
--- OPTIMIZED: Only processes wall tiles around room perimeters instead of entire 256x256 map
 function DungeonManager.autotile_walls()
-   -- Build a set of wall tiles to process (perimeter of each room + 1 tile margin)
    local tiles_to_check = {}
    local visited = {}
 
@@ -332,174 +323,57 @@ function DungeonManager.autotile_walls()
       end
    end
 
-   -- Process only the collected wall tiles
+   -- Bitmask lookup: TL=1, TR=2, BL=4, BR=8
+   local CORNER_TILES = {
+      [1]  = WALL_TILE_CORNER_BR,    -- TL only: outer corner
+      [2]  = WALL_TILE_CORNER_BL,    -- TR only: outer corner
+      [4]  = WALL_TILE_CORNER_TR,    -- BL only: outer corner
+      [8]  = WALL_TILE_CORNER_TL,    -- BR only: outer corner
+      [3]  = WALL_TILE_INNER_TOP,    -- TL+TR: inner top
+      [12] = WALL_TILE_INNER_BOTTOM, -- BL+BR: inner bottom
+      [10] = WALL_TILE_INNER_RIGHT,  -- TR+BR: inner right
+      [5]  = WALL_TILE_INNER_LEFT,   -- TL+BL: inner left
+   }
+
    for _, tile in ipairs(tiles_to_check) do
       local tx, ty = tile.tx, tile.ty
-
-      -- Skip if somehow became a floor tile
       if DungeonManager.is_floor_tile(tx, ty) then goto continue end
 
-      -- Check orthogonally adjacent tiles for floor
-      local floor_above          = DungeonManager.is_floor_tile(tx, ty - 1)
-      local floor_below          = DungeonManager.is_floor_tile(tx, ty + 1)
-      local floor_left           = DungeonManager.is_floor_tile(tx - 1, ty)
-      local floor_right          = DungeonManager.is_floor_tile(tx + 1, ty)
+      local floor_above = DungeonManager.is_floor_tile(tx, ty - 1)
+      local floor_below = DungeonManager.is_floor_tile(tx, ty + 1)
+      local floor_left  = DungeonManager.is_floor_tile(tx - 1, ty)
+      local floor_right = DungeonManager.is_floor_tile(tx + 1, ty)
 
-      -- Check diagonally adjacent tiles for floor (for corners)
-      local floor_diag_br        = DungeonManager.is_floor_tile(tx + 1, ty + 1)
-      local floor_diag_bl        = DungeonManager.is_floor_tile(tx - 1, ty + 1)
-      local floor_diag_tr        = DungeonManager.is_floor_tile(tx + 1, ty - 1)
-      local floor_diag_tl        = DungeonManager.is_floor_tile(tx - 1, ty - 1)
+      local new_tile    = nil
 
-      -- Count orthogonal floor neighbors
-      local has_orthogonal_floor = floor_above or floor_below or floor_left or floor_right
-
-      -- CORNER HANDLING: walls with no orthogonal floor neighbors
-      if not has_orthogonal_floor then
-         -- Count diagonal floor neighbors
-         local diag_count = 0
-         if floor_diag_tl then diag_count += 1 end
-         if floor_diag_tr then diag_count += 1 end
-         if floor_diag_bl then diag_count += 1 end
-         if floor_diag_br then diag_count += 1 end
-
-         if diag_count == 2 then
-            -- 2 diagonal floors: check which pair to determine inner corner
-            if floor_diag_tl and floor_diag_tr then
-               -- Two on top: inner corner pointing down
-               mset(tx, ty, WALL_TILE_INNER_TOP)
-            elseif floor_diag_bl and floor_diag_br then
-               -- Two on bottom: inner corner pointing up
-               mset(tx, ty, WALL_TILE_INNER_BOTTOM)
-            elseif floor_diag_tr and floor_diag_br then
-               -- Two on right: inner corner pointing left
-               mset(tx, ty, WALL_TILE_INNER_RIGHT)
-            elseif floor_diag_tl and floor_diag_bl then
-               -- Two on left: inner corner pointing right
-               mset(tx, ty, WALL_TILE_INNER_LEFT)
-            end
-            -- Diagonal pair (TL+BR or TR+BL): leave as full wall (default)
-         elseif diag_count == 1 then
-            -- Single diagonal floor: outer corner (original logic)
-            if floor_diag_br then
-               mset(tx, ty, WALL_TILE_CORNER_TL) -- A: top-left corner (floor at bottom-right)
-            elseif floor_diag_bl then
-               mset(tx, ty, WALL_TILE_CORNER_TR) -- B: top-right corner (floor at bottom-left)
-            elseif floor_diag_tr then
-               mset(tx, ty, WALL_TILE_CORNER_BL) -- C: bottom-left corner (floor at top-right)
-            elseif floor_diag_tl then
-               mset(tx, ty, WALL_TILE_CORNER_BR) -- D: bottom-right corner (floor at top-left)
-            end
+      if floor_above or floor_below or floor_left or floor_right then
+         if floor_above or floor_below then
+            new_tile = WALL_TILE_HORIZONTAL[flr(rnd(#WALL_TILE_HORIZONTAL)) + 1]
+         else
+            new_tile = WALL_TILE_VERTICAL[flr(rnd(#WALL_TILE_VERTICAL)) + 1]
          end
-         -- diag_count == 0: leave as full wall (no adjacent floors)
-      elseif floor_above or floor_below then
-         -- Horizontal wall (floor above or below)
-         local variants = WALL_TILE_HORIZONTAL
-         mset(tx, ty, variants[flr(rnd(#variants)) + 1])
-      elseif floor_left or floor_right then
-         -- Vertical wall (floor left or right)
-         local variants = WALL_TILE_VERTICAL
-         mset(tx, ty, variants[flr(rnd(#variants)) + 1])
+      else
+         -- No orthogonal floors: check diagonals with bitmask
+         local diag_mask = 0
+         if DungeonManager.is_floor_tile(tx - 1, ty - 1) then diag_mask += 1 end -- TL
+         if DungeonManager.is_floor_tile(tx + 1, ty - 1) then diag_mask += 2 end -- TR
+         if DungeonManager.is_floor_tile(tx - 1, ty + 1) then diag_mask += 4 end -- BL
+         if DungeonManager.is_floor_tile(tx + 1, ty + 1) then diag_mask += 8 end -- BR
+         new_tile = CORNER_TILES[diag_mask]
       end
-      -- Otherwise: leave as full wall (Z) - no adjacent floors
+
+      if new_tile then
+         mset(tx, ty, new_tile)
+      end
 
       ::continue::
    end
-end
-
-function DungeonManager.enter_door(direction)
-   local dx, dy = DungeonManager.get_direction_delta(direction)
-
-   local target_gx = DungeonManager.current_grid_x + dx
-   local target_gy = DungeonManager.current_grid_y + dy
-   local key = target_gx..","..target_gy
-
-   local next_room = DungeonManager.rooms[key]
-
-   if next_room then
-      DungeonManager.current_grid_x = target_gx
-      DungeonManager.current_grid_y = target_gy
-      DungeonManager.current_room = next_room
-
-      return next_room
-   end
-   return nil
 end
 
 function DungeonManager.init()
    DungeonManager.map_data = userdata("i16", EXT_MAP_W, EXT_MAP_H)
    memmap(DungeonManager.map_data, MAP_MEMORY_ADDRESS)
    DungeonManager.generate()
-end
-
--- Helper: Get vector delta for a direction string
-function DungeonManager.get_direction_delta(direction)
-   if direction == "east" then return 1, 0 end
-   if direction == "west" then return -1, 0 end
-   if direction == "north" then return 0, -1 end
-   if direction == "south" then return 0, 1 end
-   return 0, 0
-end
-
--- Helper: Get direction string from vector delta
-function DungeonManager.get_direction_name(dx, dy)
-   if dx == 1 and dy == 0 then return "east" end
-   if dx == -1 and dy == 0 then return "west" end
-   if dx == 0 and dy == -1 then return "north" end
-   if dx == 0 and dy == 1 then return "south" end
-   return nil
-end
-
--- Peek at next room without committing transition (for RoomManager scroll animation)
-function DungeonManager.peek_next_room(direction)
-   local dx, dy = DungeonManager.get_direction_delta(direction)
-
-   local target_gx = DungeonManager.current_grid_x + dx
-   local target_gy = DungeonManager.current_grid_y + dy
-   local key = target_gx..","..target_gy
-
-   return DungeonManager.rooms[key]
-end
-
--- Calculate player spawn position for given door direction
--- Preserves Y for horizontal (east/west) and X for vertical (north/south) doors
--- Returns WORLD coordinates (absolute pixels)
-function DungeonManager.calculate_spawn_position(direction, room, current_x, current_y)
-   local x, y = 0, 0
-   local p_w = GameConstants.Player.width
-   local p_h = GameConstants.Player.height
-
-   if direction == "east" then
-      -- Moving East, entering next room from West
-      -- Wall at x, Floor at x + GRID_SIZE. Player at x + GRID_SIZE (flush against wall)
-      x = room.pixels.x + GRID_SIZE
-      y = current_y
-   elseif direction == "west" then
-      -- Moving West, entering next room from East
-      -- Wall starts at x+w-GRID_SIZE. Player right edge at x+w-GRID_SIZE.
-      -- Player left edge at x+w-GRID_SIZE-p_w (flush against wall)
-      x = room.pixels.x + room.pixels.w - GRID_SIZE - p_w
-      y = current_y
-   elseif direction == "north" then
-      x = current_x
-      -- Moving North, entering next room from South
-      -- Wall at y+h-GRID_SIZE. Player bottom edge at y+h-GRID_SIZE.
-      -- Player top edge at y+h-GRID_SIZE-p_h (flush against wall)
-      y = room.pixels.y + room.pixels.h - GRID_SIZE - p_h
-   elseif direction == "south" then
-      -- Moving South, entering next room from North
-      -- Wall at y, Floor at y+GRID_SIZE. Player at y+GRID_SIZE (flush against wall)
-      x = current_x
-      y = room.pixels.y + GRID_SIZE
-   end
-
-   return {x = x, y = y}
-end
-
-function DungeonManager.draw()
-   if DungeonManager.current_room then
-      DungeonManager.current_room:draw()
-   end
 end
 
 return DungeonManager

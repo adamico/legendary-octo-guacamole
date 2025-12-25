@@ -10,7 +10,6 @@ function Room:initialize(tx, ty, w, h, is_safe)
         h = h * GRID_SIZE
     }
 
-    self.floor_color = 5
     self.enemy_positions = {}
 
     -- Lifecycle FSM
