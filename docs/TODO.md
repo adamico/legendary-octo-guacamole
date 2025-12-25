@@ -1,7 +1,5 @@
 # TODO
 
-- unify enemy AI to use FSMs (like Dasher) with emotion callbacks [PENDING]
-
 ## Ideas
 
 - should we scale the sprites up? 24x24? 32x32? [PENDING]

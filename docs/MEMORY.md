@@ -17,15 +17,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 ### Recent Activities
 
 - **Simplified Module Requires**: Added `src/ai/` to the module search path in `main.lua` and refactored all `require` statements to use simple filenames (e.g., `require("emotions")` instead of `require("systems/emotions")`). This follows the project's established convention for cleaner codebase organization.
+- **Unified Enemy AI to FSMs**: Refactored `chaser.lua` and `shooter.lua` to use `lua-state-machine` FSMs with emotion callbacks, matching the `dasher.lua` pattern:
+  - **Chaser FSM**: States: `wandering`, `chasing`, `puzzled`. Callbacks trigger "alert" on spot and "confused" during puzzled pause before wandering.
+  - **Shooter FSM**: States: `wandering`, `engaging`, `puzzled`. Same emotion callbacks and puzzled state as Chaser.
+  - **Dasher FSM**: Added "stunned" emotion (★ in yellow) when entering stun state after collision.
+  - Removed all ad-hoc `ai_state` string tracking in favor of FSM `fsm:is()` checks.
 - **Brainstormed Pizza-Themed Collectibles**: Created `docs/ideas/pizza_theme.md` with ideas for currency (Slices), keys (Dough Knots), bombs (Spicy Meatballs), and "Ammunition Mods" (Garlic, Anchovy, Pineapple) that integrate with the health-as-ammo mechanic.
-- **Implemented Enemy Emotions System**: Created `src/systems/emotions.lua` module that displays visual indicators above enemies based on their AI state:
-  - **Alert (!)**: Red exclamation when spotting the player
-  - **Confused (?)**: Cyan question mark when losing sight of the player
-  - **Idle (♪)**: Green musical note when wandering (50% chance during pauses)
-  - Uses p8scii print with outline controls for visibility
-  - Bounce animation for visual polish
-  - Integrated into all AI modules (`chaser.lua`, `shooter.lua`, `wanderer.lua`, `dasher.lua`)
-  - **Note**: Chaser/Shooter use simple `ai_state` string tracking; Dasher uses FSM. Future enhancement: unify all enemies to use FSMs with emotion callbacks.
 - **AI Behavior Modularization**: Extracted individual AI behaviors from the monolithic `src/systems/ai.lua` into a new `src/ai/` directory (`chaser.lua`, `shooter.lua`, `dasher.lua`). Refactored `src/systems/ai.lua` into a clean dispatcher module.
 - **Renamed Redundant AI Function**: Renamed `AI.enemy_ai` to `AI.update` and updated its export in `Systems` to `Systems.ai` for better consistency with other systems.
 - **Implemented Shooter Vision Range**: Added a distance-based activation check to the Shooter AI. Shooters now remain idle until the player enters their `vision_range` (200 pixels).

@@ -130,3 +130,69 @@ end
 - ✅ **Decoupled**: Effect logic separated from collision detection
 - ✅ **Type-safe**: Unknown pickup types log warnings instead of crashing
 - ✅ **Flexible**: Same entity type can have different effects via `pickup_type`
+
+---
+
+## Spritesheet Pickup Ideas
+
+Based on the available sprites, here are the recommended pickups:
+
+### 💰 Coins (Spendable Currency)
+
+| Pickup | Sprite Location | Value | Notes |
+|--------|-----------------|-------|-------|
+| **Gold Coin** | Sheet 2, row 2 (animated orange orbs) | 1 | Common drop from enemies, breakables |
+| **Gem** | Sheet 2, row 6 (blue/pink diamonds) | 10-25 | Rare, secret rooms |
+| **Trophy** | Sheet 2, top row (gold cup) | 50 | Boss drops |
+
+**Uses**: Shop purchases, slot machines, donation boxes, toll doors.
+
+---
+
+### 🔑 Keys
+
+| Pickup | Sprite Location | Type | Notes |
+|--------|-----------------|------|-------|
+| **Bronze Key** | Sheet 1, middle (golden key) | Standard | Opens treasure rooms, locked chests |
+| **Key Ring** | Sheet 1, row 3 | Multi-use | Opens multiple doors |
+
+**Uses**: Treasure rooms, locked chests, vault rooms, floor shortcuts.
+
+---
+
+### 💣 Bombs
+
+| Pickup | Sprite Location | Type | Notes |
+|--------|-----------------|------|-------|
+| **Standard Bomb** | Sheet 1, row 3 (black bomb with fuse) | Basic | Destroys tiles, damages enemies |
+
+**Uses**:
+
+- **Combat**: Area damage, crowd control
+- **Exploration**: Reveal secret rooms (weak walls)
+- **Environment**: Remove destructible tiles for shortcuts
+
+---
+
+### ✨ Bonus Pickups
+
+| Pickup | Sprite Location | Effect |
+|--------|-----------------|--------|
+| **Star** | Sheet 2, rows 1-2 (yellow stars) | Invincibility / damage boost |
+| **Lightning** | Sheet 2, row 6 (yellow bolt) | Speed boost |
+| **Clock** | Sheet 3, middle | Time freeze / slow-mo |
+| **Bell** | Sheet 1, bottom (gold bell) | Alert / summon |
+
+---
+
+### Sprite Index Reference
+
+> **TODO**: Map exact sprite indices once integrated into `constants.lua`
+
+| Pickup Type | Suggested Sprite Index |
+|-------------|----------------------|
+| Coin | TBD (animated) |
+| Key | TBD |
+| Bomb | TBD |
+| Heart | 64 (already in use) |
+| Gem | TBD |

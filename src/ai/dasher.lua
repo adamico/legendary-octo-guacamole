@@ -67,6 +67,7 @@ local function init_dasher_fsm(entity)
                 entity.rotation_angle = 0
             end,
             onenterstun = function()
+                Emotions.set(entity, "stunned")
                 entity.dasher_timer = entity.stun_duration
                 entity.vel_x = 0
                 entity.vel_y = 0
