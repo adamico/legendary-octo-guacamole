@@ -1,5 +1,17 @@
--- Shared utilities for entity factories
+local GameConstants = require("constants")
 local Utils = {}
+
+-- Get the configuration table for an entity based on its type and enemy_type
+function Utils.get_config(entity)
+    if entity.type == "Enemy" and entity.enemy_type then
+        return GameConstants.Enemy[entity.enemy_type]
+    end
+    -- Handle projectile Type Object pattern
+    if (entity.type == "Projectile" or entity.type == "EnemyProjectile") and entity.projectile_type then
+        return GameConstants.Projectile[entity.projectile_type]
+    end
+    return GameConstants[entity.type]
+end
 
 -- Convert direction vector (dx, dy) to direction name string
 -- @param dx - x component of direction (-1, 0, or 1)

@@ -8,7 +8,7 @@ local Effects = require("effects")
 local Animation = require("animation")
 local LocalInput = require("input")
 local Spawner = require("spawner")
-
+local Lifecycle = require("lifecycle")
 
 -- Merge all modules into a single Systems table for backward compatibility
 local Systems = {}
@@ -50,9 +50,11 @@ Systems.draw_hitbox = Rendering.draw_hitbox
 Systems.palette_swappable = Rendering.palette_swappable
 Systems.draw_doors = Rendering.draw_doors
 
+-- Lifecycle systems (state management)
+Systems.init_lifecycle = Lifecycle.init_fsm
+Systems.update_lifecycle = Lifecycle.update_fsm
 
--- Animation FSM systems
-Systems.update_fsm = Animation.update_fsm
+-- Animation systems (sprite updates only)
 Systems.animate = Animation.animate
 
 -- Effects systems

@@ -105,8 +105,8 @@ function Rendering.change_sprite(entity)
     local sprite_index
     local flip = false
 
-    local lookup_type = entity.type == "Enemy" and entity.enemy_type or entity.type
-    local config = GameConstants[lookup_type] or GameConstants.Enemy[lookup_type]
+    local Utils = require("utils")
+    local config = Utils.get_config(entity)
     if not config then return end
 
     if neutral or down then sprite_index = config.sprite_index_offsets.down end
