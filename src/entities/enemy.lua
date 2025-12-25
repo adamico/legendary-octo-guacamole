@@ -16,62 +16,56 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
     instance_data = instance_data or {}
 
     local config = GameConstants.Enemy[enemy_type]
+    if not config then
+        Log.error("Attempted to spawn unknown enemy type: "..tostring(enemy_type))
+        return nil
+    end
 
-    -- Build enemy entity from type config
+    -- 1. Base identity and physics state
     local enemy = {
-        type = config.entity_type,
+        type = config.entity_type or "Enemy",
         enemy_type = enemy_type,
         x = x,
         y = y,
-        width = config.width,
-        height = config.height,
-        hitbox_width = config.hitbox_width,
-        hitbox_height = config.hitbox_height,
-        hitbox_offset_x = config.hitbox_offset_x,
-        hitbox_offset_y = config.hitbox_offset_y,
-        shadow_offset = config.shadow_offset or 0,
-        shadow_offsets = config.shadow_offsets,
-        shadow_width = config.shadow_width,
-        shadow_height = config.shadow_height,
-        shadow_widths = config.shadow_widths,
-        shadow_heights = config.shadow_heights,
-        hp = config.hp,
-        max_hp = config.hp,
-        speed = config.speed,
-        contact_damage = config.contact_damage,
         vel_x = 0,
         vel_y = 0,
         sub_x = 0,
         sub_y = 0,
         dir_x = 0,
-        dir_y = 1,
-        sprite_index = config.sprite_index_offsets.down,
+        dir_y = 1, -- Default facing down
         flip_x = false,
-        -- Type-specific properties from config
-        shoot_timer = config.shoot_delay,
-        shoot_delay = config.shoot_delay,
-        is_shooter = config.is_shooter,
-        -- Dasher-specific properties
-        vision_range = config.vision_range,
-        windup_duration = config.windup_duration,
-        stun_duration = config.stun_duration,
-        dash_speed_multiplier = config.dash_speed_multiplier,
-        sprite_shell = config.sprite_shell,
-        -- Dasher state (initialized at spawn)
-        dasher_state = config.vision_range and "patrol" or nil, -- patrol/windup/dash/stun
-        dasher_timer = 0,
-        patrol_dir_x = 0,
-        patrol_dir_y = 1, -- Start moving down
-        dash_target_dx = 0,
-        dash_target_dy = 0,
+        hp = config.hp or 10,
+        max_hp = config.hp or 10,
     }
 
-    -- Apply instance-specific overrides
+    -- 2. Bulk copy all non-table values from config (stats, bounds, offsets)
+    for k, v in pairs(config) do
+        if type(v) ~= "table" then
+            enemy[k] = v
+        end
+    end
+
+    -- 3. Static table references (offsets, directional maps)
+    enemy.sprite_index_offsets = config.sprite_index_offsets
+    enemy.shadow_offsets = config.shadow_offsets
+    enemy.shadow_widths = config.shadow_widths
+    enemy.shadow_heights = config.shadow_heights
+
+    -- 4. Dynamic/Behavior initialization
+    if enemy.sprite_index_offsets then
+        enemy.sprite_index = enemy.sprite_index_offsets.down
+    end
+
+    if enemy.is_shooter then
+        enemy.shoot_timer = enemy.shoot_delay or 60
+    end
+
+    -- 5. Apply instance overrides
     for k, v in pairs(instance_data) do
         enemy[k] = v
     end
 
-    -- Create entity with tags from config (shadow auto-spawned if tagged)
+    -- 6. Create entity with tags from config
     return Utils.spawn_entity(world, config.tags, enemy)
 end
 

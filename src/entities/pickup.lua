@@ -15,24 +15,33 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
     instance_data = instance_data or {}
 
     local config = GameConstants.Pickup[pickup_type]
+    if not config then
+        Log.error("Attempted to spawn unknown pickup type: "..tostring(pickup_type))
+        return nil
+    end
+
     local direction = instance_data.direction
 
-    -- Build pickup entity from type config
+    -- 1. Base identity and physics state
     local pickup = {
-        type = config.entity_type,
+        type = config.entity_type or "Pickup",
         pickup_type = pickup_type,
-        pickup_effect = config.pickup_effect,
         x = x,
         y = y,
-        width = config.width,
-        height = config.height,
         vel_x = 0,
         vel_y = 0,
         sub_x = 0,
         sub_y = 0,
     }
 
-    -- Sprite: use instance override, or direction-based lookup, or static sprite
+    -- 2. Bulk copy all non-table values from config (stats, bounds, offsets)
+    for k, v in pairs(config) do
+        if type(v) ~= "table" then
+            pickup[k] = v
+        end
+    end
+
+    -- 3. Sprite: use instance override, or direction-based lookup, or static sprite
     if instance_data.sprite_index then
         pickup.sprite_index = instance_data.sprite_index
     elseif config.sprite_index_offsets and direction then
@@ -41,22 +50,17 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
         pickup.sprite_index = config.sprite_index or 0
     end
 
-    -- Hitbox: special handling for projectile-based pickups (uses Laser hitbox)
+    -- 4. Hitbox: special handling for projectile-based pickups (uses Laser hitbox)
     if config.hitbox_from_projectile then
         pickup.hitbox = GameConstants.Projectile.Laser.hitbox
-    else
-        pickup.hitbox_width = config.hitbox_width
-        pickup.hitbox_height = config.hitbox_height
-        pickup.hitbox_offset_x = config.hitbox_offset_x
-        pickup.hitbox_offset_y = config.hitbox_offset_y
     end
 
-    -- Apply instance-specific overrides
+    -- 5. Apply instance-specific overrides
     for k, v in pairs(instance_data) do
         pickup[k] = v
     end
 
-    -- Create entity with tags from config
+    -- 6. Create entity with tags from config
     return world.ent(config.tags, pickup)
 end
 

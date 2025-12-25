@@ -17,48 +17,55 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     instance_data = instance_data or {}
 
     local config = GameConstants.Projectile[projectile_type]
+    if not config then
+        Log.error("Attempted to spawn unknown projectile type: "..tostring(projectile_type))
+        return nil
+    end
+
     local direction = Utils.get_direction_name(dx, dy)
 
-    -- Build projectile entity from type config
+    -- 1. Base identity and physics state
     local projectile = {
-        type = config.entity_type,
+        type = config.entity_type or "Projectile",
         projectile_type = projectile_type,
         x = x,
         y = y,
-        width = config.width,
-        height = config.height,
-        hitbox = config.hitbox,
-        hitbox_width = config.hitbox_width,
-        hitbox_height = config.hitbox_height,
-        hitbox_offset_x = config.hitbox_offset_x,
-        hitbox_offset_y = config.hitbox_offset_y,
         direction = direction,
         dir_x = dx,
         dir_y = dy,
-        vel_x = dx * config.speed,
-        vel_y = dy * config.speed,
+        vel_x = dx * (config.speed or 1),
+        vel_y = dy * (config.speed or 1),
         sub_x = 0,
         sub_y = 0,
-        damage = config.damage,
-        owner = config.owner,
-        animations = config.animations,
-        palette_swaps = config.palette_swaps,
-        sprite_index = config.sprite_index_offsets[direction],
-        sprite_offset_y = config.sprite_offset_y or 0,
-        shadow_offset = config.shadow_offset or 0,
-        shadow_offsets = config.shadow_offsets,
-        shadow_width = config.shadow_width,
-        shadow_height = config.shadow_height,
-        shadow_widths = config.shadow_widths,
-        shadow_heights = config.shadow_heights,
     }
 
-    -- Apply instance-specific overrides
+    -- 2. Bulk copy all non-table values from config (stats, bounds, offsets)
+    for k, v in pairs(config) do
+        if type(v) ~= "table" then
+            projectile[k] = v
+        end
+    end
+
+    -- 3. Static table references
+    projectile.hitbox = config.hitbox
+    projectile.animations = config.animations
+    projectile.palette_swaps = config.palette_swaps
+    projectile.sprite_index_offsets = config.sprite_index_offsets
+    projectile.shadow_offsets = config.shadow_offsets
+    projectile.shadow_widths = config.shadow_widths
+    projectile.shadow_heights = config.shadow_heights
+
+    -- 4. Contextual initialization
+    if projectile.sprite_index_offsets and direction then
+        projectile.sprite_index = projectile.sprite_index_offsets[direction]
+    end
+
+    -- 5. Apply instance-specific overrides
     for k, v in pairs(instance_data) do
         projectile[k] = v
     end
 
-    -- Create entity with tags from config (shadow auto-spawned if tagged)
+    -- 6. Create entity with tags from config
     return Utils.spawn_entity(world, config.tags, projectile)
 end
 
