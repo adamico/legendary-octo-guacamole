@@ -5,15 +5,15 @@ local ROOM_TILES_W = 29 -- Fixed room width in tiles
 local ROOM_TILES_H = 16 -- Fixed room height in tiles
 local MIN_ENEMIES_PER_ROOM = 2
 local MAX_ENEMIES_PER_ROOM = 5
-local ENEMY_DENSITY_DIVISOR = 100   -- Tiles per enemy
-local DEFAULT_ENEMY_MIN_DIST = 80   -- Minimum pixels from player
-local MAP_MEMORY_ADDRESS = 0x100000 -- Picotron Extended Map Address
-local EXT_MAP_W = 256               -- Large static world map
-local EXT_MAP_H = 256               -- Large static world map
-local GRID_STRIDE_X = ROOM_TILES_W  -- Rooms are directly adjacent (Isaac style)
-local GRID_STRIDE_Y = ROOM_TILES_H  -- Rooms are directly adjacent (Isaac style)
-local BASE_OFFSET_X = 64            -- Center offset for grid 0,0
-local BASE_OFFSET_Y = 64            -- Center offset for grid 0,0
+local ENEMY_DENSITY_DIVISOR = 100      -- Tiles per enemy
+local DEFAULT_ENEMY_MIN_DIST = 80      -- Minimum pixels from player
+local MAP_MEMORY_ADDRESS = 0x100000    -- Picotron Extended Map Address
+local EXT_MAP_W = 256                  -- Large static world map
+local EXT_MAP_H = 256                  -- Large static world map
+local GRID_STRIDE_X = ROOM_TILES_W - 1 -- Rooms overlap by 1 tile (shared wall)
+local GRID_STRIDE_Y = ROOM_TILES_H - 1 -- Rooms overlap by 1 tile (shared wall)
+local BASE_OFFSET_X = 64               -- Center offset for grid 0,0
+local BASE_OFFSET_Y = 64               -- Center offset for grid 0,0
 local TARGET_ROOM_COUNT = 8
 local DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 
@@ -105,12 +105,13 @@ function DungeonManager.generate()
    DungeonManager.connect_neighbor_rooms()
 
    -- Phase 5: Carve entire dungeon into map
-   DungeonManager.clear_map()
-   for key, room in pairs(DungeonManager.rooms) do
-      DungeonManager.carve_room(room)
+   DungeonManager.fill_map_with_walls() -- Fill entire map with walls first
+   -- Carve floors for all rooms (clears inner bounds)
+   for _, room in pairs(DungeonManager.rooms) do
+      DungeonManager.carve_room_floor(room)
    end
 
-   -- Phase 6: Carve corridors (after all rooms, so they pierce through margin walls)
+   -- Phase 6: Carve corridors (opens door passages)
    for _, room in pairs(DungeonManager.rooms) do
       DungeonManager.carve_corridors(room)
    end
@@ -156,62 +157,15 @@ function DungeonManager.carve_corridors(room)
    if not room.doors then return end
 
    for dir, door in pairs(room.doors) do
-      -- Get door position in current room
+      -- Get door position in current room and clear it
       local pos = room:get_door_tile(dir)
       if pos then
-         -- Clear the door tile in current room
          mset(pos.tx, pos.ty, 0)
-
-         -- Get adjacent room and clear its corresponding door tile
-         local neighbor_key = door.target_gx..","..door.target_gy
-         local neighbor = DungeonManager.rooms[neighbor_key]
-         if neighbor then
-            local opposite_dir = ({north = "south", south = "north", east = "west", west = "east"})[dir]
-            local neighbor_pos = neighbor:get_door_tile(opposite_dir)
-            if neighbor_pos then
-               mset(neighbor_pos.tx, neighbor_pos.ty, 0)
-            end
-         end
       end
    end
 end
 
-function DungeonManager.carve_room(room, wall_options)
-   wall_options = wall_options or WALL_TILES
-
-   -- Calculate margin needed for screen centering (tiles visible beyond room bounds)
-   -- When room is smaller than screen, camera centers it, exposing tiles outside room.
-   local room_px_w = room.tiles.w * GRID_SIZE
-   local room_px_h = room.tiles.h * GRID_SIZE
-   local margin_x = 0
-   local margin_y = 0
-
-   if room_px_w < SCREEN_WIDTH then
-      local gap_x = (SCREEN_WIDTH - room_px_w) / 2
-      margin_x = ceil(gap_x / GRID_SIZE)
-   end
-   if room_px_h < SCREEN_HEIGHT then
-      local gap_y = (SCREEN_HEIGHT - room_px_h) / 2
-      margin_y = ceil(gap_y / GRID_SIZE)
-   end
-
-   local bounds = room:get_bounds()
-
-   -- Carve walls including margin area around the room
-   for ty = bounds.y1 - margin_y, bounds.y2 + margin_y do
-      for tx = bounds.x1 - margin_x, bounds.x2 + margin_x do
-         -- Only carve if within extended map bounds
-         if tx >= 0 and ty >= 0 and tx < EXT_MAP_W and ty < EXT_MAP_H then
-            local sprite = wall_options[1]
-            if #wall_options > 1 and rnd() < 0.1 then
-               sprite = wall_options[flr(rnd(#wall_options - 1)) + 2]
-            end
-            mset(tx, ty, sprite)
-         end
-      end
-   end
-
-   -- Carve floor (inside walls)
+function DungeonManager.carve_room_floor(room)
    local floor = room:get_inner_bounds()
    for ty = floor.y1, floor.y2 do
       for tx = floor.x1, floor.x2 do
@@ -310,11 +264,17 @@ function DungeonManager.connect_neighbor_rooms()
    end
 end
 
-function DungeonManager.clear_map()
-   -- Clear the entire extended map
+function DungeonManager.fill_map_with_walls()
+   -- Fill entire extended map with wall tiles
+   local wall_sprite = WALL_TILES[1]
    for ty = 0, EXT_MAP_H - 1 do
       for tx = 0, EXT_MAP_W - 1 do
-         mset(tx, ty, 0)
+         -- Occasional variant wall tile
+         if #WALL_TILES > 1 and rnd() < 0.1 then
+            mset(tx, ty, WALL_TILES[flr(rnd(#WALL_TILES - 1)) + 2])
+         else
+            mset(tx, ty, wall_sprite)
+         end
       end
    end
 end
