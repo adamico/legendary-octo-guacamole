@@ -78,7 +78,7 @@ local function get_guidance(tx, ty, axis)
     for _, n in ipairs(neighbors) do
         local ntx, nty = tx + n.dx, ty + n.dy
         local tile = mget(ntx, nty)
-        if tile == SPRITE_DOOR_OPEN then
+        if tile == DOOR_OPEN_TILE then
             if axis == "x" and n.dy ~= 0 then return 0, n.dy end
             if axis == "y" and n.dx ~= 0 then return n.dx, 0 end
         end

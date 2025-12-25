@@ -26,7 +26,7 @@ function Room:initialize(tx, ty, w, h, is_safe)
             onenterspawning = function()
                 if room.doors then
                     for _, door in pairs(room.doors) do
-                        door.sprite = SPRITE_DOOR_BLOCKED
+                        door.sprite = DOOR_BLOCKED_TILE
                     end
                 end
             end,
@@ -41,7 +41,7 @@ function Room:initialize(tx, ty, w, h, is_safe)
                 room.combat_timer = -1
                 if room.doors then
                     for _, door in pairs(room.doors) do
-                        door.sprite = SPRITE_DOOR_OPEN
+                        door.sprite = DOOR_OPEN_TILE
                     end
                 end
                 if room.room_type == "combat" then
@@ -101,15 +101,6 @@ function Room:identify_door(tx, ty)
     end
 
     return nil
-end
-
-function Room:draw()
-    local inner = self:get_inner_bounds()
-    local rx = inner.x1 * GRID_SIZE
-    local ry = inner.y1 * GRID_SIZE
-    local rx2 = (inner.x2 + 1) * GRID_SIZE - 1
-    local ry2 = (inner.y2 + 1) * GRID_SIZE - 1
-    rectfill(rx, ry, rx2, ry2, self.floor_color)
 end
 
 return Room

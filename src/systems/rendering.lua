@@ -375,42 +375,19 @@ local DOOR_ROTATION = {
     west = 270   -- Bottom faces east (toward room center)
 }
 
--- Door stretch configuration: stretch doors to span 2 tiles to cover the gap
--- offset_x/y: where to start drawing (relative to tile position)
--- dw/dh: destination width/height (stretched size)
-local DOOR_STRETCH = {
-    north = {offset_x = 0, offset_y = -8, dw = GRID_SIZE, dh = GRID_SIZE * 1.5}, -- Stretch down
-    south = {offset_x = 0, offset_y = 0, dw = GRID_SIZE, dh = GRID_SIZE * 1.5},  -- Stretch up (offset to reach into room)
-    east = {offset_x = 0, offset_y = 0, dw = GRID_SIZE * 1.5, dh = GRID_SIZE},   -- Stretch left (offset to reach into room)
-    west = {offset_x = -8, offset_y = 0, dw = GRID_SIZE * 1.5, dh = GRID_SIZE}   -- Stretch right
-}
-
--- Draw rotated door sprites for a room
+-- Draw rotated door sprites for a room (both open and blocked)
 function Rendering.draw_doors(room)
     if not room.doors then return end
 
     for dir, door in pairs(room.doors) do
-        -- Only draw if the door has a blocked sprite (sprite 6)
-        -- Open doors (sprite 3) don't need rotation as they're just passages
-        if door.sprite and door.sprite == SPRITE_DOOR_BLOCKED then
+        if door.sprite then
             local pos = room:get_door_tile(dir)
             if pos then
                 local angle = DOOR_ROTATION[dir] or 0
                 local rotated = Rotator.get(door.sprite, angle)
-                local stretch = DOOR_STRETCH[dir]
-
-                local px = pos.tx * GRID_SIZE + stretch.offset_x
-                local py = pos.ty * GRID_SIZE + stretch.offset_y
-
-                -- sspr(sprite, sx, sy, sw, sh, dx, dy, dw, dh)
-                -- Source: entire rotated sprite (0, 0, size, size)
-                -- For 90/270 rotation, dimensions are swapped
-                local sw, sh = GRID_SIZE, GRID_SIZE
-                if angle == 90 or angle == 270 then
-                    sw, sh = GRID_SIZE, GRID_SIZE -- Rotator already handles the swap
-                end
-
-                sspr(rotated, 0, 0, sw, sh, px, py, stretch.dw, stretch.dh)
+                local px = pos.tx * GRID_SIZE
+                local py = pos.ty * GRID_SIZE
+                spr(rotated, px, py)
             end
         end
     end

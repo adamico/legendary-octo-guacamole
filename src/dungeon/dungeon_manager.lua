@@ -2,7 +2,7 @@ local Room = require("room")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles
-local ROOM_TILES_H = 16 -- Fixed room height in tiles
+local ROOM_TILES_H = 16 -- Fixed room height in tiles (256px fits in 270px screen)
 local MIN_ENEMIES_PER_ROOM = 2
 local MAX_ENEMIES_PER_ROOM = 5
 local ENEMY_DENSITY_DIVISOR = 100      -- Tiles per enemy
@@ -111,7 +111,10 @@ function DungeonManager.generate()
       DungeonManager.carve_room_floor(room)
    end
 
-   -- Phase 6: Carve corridors (opens door passages)
+   -- Phase 6: Apply autotiling to walls (corners, H/V variants)
+   DungeonManager.autotile_walls()
+
+   -- Phase 7: Carve corridors (opens door passages with frame tiles)
    for _, room in pairs(DungeonManager.rooms) do
       DungeonManager.carve_corridors(room)
    end
@@ -157,10 +160,26 @@ function DungeonManager.carve_corridors(room)
    if not room.doors then return end
 
    for dir, door in pairs(room.doors) do
-      -- Get door position in current room and clear it
+      -- Get door position in current room
       local pos = room:get_door_tile(dir)
       if pos then
+         -- Set door tile to 0 (transparent) - actual door sprite drawn by rendering
          mset(pos.tx, pos.ty, 0)
+
+         -- Place door frame tiles based on direction
+         if dir == "north" or dir == "south" then
+            -- North/South door: frame on left and right
+            local left_tile = DOOR_FRAME_V_LEFT[flr(rnd(#DOOR_FRAME_V_LEFT)) + 1]
+            local right_tile = DOOR_FRAME_V_RIGHT[flr(rnd(#DOOR_FRAME_V_RIGHT)) + 1]
+            mset(pos.tx - 1, pos.ty, left_tile)
+            mset(pos.tx + 1, pos.ty, right_tile)
+         else
+            -- East/West door: frame on top and bottom
+            local top_tile = DOOR_FRAME_H_TOP[flr(rnd(#DOOR_FRAME_H_TOP)) + 1]
+            local bottom_tile = DOOR_FRAME_H_BOTTOM[flr(rnd(#DOOR_FRAME_H_BOTTOM)) + 1]
+            mset(pos.tx, pos.ty - 1, top_tile)
+            mset(pos.tx, pos.ty + 1, bottom_tile)
+         end
       end
    end
 end
@@ -169,7 +188,9 @@ function DungeonManager.carve_room_floor(room)
    local floor = room:get_inner_bounds()
    for ty = floor.y1, floor.y2 do
       for tx = floor.x1, floor.x2 do
-         mset(tx, ty, 0)
+         -- Use random floor tile variant
+         local floor_tile = FLOOR_TILES[flr(rnd(#FLOOR_TILES)) + 1]
+         mset(tx, ty, floor_tile)
       end
    end
 
@@ -255,7 +276,7 @@ function DungeonManager.connect_neighbor_rooms()
          local neighbor_key = (room.grid_x + d.dx)..","..(room.grid_y + d.dy)
          if DungeonManager.rooms[neighbor_key] then
             room.doors[d.from] = {
-               sprite = SPRITE_DOOR_OPEN,
+               sprite = DOOR_OPEN_TILE,
                target_gx = room.grid_x + d.dx,
                target_gy = room.grid_y + d.dy
             }
@@ -266,16 +287,123 @@ end
 
 function DungeonManager.fill_map_with_walls()
    -- Fill entire extended map with wall tiles
-   local wall_sprite = WALL_TILES[1]
    for ty = 0, EXT_MAP_H - 1 do
       for tx = 0, EXT_MAP_W - 1 do
-         -- Occasional variant wall tile
-         if #WALL_TILES > 1 and rnd() < 0.1 then
-            mset(tx, ty, WALL_TILES[flr(rnd(#WALL_TILES - 1)) + 2])
-         else
-            mset(tx, ty, wall_sprite)
+         mset(tx, ty, WALL_TILE)
+      end
+   end
+end
+
+-- Helper: Check if a tile is a floor tile
+function DungeonManager.is_floor_tile(tx, ty)
+   local tile = mget(tx, ty)
+   if tile == 0 then return true end
+   for _, f in ipairs(FLOOR_TILES) do
+      if tile == f then return true end
+   end
+   return false
+end
+
+-- Apply contextual autotiling to walls based on adjacent floor tiles
+-- OPTIMIZED: Only processes wall tiles around room perimeters instead of entire 256x256 map
+function DungeonManager.autotile_walls()
+   -- Build a set of wall tiles to process (perimeter of each room + 1 tile margin)
+   local tiles_to_check = {}
+   local visited = {}
+
+   for _, room in pairs(DungeonManager.rooms) do
+      local floor = room:get_inner_bounds()
+      -- Check the wall ring around the floor (1 tile margin on all sides)
+      local x1, y1 = floor.x1 - 1, floor.y1 - 1
+      local x2, y2 = floor.x2 + 1, floor.y2 + 1
+
+      for ty = y1, y2 do
+         for tx = x1, x2 do
+            -- Only add wall tiles (skip interior floor tiles)
+            local is_interior = tx >= floor.x1 and tx <= floor.x2 and ty >= floor.y1 and ty <= floor.y2
+            if not is_interior then
+               local key = tx..","..ty
+               if not visited[key] then
+                  visited[key] = true
+                  add(tiles_to_check, {tx = tx, ty = ty})
+               end
+            end
          end
       end
+   end
+
+   -- Process only the collected wall tiles
+   for _, tile in ipairs(tiles_to_check) do
+      local tx, ty = tile.tx, tile.ty
+
+      -- Skip if somehow became a floor tile
+      if DungeonManager.is_floor_tile(tx, ty) then goto continue end
+
+      -- Check orthogonally adjacent tiles for floor
+      local floor_above          = DungeonManager.is_floor_tile(tx, ty - 1)
+      local floor_below          = DungeonManager.is_floor_tile(tx, ty + 1)
+      local floor_left           = DungeonManager.is_floor_tile(tx - 1, ty)
+      local floor_right          = DungeonManager.is_floor_tile(tx + 1, ty)
+
+      -- Check diagonally adjacent tiles for floor (for corners)
+      local floor_diag_br        = DungeonManager.is_floor_tile(tx + 1, ty + 1)
+      local floor_diag_bl        = DungeonManager.is_floor_tile(tx - 1, ty + 1)
+      local floor_diag_tr        = DungeonManager.is_floor_tile(tx + 1, ty - 1)
+      local floor_diag_tl        = DungeonManager.is_floor_tile(tx - 1, ty - 1)
+
+      -- Count orthogonal floor neighbors
+      local has_orthogonal_floor = floor_above or floor_below or floor_left or floor_right
+
+      -- CORNER HANDLING: walls with no orthogonal floor neighbors
+      if not has_orthogonal_floor then
+         -- Count diagonal floor neighbors
+         local diag_count = 0
+         if floor_diag_tl then diag_count += 1 end
+         if floor_diag_tr then diag_count += 1 end
+         if floor_diag_bl then diag_count += 1 end
+         if floor_diag_br then diag_count += 1 end
+
+         if diag_count == 2 then
+            -- 2 diagonal floors: check which pair to determine inner corner
+            if floor_diag_tl and floor_diag_tr then
+               -- Two on top: inner corner pointing down
+               mset(tx, ty, WALL_TILE_INNER_TOP)
+            elseif floor_diag_bl and floor_diag_br then
+               -- Two on bottom: inner corner pointing up
+               mset(tx, ty, WALL_TILE_INNER_BOTTOM)
+            elseif floor_diag_tr and floor_diag_br then
+               -- Two on right: inner corner pointing left
+               mset(tx, ty, WALL_TILE_INNER_RIGHT)
+            elseif floor_diag_tl and floor_diag_bl then
+               -- Two on left: inner corner pointing right
+               mset(tx, ty, WALL_TILE_INNER_LEFT)
+            end
+            -- Diagonal pair (TL+BR or TR+BL): leave as full wall (default)
+         elseif diag_count == 1 then
+            -- Single diagonal floor: outer corner (original logic)
+            if floor_diag_br then
+               mset(tx, ty, WALL_TILE_CORNER_TL) -- A: top-left corner (floor at bottom-right)
+            elseif floor_diag_bl then
+               mset(tx, ty, WALL_TILE_CORNER_TR) -- B: top-right corner (floor at bottom-left)
+            elseif floor_diag_tr then
+               mset(tx, ty, WALL_TILE_CORNER_BL) -- C: bottom-left corner (floor at top-right)
+            elseif floor_diag_tl then
+               mset(tx, ty, WALL_TILE_CORNER_BR) -- D: bottom-right corner (floor at top-left)
+            end
+         end
+         -- diag_count == 0: leave as full wall (no adjacent floors)
+      elseif floor_above or floor_below then
+         -- Horizontal wall (floor above or below)
+         local variants = WALL_TILE_HORIZONTAL
+         mset(tx, ty, variants[flr(rnd(#variants)) + 1])
+      elseif floor_left or floor_right then
+         -- Vertical wall (floor left or right)
+         local variants = WALL_TILE_VERTICAL
+         mset(tx, ty, variants[flr(rnd(#variants)) + 1])
+      end
+      -- Otherwise: leave as full wall (Z) - no adjacent floors
+
+      ::continue::
    end
 end
 
