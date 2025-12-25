@@ -104,8 +104,8 @@ function Rendering.change_sprite(entity)
     local sprite_index
     local flip = false
 
-    local Utils = require("utils")
-    local config = Utils.get_config(entity)
+    local EntityUtils = require("entity_utils")
+    local config = EntityUtils.get_config(entity)
     if not config then return end
 
     if neutral or down then sprite_index = config.sprite_index_offsets.down end

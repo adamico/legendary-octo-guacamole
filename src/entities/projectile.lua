@@ -2,7 +2,7 @@
 -- All projectile types are defined as pure data in GameConstants.Projectile
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
-local Utils = require("utils")
+local EntityUtils = require("entity_utils")
 
 local Projectile = {}
 
@@ -22,7 +22,7 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         return nil
     end
 
-    local direction = Utils.get_direction_name(dx, dy)
+    local direction = EntityUtils.get_direction_name(dx, dy)
 
     -- 1. Base identity and physics state
     local projectile = {
@@ -66,7 +66,7 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     end
 
     -- 6. Create entity with tags from config
-    return Utils.spawn_entity(world, config.tags, projectile)
+    return EntityUtils.spawn_entity(world, config.tags, projectile)
 end
 
 return Projectile

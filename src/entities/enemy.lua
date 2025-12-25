@@ -2,7 +2,7 @@
 -- All enemy types are defined as pure data in GameConstants.Enemy
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
-local Utils = require("utils")
+local EntityUtils = require("entity_utils")
 
 local Enemy = {}
 
@@ -66,7 +66,7 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
     end
 
     -- 6. Create entity with tags from config
-    return Utils.spawn_entity(world, config.tags, enemy)
+    return EntityUtils.spawn_entity(world, config.tags, enemy)
 end
 
 return Enemy

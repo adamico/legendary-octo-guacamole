@@ -2,7 +2,7 @@
 -- All pickup types are defined as pure data in GameConstants.Pickup
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
-local Utils = require("utils")
+local EntityUtils = require("entity_utils")
 
 local Pickup = {}
 
@@ -66,7 +66,7 @@ end
 
 -- Convenience: Spawn projectile-based pickup (from wall collisions)
 function Pickup.spawn_projectile(world, x, y, dir_x, dir_y, amount, sprite_index)
-    local direction = Utils.get_direction_name(dir_x, dir_y)
+    local direction = EntityUtils.get_direction_name(dir_x, dir_y)
     return Pickup.spawn(world, x, y, "ProjectilePickup", {
         direction = direction,
         dir_x = dir_x,

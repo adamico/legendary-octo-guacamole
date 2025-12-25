@@ -71,14 +71,14 @@ drive/src/
 │   └── dasher.lua        # FSM-based dashing behavior (Dasher)
 ├── entities/             # Entity factory modules
 │   ├── init.lua          # Aggregates all entity factories
-│   ├── utils.lua         # Shared helpers: spawning, direction conversion
 │   ├── player.lua        # Player entity with movement, health, shooting
 │   ├── enemy.lua         # Type Object factory for Skulker, Shooter, Dasher
 │   ├── projectile.lua    # Type Object factory for all bullets
 │   ├── pickup.lua        # Type Object factory for all collectibles
 │   └── shadow.lua        # Shadow entity factory
 ├── utils/                # Reusable utilities
-│   └── hitbox_utils.lua  # Hitbox calculation (used by collision, AI, rendering)
+│   ├── hitbox_utils.lua  # Hitbox calculation (used by collision, AI, rendering)
+│   └── entity_utils.lua  # Shared entity helpers: spawning, direction conversion, config lookup
 ├── systems/              # ECS system modules
 │   ├── init.lua          # Aggregates all systems
 │   ├── spawner.lua       # Enemy population and skull timer management

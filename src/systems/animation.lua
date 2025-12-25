@@ -1,5 +1,5 @@
 -- Pure animation system: sprite frame calculation and visual updates only
-local Utils = require("utils")
+local EntityUtils = require("entity_utils")
 
 local Animation = {}
 
@@ -67,7 +67,7 @@ function Animation.animate(entity)
    -- Update direction based on movement (only when moving)
    local is_moving = (abs(entity.vel_x or 0) > 0.1 or abs(entity.vel_y or 0) > 0.1)
    if is_moving then
-      entity.current_direction = Utils.get_direction_name(
+      entity.current_direction = EntityUtils.get_direction_name(
          entity.vel_x or 0,
          entity.vel_y or 0,
          entity.current_direction
@@ -75,7 +75,7 @@ function Animation.animate(entity)
       direction = entity.current_direction
    end
 
-   local config = Utils.get_config(entity)
+   local config = EntityUtils.get_config(entity)
    local state_anim = find_animation_config(config, state, direction)
 
    local current_frame_idx = 0

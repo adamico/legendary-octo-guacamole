@@ -1,7 +1,7 @@
 -- Wanderer behavior module
 -- Provides random wandering for enemies without a current target
 
-local Utils = require("utils")
+local EntityUtils = require("entity_utils")
 local Emotions = require("emotions")
 
 -- Pick a random destination within radius of current position
@@ -72,7 +72,7 @@ local function wander_behavior(entity)
             entity.dir_y = sgn(dy)
 
             -- Update direction for animation system
-            entity.current_direction = Utils.get_direction_name(dx, dy, entity.current_direction)
+            entity.current_direction = EntityUtils.get_direction_name(dx, dy, entity.current_direction)
         else
             -- Reached target, start pausing
             entity.wander_state = "pausing"

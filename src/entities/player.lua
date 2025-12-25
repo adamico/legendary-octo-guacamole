@@ -1,6 +1,6 @@
 -- Player entity factory
 local GameConstants = require("constants")
-local Utils = require("utils")
+local EntityUtils = require("entity_utils")
 
 local Player = {}
 
@@ -47,7 +47,7 @@ function Player.spawn(world, x, y)
     }
 
     -- Create entity with shadow tag (shadow auto-spawned)
-    return Utils.spawn_entity(
+    return EntityUtils.spawn_entity(
         world,
         "player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,shadow,middleground",
         player)

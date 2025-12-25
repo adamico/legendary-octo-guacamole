@@ -39,6 +39,7 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
     - **Result**: 70-85% reduction in collision checks (400 → 40-60 checks/frame for 20 entities).
   - **OOP Refactoring & Module Restructuring:**
     - **New `src/utils/hitbox_utils.lua`**: Reusable `get_hitbox()` utility, usable across collision, AI, and rendering systems.
+    - **New `src/utils/entity_utils.lua`**: Moved from `entities/utils.lua` for better organization. Contains shared entity utilities: `get_config()`, `get_direction_name()`, `spawn_entity()`.
     - **New `src/physics/` folder**: Moved all collision code from `systems/` to dedicated physics module.
       - `collision.lua`: Main collision logic (renamed from `init.lua` to avoid ambiguity).
       - `spatial_grid.lua`: SpatialGrid class for spatial partitioning.
@@ -46,6 +47,7 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
       - `handlers.lua`: Collision response handlers.
     - Each component now testable in isolation with clear responsibilities.
     - Updated `systems/rendering.lua` to import `HitboxUtils` directly instead of using removed `Collision.get_hitbox`.
+    - Updated `systems/combat.lua` to use `HitboxUtils` for projectile spawn positioning (replaces hardcoded 16x16 size with proper hitbox-based centering).
 - **Renamed `dungeon/` to `world/`**: For naming coherence with ECS "world" concept and overall architecture consistency.
 - **Extracted Room Renderer Module**: Refactored `src/scenes/play.lua` (358→152 lines, ~57% reduction) by extracting logic into appropriate modules:
   - **New `src/world/room_renderer.lua`**: Door visibility management, adjacent room floor masking, void area coverage, high-level draw helpers (`draw_scrolling()`, `draw_exploring()`).
