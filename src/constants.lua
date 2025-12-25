@@ -3,8 +3,8 @@ SCREEN_HEIGHT = 270
 GRID_SIZE = 16
 SOLID_FLAG = 0
 SPRITE_DOOR_OPEN = 0
-SPRITE_DOOR_BLOCKED = 6
-TRANSITION_TRIGGER_TILE = 24
+SPRITE_DOOR_BLOCKED = 71
+WALL_TILES = {78, 79}
 SKULL_SPAWN_TIMER = 420
 SKULL_SPAWN_LOCKED_TIMER = 1800
 
@@ -25,39 +25,39 @@ local GameConstants = {
       regen_delay = 1.5,
       animations = {
          down = {
-            idle      = {indices = {238, 239}, durations = {30, 30}},
-            walking   = {top_indices = {240}, bottom_indices = {240, 255}, durations = {8, 8}, split_row = 9},
-            attacking = {indices = {241, 242}, durations = {4, 22}},
-            hurt      = {indices = {243}, durations = {30}},
-            death     = {indices = {244}, durations = {8}}
+            idle      = {indices = {1, 2}, durations = {30, 30}},
+            walking   = {top_indices = {3}, bottom_indices = {3, 18}, durations = {8, 8}, split_row = 9},
+            attacking = {indices = {4, 5}, durations = {4, 22}},
+            hurt      = {indices = {6}, durations = {30}},
+            death     = {indices = {7}, durations = {8}}
          },
          right = {
-            idle      = {indices = {246, 247}, durations = {30, 30}},
-            walking   = {indices = {248, 249}, durations = {8, 8}},
-            attacking = {indices = {250, 251}, durations = {4, 22}},
-            hurt      = {indices = {252}, durations = {30}},
-            death     = {indices = {244}, durations = {8}}
+            idle      = {indices = {9, 10}, durations = {30, 30}},
+            walking   = {indices = {11, 12}, durations = {8, 8}},
+            attacking = {indices = {13, 14}, durations = {4, 22}},
+            hurt      = {indices = {15}, durations = {30}},
+            death     = {indices = {7}, durations = {8}}
          },
          up = {
-            idle      = {indices = {253, 254}, durations = {30, 30}},
-            walking   = {top_indices = {255}, bottom_indices = {255, 240}, durations = {8, 8}, split_row = 9},
-            attacking = {indices = {253}, durations = {8, 22}},
-            hurt      = {indices = {253}, durations = {30}},
-            death     = {indices = {244}, durations = {8}}
+            idle      = {indices = {16, 17}, durations = {30, 30}},
+            walking   = {top_indices = {18}, bottom_indices = {18, 3}, durations = {8, 8}, split_row = 9},
+            attacking = {indices = {16}, durations = {8, 22}},
+            hurt      = {indices = {6}, durations = {30}},
+            death     = {indices = {7}, durations = {8}}
          },
          left = {
-            idle      = {indices = {246, 247}, durations = {30, 30}, flip = true},
-            walking   = {indices = {248, 249}, durations = {8, 8}, flip = true},
-            attacking = {indices = {250, 251}, durations = {4, 22}, flip = true},
-            hurt      = {indices = {252}, durations = {30}, flip = true},
-            death     = {indices = {244}, durations = {8}, flip = true}
+            idle      = {indices = {9, 10}, durations = {30, 30}, flip = true},
+            walking   = {indices = {11, 12}, durations = {8, 8}, flip = true},
+            attacking = {indices = {13, 14}, durations = {4, 22}, flip = true},
+            hurt      = {indices = {15}, durations = {30}, flip = true},
+            death     = {indices = {7}, durations = {8}, flip = true}
          }
       },
       sprite_index_offsets = {
-         down = 238,
-         right = 246,
-         left = 246,
-         up = 253,
+         down = 1,
+         right = 9,
+         left = 9,
+         up = 16,
       },
       shadow_offset = 0,
    },
@@ -78,36 +78,36 @@ local GameConstants = {
             left  = {w = 10, h = 6, ox = 3, oy = 5},
          },
          sprite_index_offsets = {
-            down = 78,
-            right = 77,
-            left = 77,
-            up = 78,
+            down = 19,
+            right = 20,
+            left = 20,
+            up = 19,
          },
          sprite_offset_y = 0,
          animations = {
             down = {
-               indices = {78, 78},
+               indices = {20, 20},
                durations = {8, 8},
                flips = {
                   {x = false, y = false}, {x = true, y = false}
                }
             },
             up = {
-               indices = {78, 78},
+               indices = {20, 20},
                durations = {8, 8},
                flips = {
                   {x = false, y = false}, {x = true, y = false}
                }
             },
             right = {
-               indices = {77, 77},
+               indices = {19, 19},
                durations = {8, 8},
                flips = {
                   {x = false, y = false}, {x = false, y = true}
                }
             },
             left = {
-               indices = {77, 77},
+               indices = {19, 19},
                durations = {8, 8},
                flips = {
                   {x = false, y = false}, {x = false, y = true}
@@ -144,13 +144,13 @@ local GameConstants = {
          hitbox_offset_x = 4,
          hitbox_offset_y = 4,
          sprite_index_offsets = {
-            down = 71,
-            right = 71,
-            left = 71,
-            up = 71,
+            down = 25,
+            right = 25,
+            left = 25,
+            up = 25,
          },
          animations = {
-            idle = {indices = {71, 72}, durations = {8, 8}}
+            idle = {indices = {25, 26}, durations = {8, 8}}
          },
          sprite_offset_y = -5,
          shadow_offset = 3,
@@ -168,10 +168,10 @@ local GameConstants = {
          -- Uses direction-based hitbox from Projectile.Laser
          hitbox_from_projectile = true,
          sprite_index_offsets = {
-            down = 78,
-            right = 77,
-            left = 77,
-            up = 78,
+            down = 20,
+            right = 19,
+            left = 19,
+            up = 20,
          },
       },
       -- Health pickup spawned when enemies die
@@ -181,7 +181,7 @@ local GameConstants = {
          pickup_effect = "health",
          width = 16,
          height = 16,
-         sprite_index = 64,
+         sprite_index = 21,
          hitbox_width = 12,
          hitbox_height = 12,
          hitbox_offset_x = 2,
@@ -202,13 +202,13 @@ local GameConstants = {
          wander_pause_min = 20,
          wander_pause_max = 60,
          sprite_index_offsets = {
-            down = 231,
-            right = 231,
-            left = 231,
-            up = 231,
+            down = 35,
+            right = 35,
+            left = 35,
+            up = 35,
          },
          animations = {
-            death = {indices = {231}, durations = {30}}
+            death = {indices = {35}, durations = {30}}
          },
          width = 16,
          height = 16,
@@ -234,10 +234,10 @@ local GameConstants = {
          wander_pause_min = 30,
          wander_pause_max = 90,
          sprite_index_offsets = {
-            down = 225,
-            right = 225,
-            left = 225,
-            up = 225,
+            down = 33,
+            right = 33,
+            left = 33,
+            up = 33,
          },
          width = 16,
          height = 16,
@@ -246,8 +246,8 @@ local GameConstants = {
          hitbox_offset_x = 2,
          hitbox_offset_y = 3,
          animations = {
-            idle = {indices = {225, 226}, durations = {30, 30}},
-            death = {indices = {225}, durations = {30}}
+            idle = {indices = {33, 34}, durations = {30, 30}},
+            death = {indices = {33}, durations = {30}}
          },
          shadow_offset = 3,
          shadow_width = 12,
@@ -259,10 +259,10 @@ local GameConstants = {
          speed = 0.6,
          contact_damage = 20,
          sprite_index_offsets = {
-            down = 117,
-            right = 117,
-            left = 117,
-            up = 117,
+            down = 40,
+            right = 40,
+            left = 40,
+            up = 40,
          },
          width = 16,
          height = 16,
@@ -284,12 +284,12 @@ local GameConstants = {
          stun_duration = 120,        -- Frames of stun after collision
          dash_speed_multiplier = 10, -- 10x base speed during dash
          sprite_index_offsets = {
-            down = 236,
-            right = 236,
-            left = 236,
-            up = 236,
+            down = 38,
+            right = 38,
+            left = 38,
+            up = 38,
          },
-         sprite_shell = 235, -- Shell sprite during dash
+         sprite_shell = 37, -- Shell sprite during dash
          width = 16,
          height = 16,
          hitbox_width = 12,
@@ -298,28 +298,28 @@ local GameConstants = {
          hitbox_offset_y = 3,
          animations = {
             down = {
-               idle      = {indices = {236}, durations = {30}},
-               walking   = {indices = {236, 237}, durations = {8, 8}},
-               attacking = {indices = {235}, durations = {10}, loop = true},
-               death     = {indices = {235}, durations = {30}}
+               idle      = {indices = {38}, durations = {30}},
+               walking   = {indices = {38, 39}, durations = {8, 8}},
+               attacking = {indices = {37}, durations = {10}, loop = true},
+               death     = {indices = {37}, durations = {30}}
             },
             up = {
-               idle      = {indices = {236}, durations = {30}},
-               walking   = {indices = {236, 237}, durations = {8, 8}},
-               attacking = {indices = {235}, durations = {10}, loop = true},
-               death     = {indices = {235}, durations = {30}}
+               idle      = {indices = {38}, durations = {30}},
+               walking   = {indices = {38, 39}, durations = {8, 8}},
+               attacking = {indices = {37}, durations = {10}, loop = true},
+               death     = {indices = {37}, durations = {30}}
             },
             right = {
-               idle      = {indices = {236}, durations = {30}},
-               walking   = {indices = {236, 237}, durations = {8, 8}},
-               attacking = {indices = {235}, durations = {10}, loop = true},
-               death     = {indices = {235}, durations = {30}}
+               idle      = {indices = {38}, durations = {30}},
+               walking   = {indices = {38, 39}, durations = {8, 8}},
+               attacking = {indices = {37}, durations = {10}, loop = true},
+               death     = {indices = {37}, durations = {30}}
             },
             left = {
-               idle      = {indices = {236}, durations = {30}, flip = true},
-               walking   = {indices = {236, 237}, durations = {8, 8}, flip = true},
-               attacking = {indices = {235}, durations = {10}, loop = true, flip = true},
-               death     = {indices = {235}, durations = {30}, flip = true}
+               idle      = {indices = {38}, durations = {30}, flip = true},
+               walking   = {indices = {38, 39}, durations = {8, 8}, flip = true},
+               attacking = {indices = {37}, durations = {10}, loop = true, flip = true},
+               death     = {indices = {37}, durations = {30}, flip = true}
             }
          },
          shadow_offset = 2,

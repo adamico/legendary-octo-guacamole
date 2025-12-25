@@ -122,14 +122,12 @@ function Play:draw()
 
    local sx, sy = camera_manager:get_offset()
    local shake = Systems.Effects.get_shake_offset()
-   -- CameraManager already centers rooms on screen automatically.
    local cam_x = sx + shake.x
    local cam_y = sy + shake.y
    camera(cam_x, cam_y)
 
    local clip_square
    if camera_manager:is_scrolling() then
-      -- During transition, allow drawing across both rooms
       clip_square = {x = 0, y = 0, w = SCREEN_WIDTH, h = SCREEN_HEIGHT}
       camera_manager.old_room:draw()
       camera_manager.new_room:draw()

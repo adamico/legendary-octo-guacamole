@@ -177,7 +177,7 @@ function DungeonManager.carve_corridors(room)
 end
 
 function DungeonManager.carve_room(room, wall_options)
-   wall_options = wall_options or {1, 2}
+   wall_options = wall_options or WALL_TILES
 
    -- Calculate margin needed for screen centering (tiles visible beyond room bounds)
    -- When room is smaller than screen, camera centers it, exposing tiles outside room.

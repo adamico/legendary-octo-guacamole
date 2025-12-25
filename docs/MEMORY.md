@@ -153,7 +153,6 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Implemented 1x3 Corridors and Visual Refinements**:
   - Expanded corridors between rooms to 1x3 dimensions (1 tile wide, 3 tiles long) with automatically carved walls.
   - **Seamless Transitions**: Unlocked doors are now replaced with tile 0 (empty passage) for a cleaner visual look.
-  - **Transition Trigger**: Since doors are now empty, an invisible `TRANSITION_TRIGGER_TILE` (index 24) is placed in the middle of each 1x3 corridor to trigger room transitions.
   - **Dynamic Corridor Coloring**: Corridors now match the floor color of the room when it is unlocked, remaining black (background color) while the room is locked.
   - **Stateful Compatibility**: Updated `RoomManager` to use `getStateStackDebugInfo()` for state checks, maintaining compatibility with the third-party `Stateful` library without modification.
 - **Implemented Room Lifecycle FSM**: Replaced scattered boolean flags (`spawned`, `is_locked`, `cleared`) with a single `lua-state-machine` FSM on the Room object.

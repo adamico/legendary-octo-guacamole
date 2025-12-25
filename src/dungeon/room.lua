@@ -104,7 +104,6 @@ function Room:identify_door(tx, ty)
 end
 
 function Room:draw()
-    -- Draw floor background (inner area only, excluding walls)
     local inner = self:get_inner_bounds()
     local rx = inner.x1 * GRID_SIZE
     local ry = inner.y1 * GRID_SIZE

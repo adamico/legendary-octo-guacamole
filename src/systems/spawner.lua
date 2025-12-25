@@ -1,9 +1,9 @@
 -- Enemy spawning system
 local Entities = require("entities")
-
+SPAWNER_INDICATOR_SPRITE = 32
 local Spawner = {}
 
-Spawner.indicator_sprite = 207
+Spawner.indicator_sprite = SPAWNER_INDICATOR_SPRITE
 
 function Spawner.update(world, room)
     -- Regular enemy spawning (room is in spawning state)
