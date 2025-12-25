@@ -222,6 +222,11 @@ local GameConstants = {
          shoot_delay = 120,
          vision_range = 200,
          is_shooter = true,
+         -- Wandering configuration
+         wander_radius = 48,
+         wander_speed_mult = 0.5,
+         wander_pause_min = 30,
+         wander_pause_max = 90,
          sprite_index_offsets = {
             down = 225,
             right = 225,

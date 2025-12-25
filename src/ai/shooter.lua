@@ -1,4 +1,5 @@
 local Entities = require("entities")
+local wanderer = require("ai/wanderer")
 
 local SHOOTER_VISION_RANGE = 200
 local SHOOTER_TARGET_DIST = 100
@@ -11,6 +12,9 @@ local function shooter_behavior(entity, player)
     local vision_range = entity.vision_range or SHOOTER_VISION_RANGE
 
     if dist <= vision_range then
+        -- Player spotted: reset wandering state and engage
+        wanderer.reset(entity)
+
         -- Maintain distance
         if dist > SHOOTER_TARGET_DIST + SHOOTER_TARGET_DIST_VARIANCE then
             entity.vel_x = (dx / dist) * entity.speed
@@ -41,9 +45,8 @@ local function shooter_behavior(entity, player)
             end
         end
     else
-        -- Out of vision range: stop and idle
-        entity.vel_x = 0
-        entity.vel_y = 0
+        -- Out of vision range: wander randomly
+        wanderer.update(entity)
     end
 end
 
