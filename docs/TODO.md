@@ -1,8 +1,7 @@
 # TODO
 
 - fix door guidance system [FIX]
-- fix shadow not rendering over certain colors [FIX]
-- fix health pickup shadow not deleted after pickup [FIX]
+- fix shadow not deleted after entity is removed [X]
 
 - add a visual effect when the player projectile hits a solid tile to show that it falls down [BRAINSTORM]
 - add a function to draw sprites with outlines for better visibility over the background [BRAINSTORM]

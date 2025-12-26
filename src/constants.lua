@@ -6,6 +6,10 @@ EMPTY_TILE = 0
 DOOR_OPEN_TILE = 86
 DOOR_BLOCKED_TILE = 71
 WALL_TILE = 140
+-- Lighting and Shadow constants
+LIGHTING_SPOTLIGHT_COLOR = 33
+LIGHTING_SHADOW_COLOR = 32
+
 -- Autotiling constants
 WALL_TILE_CORNER_TL = 64                             -- A: top-left corner
 WALL_TILE_CORNER_TR = 68                             -- B: top-right corner

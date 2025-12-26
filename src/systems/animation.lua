@@ -56,7 +56,7 @@ local function find_animation_config(config, state, direction)
 end
 
 -- Main animation update: calculates sprite indices and flip flags
-function Animation.animate(entity)
+function Animation.animate(world, entity)
    -- Increment animation timer
    entity.anim_timer = (entity.anim_timer or 0) + 1
 
@@ -157,13 +157,13 @@ function Animation.animate(entity)
    if total_duration > 0 and entity.anim_timer >= total_duration then
       local Lifecycle = require("src/lifecycle")
       local is_looping = state_anim and state_anim.loop
-      Lifecycle.check_state_completion(entity, state, entity.anim_timer, total_duration, is_looping)
+      Lifecycle.check_state_completion(world, entity, state, entity.anim_timer, total_duration, is_looping)
    end
 end
 
 -- Simple direction-based sprite change (for non-FSM entities)
 local function change_sprite(entity)
-   if entity.fsm then return end  -- FSM entities use animate()
+   if entity.fsm then return end -- FSM entities use animate()
 
    local dx = entity.dir_x or 0
    local dy = entity.dir_y or 0
@@ -210,7 +210,7 @@ function Animation.update(world)
    world.sys("sprite", change_sprite)()
 
    -- Update FSM-based animations
-   world.sys("animatable", Animation.animate)()
+   world.sys("animatable", function(e) Animation.animate(world, e) end)()
 end
 
 return Animation

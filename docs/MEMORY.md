@@ -20,6 +20,10 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Refactored Lighting and Shadow Palette Logic**: Centralized common code between lighting and shadow systems:
+  - **New `src/utils/palette.lua`**: Contains Picotron base colors and `init_extended_palette()` logic for generating lighter/darker color variants.
+  - **Centralized Constants**: Moved `LIGHTING_SPOTLIGHT_COLOR` and `LIGHTING_SHADOW_COLOR` to `src/constants.lua`.
+  - **Simplified Systems**: `src/systems/lighting.lua` and `src/systems/shadows.lua` now use the centralized utility and constants, removing duplicated logic and color definitions.
 - **Unified Module Structure (Aggregators Everywhere)**: Standardized the entire codebase to use a unified, namespaced module pattern for improved clarity, discoverability, and namespace safety:
   - **Namespace Aggregators**: Created `init.lua` in all major directories (`physics/`, `ai/`, `lifecycle/`, `world/`, `utils/`, `entities/`, `systems/`, `scenes/`) to aggregate and re-export sub-modules via a single table.
   - **Explicit Namespacing**: Refactored the entire codebase (all `require` statements) to use explicit sub-paths (e.g., `local Collision = require("physics/collision")` or `local World = require("world")`).

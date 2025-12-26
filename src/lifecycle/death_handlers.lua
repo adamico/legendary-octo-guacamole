@@ -4,18 +4,20 @@ local GameConstants = require("src/constants")
 
 local DeathHandlers = {}
 
-DeathHandlers.Player = function(entity)
+DeathHandlers.Player = function(world, entity)
    Log.trace("Player died!")
    -- Future: SceneManager:gotoState("GameOver")
 end
 
-DeathHandlers.Enemy = function(entity)
+DeathHandlers.Enemy = function(world, entity)
    local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
    Entities.spawn_health_pickup(world, entity.x, entity.y, recovery)
+   world.del(entity)
 end
 
-DeathHandlers.default = function(entity)
+DeathHandlers.default = function(world, entity)
    Log.trace("Entity died: "..(entity.type or "Unknown"))
+   world.del(entity)
 end
 
 return DeathHandlers

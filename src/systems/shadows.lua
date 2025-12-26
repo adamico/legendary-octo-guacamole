@@ -4,10 +4,8 @@ local HitboxUtils = require("src/utils/hitbox_utils")
 
 local Shadows = {}
 
-Shadows.SHADOW_COLOR = 32
-
 -- Sync shadow entity properties to parent
-local function sync_shadow(shadow)
+local function sync_shadow(world, shadow)
    local parent = shadow.parent
 
    if not parent or not world.msk(parent) then
@@ -29,9 +27,10 @@ local function sync_shadow(shadow)
 end
 
 -- Draw a shadow entity
+-- @param world - ECS world
 -- @param shadow - Shadow entity
 -- @param clip_square - Clipping rectangle {x, y, w, h}
-local function draw_shadow(shadow, clip_square)
+local function draw_shadow(world, shadow, clip_square)
    local parent = shadow.parent
    if not parent or not world.msk(parent) then return end
 
@@ -70,14 +69,16 @@ local function draw_shadow(shadow, clip_square)
    local y2 = cy + flr(sh / 2)
 
    clip(clip_square.x, clip_square.y, clip_square.w, clip_square.h)
-   ovalfill(x1, y1, x2, y2, Shadows.SHADOW_COLOR)
+   palt(0, false)
+   ovalfill(x1, y1, x2, y2, 0)
+   palt(0, true)
    clip()
 end
 
 -- Sync all shadow entities to their parents
 -- @param world - ECS world
 function Shadows.sync(world)
-   world.sys("shadow_entity", sync_shadow)()
+   world.sys("shadow_entity", function(e) sync_shadow(world, e) end)()
 end
 
 -- Draw all shadow entities
@@ -85,7 +86,7 @@ end
 -- @param clip_square - Clipping rectangle
 function Shadows.draw(world, clip_square)
    world.sys("background,drawable_shadow", function(shadow)
-      draw_shadow(shadow, clip_square)
+      draw_shadow(world, shadow, clip_square)
    end)()
 end
 
