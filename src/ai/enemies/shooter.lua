@@ -18,7 +18,6 @@ local function init_fsm(entity)
       initial = "wandering",
       events = {
          {name = "spot",   from = "wandering", to = "engaging"},
-         {name = "spot",   from = "puzzled",   to = "engaging"},    -- Can re-spot during puzzled
          {name = "lose",   from = "engaging",  to = "puzzled"},
          {name = "wander", from = "puzzled",   to = "wandering"},
       },
@@ -50,10 +49,16 @@ local function shooter_ai(entity, player)
    end
 
    local fsm = entity.shooter_fsm
-   local dx = player.x - entity.x
-   local dy = player.y - entity.y
-   local dist = sqrt(dx * dx + dy * dy)
    local vision_range = entity.vision_range or SHOOTER_VISION_RANGE
+
+   -- Calculate distance to player (treat nil player as infinitely far)
+   local dist = math.huge
+   local dx, dy = 0, 0
+   if player then
+      dx = player.x - entity.x
+      dy = player.y - entity.y
+      dist = sqrt(dx * dx + dy * dy)
+   end
 
    if fsm:is("wandering") then
       if dist <= vision_range then
@@ -64,7 +69,7 @@ local function shooter_ai(entity, player)
    elseif fsm:is("engaging") then
       if dist > vision_range then
          fsm:lose()
-      else
+      elseif player then
          -- Maintain ideal distance using chase primitive
          Chase.maintain_distance(entity, player.x, player.y, SHOOTER_TARGET_DIST, SHOOTER_TARGET_DIST_VARIANCE)
 
@@ -78,18 +83,15 @@ local function shooter_ai(entity, player)
          end
       end
    elseif fsm:is("puzzled") then
-      -- Stand still, wait for timer
+      -- Stand still, wait for timer (grace period - cannot spot during this time)
       entity.vel_x = 0
       entity.vel_y = 0
+      entity.shoot_dir_x = 0
+      entity.shoot_dir_y = 0
 
-      -- Can re-spot player during puzzled state
-      if dist <= vision_range then
-         fsm:spot()
-      else
-         entity.puzzled_timer = entity.puzzled_timer - 1
-         if entity.puzzled_timer <= 0 then
-            fsm:wander()
-         end
+      entity.puzzled_timer = entity.puzzled_timer - 1
+      if entity.puzzled_timer <= 0 then
+         fsm:wander()
       end
    end
 end

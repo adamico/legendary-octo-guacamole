@@ -1,10 +1,12 @@
 -- Dasher enemy AI profile
--- FSM: patrol -> windup -> dash -> stun -> patrol
+-- FSM: patrol -> windup -> dash -> stun -> puzzled -> patrol
 -- Self-contained (doesn't use wander/chase primitives due to unique movement)
 
 local machine = require("lib/lua-state-machine/statemachine")
 local EntityUtils = require("src/utils/entity_utils")
 local Emotions = require("src/systems/emotions")
+
+local PUZZLED_DURATION = 60 -- frames to stay puzzled before patrol
 
 -- Cardinal directions for patrol: {dx, dy}
 local CARDINAL_DIRS = {
@@ -50,10 +52,11 @@ local function init_fsm(entity)
    entity.dasher_fsm = machine.create({
       initial = "patrol",
       events = {
-         {name = "spot",    from = "patrol", to = "windup"}, -- Player spotted, facing them
-         {name = "charge",  from = "windup", to = "dash"},   -- Windup complete
-         {name = "collide", from = "dash",   to = "stun"},   -- Hit wall or player
-         {name = "recover", from = "stun",   to = "patrol"}, -- Stun timer finished
+         {name = "spot",    from = "patrol",  to = "windup"},  -- Player spotted, facing them
+         {name = "charge",  from = "windup",  to = "dash"},    -- Windup complete
+         {name = "collide", from = "dash",    to = "stun"},    -- Hit wall or player
+         {name = "recover", from = "stun",    to = "puzzled"}, -- Stun timer finished
+         {name = "wander",  from = "puzzled", to = "patrol"},  -- Puzzled timer finished
       },
       callbacks = {
          onenterwindup = function()
@@ -78,14 +81,15 @@ local function init_fsm(entity)
             entity.dasher_collision = nil
             entity.rotation_angle = 0
          end,
+         onenterpuzzled = function()
+            Emotions.set(entity, "confused")
+            entity.puzzled_timer = PUZZLED_DURATION
+            entity.vel_x = 0
+            entity.vel_y = 0
+         end,
          onenterpatrol = function(self, event)
             if entity.fsm and entity.fsm:is("attacking") and entity.fsm:can("finish") then
                entity.fsm:finish()
-            end
-
-            -- Only show confused if coming from stun (recovering)
-            if event and event.name == "recover" then
-               Emotions.set(entity, "confused")
             end
 
             local dir = CARDINAL_DIRS[flr(rnd(4)) + 1]
@@ -107,10 +111,16 @@ local function dasher_ai(entity, player)
    end
 
    local fsm = entity.dasher_fsm
-   local dx = player.x - entity.x
-   local dy = player.y - entity.y
-   local dist = sqrt(dx * dx + dy * dy)
-   local in_range = dist <= entity.vision_range
+
+   -- Calculate distance to player (treat nil player as infinitely far)
+   local in_range = false
+   local dx, dy, dist = 0, 0, math.huge
+   if player then
+      dx = player.x - entity.x
+      dy = player.y - entity.y
+      dist = sqrt(dx * dx + dy * dy)
+      in_range = dist <= entity.vision_range
+   end
 
    -- State-specific behavior
    if fsm:is("patrol") then
@@ -191,6 +201,15 @@ local function dasher_ai(entity, player)
       entity.dasher_timer = entity.dasher_timer - 1
       if entity.dasher_timer <= 0 then
          fsm:recover()
+      end
+   elseif fsm:is("puzzled") then
+      -- Stand still, wait for timer (grace period - cannot spot during this time)
+      entity.vel_x = 0
+      entity.vel_y = 0
+
+      entity.puzzled_timer = entity.puzzled_timer - 1
+      if entity.puzzled_timer <= 0 then
+         fsm:wander()
       end
    end
 end

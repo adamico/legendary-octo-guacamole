@@ -15,7 +15,6 @@ local function init_fsm(entity)
       initial = "wandering",
       events = {
          {name = "spot",   from = "wandering", to = "chasing"},
-         {name = "spot",   from = "puzzled",   to = "chasing"},    -- Can re-spot during puzzled
          {name = "lose",   from = "chasing",   to = "puzzled"},
          {name = "wander", from = "puzzled",   to = "wandering"},
       },
@@ -47,13 +46,17 @@ local function skulker_ai(entity, player)
    end
 
    local fsm = entity.skulker_fsm
-   local dx = player.x - entity.x
-   local dy = player.y - entity.y
-   local dist = sqrt(dx * dx + dy * dy)
    local vision_range = entity.vision_range
 
-   -- If no vision_range defined, always chase (original behavior)
-   local in_range = not vision_range or dist <= vision_range
+   -- Calculate distance to player (treat nil player as infinitely far)
+   local in_range = false
+   if player then
+      local dx = player.x - entity.x
+      local dy = player.y - entity.y
+      local dist = sqrt(dx * dx + dy * dy)
+      -- If no vision_range defined, always chase (original behavior)
+      in_range = not vision_range or dist <= vision_range
+   end
 
    if fsm:is("wandering") then
       if in_range then
@@ -64,22 +67,17 @@ local function skulker_ai(entity, player)
    elseif fsm:is("chasing") then
       if not in_range then
          fsm:lose()
-      else
+      elseif player then
          Chase.toward(entity, player.x, player.y)
       end
    elseif fsm:is("puzzled") then
-      -- Stand still, wait for timer
+      -- Stand still, wait for timer (grace period - cannot spot during this time)
       entity.vel_x = 0
       entity.vel_y = 0
 
-      -- Can re-spot player during puzzled state
-      if in_range then
-         fsm:spot()
-      else
-         entity.puzzled_timer = entity.puzzled_timer - 1
-         if entity.puzzled_timer <= 0 then
-            fsm:wander()
-         end
+      entity.puzzled_timer = entity.puzzled_timer - 1
+      if entity.puzzled_timer <= 0 then
+         fsm:wander()
       end
    end
 end
