@@ -1,8 +1,11 @@
 # TODO
 
-- player attack animation is too fast, last frame should linger for a bit [BRAINSTORM]
-
 - add minimap system [BRAINSTORM]
+- add treasure room with powerups[BRAINSTORM]
+- add pickups (bombs, keys, etc.) [BRAINSTORM]
+- add shop room with items[BRAINSTORM]
+- add boss room with boss[BRAINSTORM]
+- player attack animation is too fast, last frame should linger for a bit [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 - add a pub/sub system to allow entities to notify other entities of events [BRAINSTORM]
 - should we scale the sprites up? 24x24? 32x32? [BRAINSTORM]
