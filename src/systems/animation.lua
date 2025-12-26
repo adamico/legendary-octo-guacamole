@@ -161,4 +161,56 @@ function Animation.animate(entity)
    end
 end
 
+-- Simple direction-based sprite change (for non-FSM entities)
+local function change_sprite(entity)
+   if entity.fsm then return end  -- FSM entities use animate()
+
+   local dx = entity.dir_x or 0
+   local dy = entity.dir_y or 0
+   local neutral = (dx == 0 and dy == 0)
+   local down = (dx == 0 and dy == 1)
+   local down_right = (dx == 1 and dy == 1)
+   local down_left = (dx == -1 and dy == 1)
+   local right = (dx == 1 and dy == 0)
+   local up_right = (dx == 1 and dy == -1)
+   local up = (dx == 0 and dy == -1)
+   local up_left = (dx == -1 and dy == -1)
+   local left = (dx == -1 and dy == 0)
+   local sprite_index
+   local flip = false
+
+   local config = EntityUtils.get_config(entity)
+   if not config then return end
+
+   if neutral or down then sprite_index = config.sprite_index_offsets.down end
+   if right or down_right or up_right then sprite_index = config.sprite_index_offsets.right end
+   if up or up_left or down_left then sprite_index = config.sprite_index_offsets.up end
+   if left or up_left or down_left then
+      sprite_index = config.sprite_index_offsets.right
+      flip = true
+   end
+
+   entity.base_sprite_index = sprite_index
+   entity.sprite_index = sprite_index
+   entity.flip_x = flip
+   entity.flip_y = false
+end
+
+-- Simple time-based animation (for non-FSM entities)
+local function simple_animate(entity)
+   local base = entity.base_sprite_index or entity.sprite_index
+   local anim_offset = (flr(t() * 2) % 2)
+   entity.sprite_index = base + anim_offset
+end
+
+-- Update all animations
+-- @param world - ECS world
+function Animation.update(world)
+   -- Update direction-based sprites for simple entities
+   world.sys("sprite", change_sprite)()
+
+   -- Update FSM-based animations
+   world.sys("animatable", Animation.animate)()
+end
+
 return Animation

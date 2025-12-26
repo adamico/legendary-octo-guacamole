@@ -62,24 +62,34 @@ function Play:update()
    -- Check room clear
    DungeonManager.check_room_clear(current_room, world)
 
-   -- Game systems
+   -- Input
    world.sys("controllable", Systems.read_input)()
-   world.sys("acceleration", Systems.acceleration)()
+
+   -- Physics (self-iterating)
+   Systems.acceleration(world)
    world.sys("map_collidable,velocity", function(e)
       Systems.resolve_map(e, current_room, camera_manager)
    end)()
-   world.sys("velocity", Systems.velocity)()
-   world.sys("animatable", Systems.update_lifecycle)()
-   world.sys("sprite", Systems.change_sprite)()
-   world.sys("animatable", Systems.animate)()
+   Systems.velocity(world)
+
+   -- Animation & Lifecycle (self-iterating)
+   Systems.update_lifecycle(world)
+   Systems.animation(world)
+
+   -- Combat & AI (self-iterating)
    Systems.shooter(world)
    Systems.ai(world, player)
    Emotions.update(world)
    world.sys("collidable", Systems.resolve_entities)()
+
+   -- Timers & Health (self-iterating)
    Systems.health_regen(world)
    Systems.timers(world)
-   world.sys("shadow_entity", Systems.sync_shadows)()
 
+   -- Shadows (self-iterating)
+   Systems.sync_shadows(world)
+
+   -- Effects
    Systems.Effects.update_shake()
 
    if keyp("f3") then
@@ -102,35 +112,34 @@ function Play:draw()
       local new_room = camera_manager.new_room
 
       clip_square = RoomRenderer.draw_scrolling(camera_manager, cam_x, cam_y)
-      Systems.draw_doors(old_room)
-      Systems.draw_doors(new_room)
+      RoomRenderer.draw_doors(old_room)
+      RoomRenderer.draw_doors(new_room)
    else
       clip_square = RoomRenderer.draw_exploring(current_room, cam_x, cam_y)
-      Systems.draw_doors(current_room)
+      RoomRenderer.draw_doors(current_room)
    end
 
-   Systems.reset_spotlight()
-   world.sys("spotlight", function(entity) Systems.draw_spotlight(entity, clip_square) end)()
+   -- Lighting (self-iterating)
+   Systems.lighting(world, clip_square)
 
-   -- 1. Background Layer: Shadows, Projectiles, Pickups
-   world.sys("background,drawable_shadow",
-      function(entity) Systems.draw_shadow_entity(entity, clip_square) end)()
-   world.sys("background,drawable", function() Systems.draw_layer(world, "background,drawable", false) end)()
+   -- 1. Background Layer: Shadows, Pickups
+   Systems.draw_shadows(world, clip_square)
+   Systems.draw_layer(world, "background,drawable", false)
 
    -- 2. Middleground Layer: Characters (Y-Sorted)
    Systems.draw_layer(world, "middleground,drawable", true)
    Emotions.draw(world)
 
    -- 3. Global Effects & Debug
-   world.sys("palette_swappable", Systems.palette_swappable)()
+   Systems.apply_palette_swaps(world)
    Systems.Spawner.draw(current_room)
 
    pal()
 
    -- 4. Foreground Layer: Entity UI (Health Bars, Hitboxes)
-   world.sys("health", Systems.draw_health_bar)()
+   Systems.draw_health_bars(world)
    if key("f2") then
-      world.sys("collidable", Systems.draw_hitbox)()
+      Systems.draw_hitboxes(world)
    end
 
    -- Reset camera for global UI

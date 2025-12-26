@@ -6,11 +6,14 @@ local Timers = require("src/systems/timers")
 local HealthRegen = require("src/systems/health_regen")
 local AISys = require("src/systems/ai")
 local Rendering = require("src/systems/rendering")
+local Lighting = require("src/systems/lighting")
+local Shadows = require("src/systems/shadows")
+local UI = require("src/systems/ui")
 local Effects = require("src/systems/effects")
 local Animation = require("src/systems/animation")
 local Input = require("src/input")
 local Spawner = require("src/systems/spawner")
-local Lifecycle = require("src/lifecycle") -- Aggregator for lifecycle & death handlers
+local Lifecycle = require("src/lifecycle")
 
 -- Merge all modules into a single Systems table for backward compatibility
 local Systems = {}
@@ -20,40 +23,44 @@ Systems.CollisionHandlers = PhysicsCore.Handlers
 Systems.resolve_entities = PhysicsCore.resolve_entities
 Systems.resolve_map = PhysicsCore.resolve_map
 
--- Physics systems (from PhysicsSys)
+-- Input (from top-level module)
 Systems.read_input = Input.read_input
+
+-- Physics systems (self-iterating)
 Systems.acceleration = PhysicsSys.acceleration
 Systems.velocity = PhysicsSys.velocity
 
--- Shooting & Health systems (abstracted)
+-- Shooting & Health systems (self-iterating)
 Systems.shooter = Shooter.update
 Systems.health_regen = HealthRegen.update
 Systems.timers = Timers.update
 
--- AI systems
+-- AI systems (self-iterating)
 Systems.ai = AISys.update
 
--- Rendering systems
-Systems.init_extended_palette = Rendering.init_extended_palette
-Systems.init_spotlight = Rendering.init_spotlight
-Systems.reset_spotlight = Rendering.reset_spotlight
-Systems.change_sprite = Rendering.change_sprite
-Systems.animatable = Rendering.animatable
-Systems.draw_layer = Rendering.draw_layer
-Systems.sync_shadows = Rendering.sync_shadows
-Systems.draw_shadow_entity = Rendering.draw_shadow_entity
-Systems.draw_spotlight = Rendering.draw_spotlight
-Systems.draw_health_bar = Rendering.draw_health_bar
-Systems.draw_hitbox = Rendering.draw_hitbox
-Systems.palette_swappable = Rendering.palette_swappable
-Systems.draw_doors = Rendering.draw_doors
+-- Lighting systems (self-iterating)
+Systems.init_extended_palette = Lighting.init_extended_palette
+Systems.init_spotlight = Lighting.init_spotlight
+Systems.lighting = Lighting.update
 
--- Lifecycle systems (using Lifecycle aggregator)
+-- Shadow systems (self-iterating)
+Systems.sync_shadows = Shadows.sync
+Systems.draw_shadows = Shadows.draw
+
+-- Rendering systems
+Systems.draw_layer = Rendering.draw_layer
+Systems.apply_palette_swaps = Rendering.apply_palette_swaps
+
+-- UI systems (self-iterating)
+Systems.draw_health_bars = UI.draw_health_bars
+Systems.draw_hitboxes = UI.draw_hitboxes
+
+-- Animation systems (self-iterating)
+Systems.animation = Animation.update
+
+-- Lifecycle systems
 Systems.init_lifecycle = Lifecycle.init
 Systems.update_lifecycle = Lifecycle.update
-
--- Animation systems (sprite updates only)
-Systems.animate = Animation.animate
 
 -- Effects systems
 Systems.Effects = Effects

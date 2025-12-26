@@ -1,10 +1,10 @@
 -- Physics and movement systems
-local GameConstants = require("src/constants")
+-- Handles acceleration, friction, and velocity application
 
 local Physics = {}
 
--- Acceleration system: apply acceleration, friction, and clamp velocity
-function Physics.acceleration(entity)
+-- Internal: apply acceleration, friction, and clamp velocity
+local function apply_acceleration(entity)
     local dx = entity.dir_x or 0
     local dy = entity.dir_y or 0
 
@@ -32,8 +32,8 @@ function Physics.acceleration(entity)
     if abs(entity.vel_y) < 0.1 then entity.vel_y = 0 end
 end
 
--- Velocity system: apply velocity to position with sub-pixel precision
-function Physics.velocity(entity)
+-- Internal: apply velocity to position with sub-pixel precision
+local function apply_velocity(entity)
     -- Initialize sub-pixel accumulators if not present
     entity.sub_x = entity.sub_x or 0
     entity.sub_y = entity.sub_y or 0
@@ -61,6 +61,18 @@ function Physics.velocity(entity)
     -- Keep the remainder for next frame
     entity.sub_x -= move_x
     entity.sub_y -= move_y
+end
+
+-- Update acceleration for all entities with acceleration tag
+-- @param world - ECS world
+function Physics.acceleration(world)
+    world.sys("acceleration", apply_acceleration)()
+end
+
+-- Update velocity for all entities with velocity tag
+-- @param world - ECS world
+function Physics.velocity(world)
+    world.sys("velocity", apply_velocity)()
 end
 
 return Physics

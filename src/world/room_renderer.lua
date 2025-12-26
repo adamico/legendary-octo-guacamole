@@ -222,4 +222,34 @@ function RoomRenderer.draw_exploring(current_room, cam_x, cam_y)
     return clip_square
 end
 
+-- Door rotation angles based on direction (bottom of sprite faces room center)
+-- The door sprite (6) has its bottom naturally facing south (down)
+local DOOR_ROTATION = {
+    north = 0,   -- Bottom faces south (toward room center) - no rotation needed
+    south = 180, -- Bottom faces north (toward room center)
+    east = 90,   -- Bottom faces west (toward room center)
+    west = 270   -- Bottom faces east (toward room center)
+}
+
+--- Draw rotated door sprites for a room (both open and blocked)
+-- @param room The room to draw doors for
+function RoomRenderer.draw_doors(room)
+    if not room.doors then return end
+
+    local Rotator = require("src/systems/sprite_rotator")
+
+    for dir, door in pairs(room.doors) do
+        if door.sprite then
+            local pos = room:get_door_tile(dir)
+            if pos then
+                local angle = DOOR_ROTATION[dir] or 0
+                local rotated = Rotator.get(door.sprite, angle)
+                local px = pos.tx * GRID_SIZE
+                local py = pos.ty * GRID_SIZE
+                spr(rotated, px, py)
+            end
+        end
+    end
+end
+
 return RoomRenderer
