@@ -1,5 +1,5 @@
 -- Generic shooting system for ANY entity with "shooter" tag
-local Entities = require("entities")
+local Entities = require("src/entities")
 
 local Shooter = {}
 

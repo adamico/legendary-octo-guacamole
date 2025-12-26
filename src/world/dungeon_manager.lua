@@ -1,4 +1,4 @@
-local Room = require("world/room")
+local Room = require("src/world/room")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles
@@ -371,7 +371,7 @@ end
 -- @param player The player entity (for spawn distance calculations)
 -- @param world The ECS world instance
 function DungeonManager.setup_room(room, player, world)
-   local Systems = require("systems")
+   local Systems = require("src/systems")
    Systems.Spawner.populate(room, player)
 
    -- If enemies assigned and room is populated, trigger enter to lock doors

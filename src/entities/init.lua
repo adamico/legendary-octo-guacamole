@@ -1,8 +1,8 @@
 -- Main entities module: aggregates all entity factories
-local Player = require("entities/player")
-local Projectile = require("entities/projectile")
-local Enemy = require("entities/enemy")
-local Pickup = require("entities/pickup")
+local Player = require("src/entities/player")
+local Projectile = require("src/entities/projectile")
+local Enemy = require("src/entities/enemy")
+local Pickup = require("src/entities/pickup")
 
 local Entities = {}
 

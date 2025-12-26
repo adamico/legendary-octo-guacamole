@@ -2,10 +2,10 @@
 -- FSM: wandering <-> engaging <-> puzzled
 -- Uses: wander primitive, chase primitive (maintain_distance)
 
-local machine = require("lua-state-machine/statemachine")
-local Wander = require("ai/primitives/wander")
-local Chase = require("ai/primitives/chase")
-local Emotions = require("systems/emotions")
+local machine = require("lib/lua-state-machine/statemachine")
+local Wander = require("src/ai/primitives/wander")
+local Chase = require("src/ai/primitives/chase")
+local Emotions = require("src/systems/emotions")
 
 local SHOOTER_VISION_RANGE = 200
 local SHOOTER_TARGET_DIST = 100

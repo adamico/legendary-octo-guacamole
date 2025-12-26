@@ -1,5 +1,5 @@
 -- Input system: consolidates all input handling
-local GameConstants = require("constants")
+local GameConstants = require("src/constants")
 
 local Input = {}
 

@@ -2,14 +2,14 @@
 -- Exposes primitives for composition and enemy-type dispatch
 
 -- Primitives (reusable building blocks)
-local Wander = require("ai/primitives/wander")
-local Chase = require("ai/primitives/chase")
+local Wander = require("src/ai/primitives/wander")
+local Chase = require("src/ai/primitives/chase")
 
 -- Enemy AI profiles (per-enemy-type controllers)
-local skulker_ai = require("ai/enemies/skulker")
-local skull_ai = require("ai/enemies/skull")
-local shooter_ai = require("ai/enemies/shooter")
-local dasher_ai = require("ai/enemies/dasher")
+local skulker_ai = require("src/ai/enemies/skulker")
+local skull_ai = require("src/ai/enemies/skull")
+local shooter_ai = require("src/ai/enemies/shooter")
+local dasher_ai = require("src/ai/enemies/dasher")
 
 local AI = {}
 

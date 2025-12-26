@@ -1,7 +1,7 @@
-local HitboxUtils = require("utils/hitbox_utils")
-local qsort = require("qsort")
-local Effects = require("systems/effects")
-local Rotator = require("systems/sprite_rotator")
+local HitboxUtils = require("src/utils/hitbox_utils")
+local qsort = require("lib/qsort")
+local Effects = require("src/systems/effects")
+local Rotator = require("src/systems/sprite_rotator")
 
 local Rendering = {}
 
@@ -104,7 +104,7 @@ function Rendering.change_sprite(entity)
     local sprite_index
     local flip = false
 
-    local EntityUtils = require("utils/entity_utils")
+    local EntityUtils = require("src/utils/entity_utils")
     local config = EntityUtils.get_config(entity)
     if not config then return end
 

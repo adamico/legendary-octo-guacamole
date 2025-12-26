@@ -1,4 +1,4 @@
-local GameConstants = require("constants")
+local GameConstants = require("src/constants")
 local Utils = {}
 
 -- Get the configuration table for an entity based on its type and enemy_type
@@ -46,7 +46,7 @@ function Utils.spawn_entity(world, tags, entity_data)
 
     -- Auto-spawn shadow if entity has "shadow" tag
     if tags:find("shadow") then
-        local Shadow = require("entities/shadow")
+        local Shadow = require("src/entities/shadow")
         Shadow.spawn(world, ent)
     end
 

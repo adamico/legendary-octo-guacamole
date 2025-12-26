@@ -1,4 +1,4 @@
-local machine = require("lua-state-machine/statemachine")
+local machine = require("lib/lua-state-machine/statemachine")
 local Room = Class("Room")
 
 function Room:initialize(tx, ty, w, h, is_safe)

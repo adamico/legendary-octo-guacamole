@@ -1,5 +1,5 @@
 -- Enemy spawning system
-local Entities = require("entities")
+local Entities = require("src/entities")
 SPAWNER_INDICATOR_SPRITE = 32
 local Spawner = {}
 

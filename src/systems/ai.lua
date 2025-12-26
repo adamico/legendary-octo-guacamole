@@ -1,4 +1,4 @@
-local AI = require("ai")
+local AI = require("src/ai")
 local AISystem = {}
 
 -- Enemy AI system: orchestrates AI updates for all enemies

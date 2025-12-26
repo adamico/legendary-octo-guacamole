@@ -1,6 +1,6 @@
 -- Utils module aggregator
-local HitboxUtils = require("utils/hitbox_utils")
-local EntityUtils = require("utils/entity_utils")
+local HitboxUtils = require("src/utils/hitbox_utils")
+local EntityUtils = require("src/utils/entity_utils")
 
 local Utils = {}
 

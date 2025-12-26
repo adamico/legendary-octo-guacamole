@@ -2,7 +2,7 @@
 -- Simple: always chase player (no wander, no puzzled state)
 -- Uses: chase primitive
 
-local Chase = require("ai/primitives/chase")
+local Chase = require("src/ai/primitives/chase")
 
 --- Main AI update for Skull enemy type
 -- @param entity The skull entity

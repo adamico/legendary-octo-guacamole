@@ -1,4 +1,4 @@
-local GameConstants = require("constants")
+local GameConstants = require("src/constants")
 
 local CollisionFilter = Class("CollisionFilter")
 

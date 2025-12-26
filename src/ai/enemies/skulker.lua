@@ -2,10 +2,10 @@
 -- FSM: wandering <-> chasing <-> puzzled
 -- Uses: wander primitive, chase primitive
 
-local machine = require("lua-state-machine/statemachine")
-local Wander = require("ai/primitives/wander")
-local Chase = require("ai/primitives/chase")
-local Emotions = require("systems/emotions")
+local machine = require("lib/lua-state-machine/statemachine")
+local Wander = require("src/ai/primitives/wander")
+local Chase = require("src/ai/primitives/chase")
+local Emotions = require("src/systems/emotions")
 
 local PUZZLED_DURATION = 60 -- frames to stay puzzled before wandering
 

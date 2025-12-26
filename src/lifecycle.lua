@@ -1,2 +1,2 @@
 -- Lifecycle module redirect
-return require("lifecycle/init")
+return require("src/lifecycle/init")

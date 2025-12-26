@@ -1,6 +1,6 @@
 -- Lifecycle module aggregator
-local lifecycle = require("lifecycle/lifecycle")
-local death_handlers = require("lifecycle/death_handlers")
+local lifecycle = require("src/lifecycle/lifecycle")
+local death_handlers = require("src/lifecycle/death_handlers")
 
 local Lifecycle = {}
 

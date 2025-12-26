@@ -1,5 +1,5 @@
 -- Pure animation system: sprite frame calculation and visual updates only
-local EntityUtils = require("utils/entity_utils")
+local EntityUtils = require("src/utils/entity_utils")
 
 local Animation = {}
 
@@ -155,7 +155,7 @@ function Animation.animate(entity)
 
    -- Notify lifecycle system if animation completed
    if total_duration > 0 and entity.anim_timer >= total_duration then
-      local Lifecycle = require("lifecycle")
+      local Lifecycle = require("src/lifecycle")
       local is_looping = state_anim and state_anim.loop
       Lifecycle.check_state_completion(entity, state, entity.anim_timer, total_duration, is_looping)
    end

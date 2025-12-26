@@ -1,5 +1,5 @@
 -- Entity lifecycle management: FSM initialization and state transitions
-local machine = require("lua-state-machine/statemachine")
+local machine = require("lib/lua-state-machine/statemachine")
 
 local Lifecycle = {}
 
@@ -79,7 +79,7 @@ end
 -- Handle animation-triggered lifecycle events (death cleanup, attack finish)
 function Lifecycle.check_state_completion(entity, state, timer, total_duration, is_looping)
     if state == "death" and timer >= total_duration then
-        local DeathHandlers = require("lifecycle/death_handlers")
+        local DeathHandlers = require("src/lifecycle/death_handlers")
         local handler = DeathHandlers[entity.type] or DeathHandlers.default
         if not entity.death_cleanup_called then
             entity.death_cleanup_called = true

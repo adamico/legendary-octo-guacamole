@@ -4,7 +4,7 @@
 -- This module extracts rendering-related functions from play.lua to keep
 -- the scene file focused on orchestration.
 
-local DungeonManager = require("world/dungeon_manager")
+local DungeonManager = require("src/world/dungeon_manager")
 
 local RoomRenderer = {}
 

@@ -1,6 +1,6 @@
 -- Entity death behavior registry
-local Entities = require("entities")
-local GameConstants = require("constants")
+local Entities = require("src/entities")
+local GameConstants = require("src/constants")
 
 local DeathHandlers = {}
 

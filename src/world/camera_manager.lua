@@ -1,8 +1,8 @@
-local GameConstants = require("constants")
+local GameConstants = require("src/constants")
 local CameraManager = Class("CameraManager")
 CameraManager:include(Stateful)
 
-local DungeonManager = require("world/dungeon_manager")
+local DungeonManager = require("src/world/dungeon_manager")
 
 -- Camera manager responsible for following the player and handling transitions
 function CameraManager:initialize(player)

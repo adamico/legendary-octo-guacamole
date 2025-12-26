@@ -2,9 +2,9 @@
 -- FSM: patrol -> windup -> dash -> stun -> patrol
 -- Self-contained (doesn't use wander/chase primitives due to unique movement)
 
-local machine = require("lua-state-machine/statemachine")
-local EntityUtils = require("utils/entity_utils")
-local Emotions = require("systems/emotions")
+local machine = require("lib/lua-state-machine/statemachine")
+local EntityUtils = require("src/utils/entity_utils")
+local Emotions = require("src/systems/emotions")
 
 -- Cardinal directions for patrol: {dx, dy}
 local CARDINAL_DIRS = {

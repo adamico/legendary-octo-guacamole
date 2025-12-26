@@ -1,8 +1,8 @@
 -- Physics module aggregator
-local Collision = require("physics/collision")
-local SpatialGrid = require("physics/spatial_grid")
-local CollisionFilter = require("physics/collision_filter")
-local Handlers = require("physics/handlers")
+local Collision = require("src/physics/collision")
+local SpatialGrid = require("src/physics/spatial_grid")
+local CollisionFilter = require("src/physics/collision_filter")
+local Handlers = require("src/physics/handlers")
 
 local Physics = {}
 

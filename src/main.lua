@@ -2,34 +2,28 @@ include("lib/require.lua")
 include("lib/debugui.lua")
 include("lib/eggs.p8/eggs.lua")
 
-add_module_path("lib/")
-add_module_path("src/")
+Class = require("lib/middleclass")
+Stateful = require("lib/stateful")
 
-Class = require("middleclass")
-Stateful = require("stateful")
-
-Log = require("log")
+Log = require("lib/log")
 Log.init("trace")
 Log.trace("Log.init: current_level = "..Log.current_level)
 
-local SceneManager = require("scene_manager")
-require("title")
-require("play")
-require("game_over")
+local Scenes = require("src/scenes")
 
 local starting_scene = "Play"
-local Scene = SceneManager:new()
+local scene_manager = Scenes.Manager:new()
 
 function _init()
-   Scene:gotoState(starting_scene)
+   scene_manager:gotoState(starting_scene)
 end
 
 function _update()
-   Scene:update()
+   scene_manager:update()
 end
 
 function _draw()
-   Scene:draw()
+   scene_manager:draw()
    debugui.run()
 end
 

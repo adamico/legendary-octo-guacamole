@@ -1,2 +1,2 @@
 -- AI module redirect
-return require("ai/init")
+return require("src/ai/init")

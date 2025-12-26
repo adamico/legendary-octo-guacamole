@@ -1,8 +1,8 @@
 -- Projectile entity factory (Type Object pattern)
 -- All projectile types are defined as pure data in GameConstants.Projectile
 -- This factory simply instantiates entities from their type config
-local GameConstants = require("constants")
-local EntityUtils = require("utils/entity_utils")
+local GameConstants = require("src/constants")
+local EntityUtils = require("src/utils/entity_utils")
 
 local Projectile = {}
 
@@ -71,7 +71,7 @@ end
 
 -- Spawn projectile centered on shooter's hitbox
 function Projectile.spawn_centered(world, shooter, dx, dy, projectile_type, instance_data)
-    local HitboxUtils = require("utils/hitbox_utils")
+    local HitboxUtils = require("src/utils/hitbox_utils")
     local shooter_hb = HitboxUtils.get_hitbox(shooter)
     local proj_config = GameConstants.Projectile[projectile_type or "Laser"]
 

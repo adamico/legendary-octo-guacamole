@@ -2,8 +2,8 @@
 -- Provides random wandering movement for entities without a current target
 -- This is a stateful primitive that tracks wander state on the entity
 
-local EntityUtils = require("utils/entity_utils")
-local Emotions = require("systems/emotions")
+local EntityUtils = require("src/utils/entity_utils")
+local Emotions = require("src/systems/emotions")
 
 local Wander = {}
 

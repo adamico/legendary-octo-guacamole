@@ -1,2 +1,2 @@
 -- Utils module redirect
-return require("utils/init")
+return require("src/utils/init")

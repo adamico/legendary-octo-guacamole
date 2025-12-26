@@ -1,2 +1,2 @@
 -- World module redirect
-return require("world/init")
+return require("src/world/init")

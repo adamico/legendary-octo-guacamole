@@ -1,14 +1,14 @@
-local GameConstants = require("constants")
-local World = require("world")
-local Entities = require("entities")
-local Systems = require("systems")
-local Emotions = require("systems/emotions")
+local GameConstants = require("src/constants")
+local World = require("src/world")
+local Entities = require("src/entities")
+local Systems = require("src/systems")
+local Emotions = require("src/systems/emotions")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
 local RoomRenderer = World.RoomRenderer
 
-local SceneManager = require("scene_manager")
+local SceneManager = require("src/scenes/manager")
 
 local Play = SceneManager:addState("Play")
 

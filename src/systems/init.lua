@@ -1,16 +1,16 @@
 -- Main systems module: aggregates all system modules
-local PhysicsCore = require("physics")        -- Aggregator for collision, etc.
-local PhysicsSys = require("systems/physics") -- Acceleration, Velocity
-local Shooter = require("systems/shooter")
-local Timers = require("systems/timers")
-local HealthRegen = require("systems/health_regen")
-local AISys = require("systems/ai")
-local Rendering = require("systems/rendering")
-local Effects = require("systems/effects")
-local Animation = require("systems/animation")
-local LocalInput = require("systems/input")
-local Spawner = require("systems/spawner")
-local Lifecycle = require("lifecycle") -- Aggregator for lifecycle & death handlers
+local PhysicsCore = require("src/physics")        -- Aggregator for collision, etc.
+local PhysicsSys = require("src/systems/physics") -- Acceleration, Velocity
+local Shooter = require("src/systems/shooter")
+local Timers = require("src/systems/timers")
+local HealthRegen = require("src/systems/health_regen")
+local AISys = require("src/systems/ai")
+local Rendering = require("src/systems/rendering")
+local Effects = require("src/systems/effects")
+local Animation = require("src/systems/animation")
+local LocalInput = require("src/systems/input")
+local Spawner = require("src/systems/spawner")
+local Lifecycle = require("src/lifecycle") -- Aggregator for lifecycle & death handlers
 
 -- Merge all modules into a single Systems table for backward compatibility
 local Systems = {}

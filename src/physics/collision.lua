@@ -1,8 +1,8 @@
 local Collision = {}
 
-local SpatialGrid = require("physics/spatial_grid")
-local CollisionFilter = require("physics/collision_filter")
-local HitboxUtils = require("utils/hitbox_utils")
+local SpatialGrid = require("src/physics/spatial_grid")
+local CollisionFilter = require("src/physics/collision_filter")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 -- Create persistent filter instance (doesn't change per frame)
 local collision_filter = CollisionFilter:new()
@@ -10,7 +10,7 @@ local collision_filter = CollisionFilter:new()
 -- Local reference for convenience within this module
 local get_hitbox = HitboxUtils.get_hitbox
 
-Collision.CollisionHandlers = require("physics/handlers")
+Collision.CollisionHandlers = require("src/physics/handlers")
 
 -- Helper: Iterate over tiles overlapping a hitbox
 local function for_each_tile(hb, callback)

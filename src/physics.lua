@@ -1,2 +1,2 @@
 -- Physics module redirect
-return require("physics/init")
+return require("src/physics/init")

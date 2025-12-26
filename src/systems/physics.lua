@@ -1,5 +1,5 @@
 -- Physics and movement systems
-local GameConstants = require("constants")
+local GameConstants = require("src/constants")
 
 local Physics = {}
 

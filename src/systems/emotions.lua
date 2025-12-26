@@ -1,5 +1,5 @@
 -- Emotions system: displays visual indicators above enemies based on AI state
-local GameConstants = require("constants")
+local GameConstants = require("src/constants")
 
 local Emotions = {}
 
