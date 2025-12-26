@@ -2,7 +2,7 @@
 -- All pickup types are defined as pure data in GameConstants.Pickup
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
-local EntityUtils = require("entity_utils")
+local EntityUtils = require("utils/entity_utils")
 
 local Pickup = {}
 

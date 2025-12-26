@@ -245,7 +245,8 @@ local GameConstants = {
       },
       Shooter = {
          entity_type = "Enemy",
-         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         tags =
+         "enemy,shooter,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 30,
          speed = 0.3,
          contact_damage = 10,
@@ -402,22 +403,22 @@ GameConstants.controls = {
 
 -- Collision layers (bitmasking for fast collision filtering)
 GameConstants.CollisionLayers = {
-   PLAYER = 1,             -- 0b000001
-   ENEMY = 2,              -- 0b000010
-   PLAYER_PROJECTILE = 4,  -- 0b000100
-   ENEMY_PROJECTILE = 8,   -- 0b001000
-   PICKUP = 16,            -- 0b010000
-   WORLD = 32,             -- 0b100000
+   PLAYER = 1,            -- 0b000001
+   ENEMY = 2,             -- 0b000010
+   PLAYER_PROJECTILE = 4, -- 0b000100
+   ENEMY_PROJECTILE = 8,  -- 0b001000
+   PICKUP = 16,           -- 0b010000
+   WORLD = 32,            -- 0b100000
 }
 
 -- What each layer can collide with (bitmask)
 GameConstants.CollisionMasks = {
-   [1] = 2 + 8 + 16 + 32,  -- PLAYER: Enemy + EnemyProjectile + Pickup + World
-   [2] = 1 + 4 + 32,       -- ENEMY: Player + PlayerProjectile + World
-   [4] = 2 + 32,           -- PLAYER_PROJECTILE: Enemy + World
-   [8] = 1 + 32,           -- ENEMY_PROJECTILE: Player + World
-   [16] = 1,               -- PICKUP: Player only
-   [32] = 1 + 2 + 4 + 8,   -- WORLD: Everything except Pickup
+   [1] = 2 + 8 + 16 + 32, -- PLAYER: Enemy + EnemyProjectile + Pickup + World
+   [2] = 1 + 4 + 32,      -- ENEMY: Player + PlayerProjectile + World
+   [4] = 2 + 32,          -- PLAYER_PROJECTILE: Enemy + World
+   [8] = 1 + 32,          -- ENEMY_PROJECTILE: Player + World
+   [16] = 1,              -- PICKUP: Player only
+   [32] = 1 + 2 + 4 + 8,  -- WORLD: Everything except Pickup
 }
 
 -- Entity type to collision layer mapping

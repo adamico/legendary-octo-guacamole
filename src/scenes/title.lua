@@ -36,7 +36,7 @@ function Title:update()
 	new_game_clicked        = stack[1]
 	quit_clicked            = stack[2]
 
-	if new_game_clicked then self:gotoState("Stage1") end
+	if new_game_clicked then self:gotoState("Play") end
 	if quit_clicked then print("Clicked Quit", 0, 0, 7) end
 end
 

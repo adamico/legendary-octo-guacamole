@@ -1,6 +1,6 @@
 -- Player entity factory
 local GameConstants = require("constants")
-local EntityUtils = require("entity_utils")
+local EntityUtils = require("utils/entity_utils")
 
 local Player = {}
 
@@ -43,13 +43,20 @@ function Player.spawn(world, x, y)
         time_since_shot = 0,
         overflow_hp = 0,
         shoot_cooldown = 0,
-        invuln_timer = 0, -- Frames of invulnerability remaining after taking damage
+        invuln_timer = 0,      -- Frames of invulnerability remaining after taking damage
+        -- Shooter system properties
+        health_as_ammo = true, -- Shooting costs HP
+        projectile_type = "Laser",
+        shoot_cooldown_duration = 15,
+        -- Health regen properties
+        regen_trigger_field = "time_since_shot", -- Trigger for regen
+        overflow_banking = true,                 -- Bank overflow HP
     }
 
     -- Create entity with shadow tag (shadow auto-spawned)
     return EntityUtils.spawn_entity(
         world,
-        "player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,drawable,animatable,spotlight,sprite,shadow,middleground",
+        "player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,health_regen,timers,drawable,animatable,spotlight,sprite,shadow,middleground",
         player)
 end
 

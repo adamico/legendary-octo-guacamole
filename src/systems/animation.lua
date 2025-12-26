@@ -1,5 +1,5 @@
 -- Pure animation system: sprite frame calculation and visual updates only
-local EntityUtils = require("entity_utils")
+local EntityUtils = require("utils/entity_utils")
 
 local Animation = {}
 

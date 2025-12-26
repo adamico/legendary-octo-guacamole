@@ -1,7 +1,7 @@
 local machine = require("lua-state-machine/statemachine")
 local Entities = require("entities")
-local wanderer = require("wanderer")
-local Emotions = require("emotions")
+local wanderer = require("ai/wanderer_behavior")
+local Emotions = require("systems/emotions")
 
 local SHOOTER_VISION_RANGE = 200
 local SHOOTER_TARGET_DIST = 100
@@ -76,16 +76,13 @@ local function shooter_behavior(entity, player)
                 entity.dir_y = sgn(dy)
             end
 
-            -- Shooting logic
-            if entity.is_shooter and entity.shoot_timer then
-                entity.shoot_timer = entity.shoot_timer - 1
-                if entity.shoot_timer <= 0 then
-                    -- Shoot towards player
-                    if dist > 0 then
-                        Entities.spawn_enemy_projectile(world, entity.x, entity.y, dx / dist, dy / dist)
-                    end
-                    entity.shoot_timer = entity.shoot_delay
-                end
+            -- Set shooting direction (actual spawning handled by Shooter system)
+            if dist > 0 then
+                entity.shoot_dir_x = dx / dist
+                entity.shoot_dir_y = dy / dist
+            else
+                entity.shoot_dir_x = 0
+                entity.shoot_dir_y = 0
             end
         end
     elseif fsm:is("puzzled") then

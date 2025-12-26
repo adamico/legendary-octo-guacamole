@@ -1,6 +1,6 @@
 local Entities = require("entities")
 local GameConstants = require("constants")
-local Effects = require("effects")
+local Effects = require("systems/effects")
 
 local Handlers = {
     entity = {},

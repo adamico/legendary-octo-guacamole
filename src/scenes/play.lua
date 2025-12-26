@@ -1,9 +1,11 @@
-local DungeonManager = require("dungeon_manager")
-local CameraManager = require("camera_manager")
-local RoomRenderer = require("room_renderer")
+local World = require("world")
 local Entities = require("entities")
 local Systems = require("systems")
-local Emotions = require("emotions")
+local Emotions = require("systems/emotions")
+
+local DungeonManager = World.DungeonManager
+local CameraManager = World.CameraManager
+local RoomRenderer = World.RoomRenderer
 
 local SceneManager = require("scene_manager")
 
@@ -69,13 +71,12 @@ function Play:update()
    world.sys("animatable", Systems.update_lifecycle)()
    world.sys("sprite", Systems.change_sprite)()
    world.sys("animatable", Systems.animate)()
-   world.sys("shooter", Systems.projectile_fire)()
-   world.sys("enemy", Systems.ai)()
+   Systems.shooter(world)
+   Systems.ai(world)
    Emotions.update(world)
    world.sys("collidable", Systems.resolve_entities)()
-   world.sys("health", Systems.health_regen)()
-   world.sys("player", Systems.invulnerability_tick)()
-   world.sys("health", Systems.health_manager)()
+   Systems.health_regen(world)
+   Systems.timers(world)
    world.sys("shadow_entity", Systems.sync_shadows)()
 
    Systems.Effects.update_shake()

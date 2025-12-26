@@ -1,0 +1,40 @@
+-- Generic shooting system for ANY entity with "shooter" tag
+local Entities = require("entities")
+
+local Shooter = {}
+
+-- Shooting system: works for ANY entity with "shooter" tag
+function Shooter.update(world)
+   world.sys("shooter", function(entity)
+      local sx = entity.shoot_dir_x or 0
+      local sy = entity.shoot_dir_y or 0
+
+      local cooldown_ready = (entity.shoot_cooldown or 0) == 0
+      local wants_to_shoot = sx ~= 0 or sy ~= 0
+
+      -- Check ammo (HP for entities with health_as_ammo, unlimited otherwise)
+      local has_ammo = true
+      if entity.health_as_ammo and entity.hp then
+         has_ammo = entity.hp > (entity.shot_cost or 20)
+      end
+
+      if wants_to_shoot and has_ammo and cooldown_ready then
+         -- Consume ammo if using health
+         if entity.health_as_ammo then
+            entity.hp -= (entity.shot_cost or 20)
+            entity.time_since_shot = 0
+         end
+
+         -- Spawn projectile
+         local projectile_type = entity.projectile_type or "Laser"
+         Entities.spawn_centered_projectile(
+            world, entity, sx, sy, projectile_type,
+            {recovery_percent = entity.recovery_percent, shot_cost = entity.shot_cost}
+         )
+
+         entity.shoot_cooldown = entity.shoot_cooldown_duration or 15
+      end
+   end)()
+end
+
+return Shooter

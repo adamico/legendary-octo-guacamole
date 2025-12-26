@@ -1,8 +1,8 @@
 -- Wanderer behavior module
 -- Provides random wandering for enemies without a current target
 
-local EntityUtils = require("entity_utils")
-local Emotions = require("emotions")
+local EntityUtils = require("utils/entity_utils")
+local Emotions = require("systems/emotions")
 
 -- Pick a random destination within radius of current position
 local function pick_wander_target(entity)

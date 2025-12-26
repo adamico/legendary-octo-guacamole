@@ -20,6 +20,21 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Unified Module Structure (Aggregators Everywhere)**: Standardized the entire codebase to use a unified, namespaced module pattern for improved clarity, discoverability, and namespace safety:
+  - **Namespace Aggregators**: Created `init.lua` in all major directories (`physics/`, `ai/`, `lifecycle/`, `world/`, `utils/`, `entities/`, `systems/`, `scenes/`) to aggregate and re-export sub-modules via a single table.
+  - **Explicit Namespacing**: Refactored the entire codebase (all `require` statements) to use explicit sub-paths (e.g., `local Collision = require("physics/collision")` or `local World = require("world")`).
+  - **Root Redirects**: Created root-level redirect files (e.g., `src/physics.lua`) that simply `return require("physics/init")`, allowing both `require("physics")` and `require("physics/collision")` to work seamlessly.
+  - **Simplified Search Paths**: Cleaned up `main.lua` to only include `lib/` and `src/` in `add_module_path`, removing all recursive subfolder additions.
+  - **Namespace Safety**: Renamed potentially conflicting modules (e.g., AI behaviors) with explicit suffixes (`_behavior.lua`) and grouped them under their respective namespaces.
+- **Dissolved `combat.lua` Module**: Major architectural refactoring to establish proper system boundaries and generic ECS tags:
+  - **New `systems/shooter.lua`**: Generic shooting system for ANY entity with `shooter` tag. Works for both player and enemies. Uses `health_as_ammo` flag instead of type checks.
+  - **New `systems/timers.lua`**: Generic countdown timer system for entities with `timers` tag. Handles `invuln_timer` and `shoot_cooldown`.
+  - **New `systems/health_regen.lua`**: Generic health regeneration for entities with `health_regen` tag. Configurable triggers and optional overflow banking.
+  - **New `lifecycle/death_handlers.lua`**: Entity death behavior registry for FSM-based deaths (loot, game over). This is a registry/utility, not an ECS system.
+  - **Renamed AI behaviors**: All AI behavior files renamed to `*_behavior.lua` pattern (`chaser_behavior.lua`, `shooter_behavior.lua`, `dasher_behavior.lua`, `wanderer_behavior.lua`) to resolve namespace conflicts with `systems/shooter.lua`.
+  - **Player entity updated**: Added `health_regen`, `timers`, `shooter` tags and new properties (`health_as_ammo`, `overflow_banking`, `regen_trigger_field`).
+  - **Shooter enemy updated**: Added `shooter`, `timers` tags in `constants.lua`. AI now sets `shoot_dir_x/y` while system handles spawning.
+  - **Added `Projectile.spawn_centered()`**: Helper for hitbox-centered projectile spawning, now exported via `entities/init.lua`.
 - **Optimized Collision System**: Comprehensive refactoring of collision detection for massive performance gains and better code organization:
   - **Priority 1 (Performance):**
     - Removed dead code (`get_overlapping_tile` function).

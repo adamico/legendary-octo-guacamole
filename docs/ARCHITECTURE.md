@@ -52,50 +52,65 @@ graph TB
 
 ```text
 drive/src/
-├── main.lua              # Entry point, game loop, scene initialization
+├── main.lua              # Entry point, simple search paths (lib/, src/)
+├── play.lua              # Scene redirect (returns scenes/play)
+├── physics.lua           # Namespace redirect (returns physics/init)
+├── ai.lua                # Namespace redirect (returns ai/init)
+├── lifecycle.lua         # Namespace redirect (returns lifecycle/init)
+├── world.lua             # Namespace redirect (returns world/init)
+├── utils.lua             # Namespace redirect (returns utils/init)
+├── entities.lua          # Namespace redirect (returns entities/init)
+├── systems.lua           # Namespace redirect (returns systems/init)
 ├── scene_manager.lua     # State machine for scene transitions
-├── constants.lua         # Game configuration (sprites, player stats, controls, collision layers)
-├── world/                # World management module (renamed from dungeon/)
-│   ├── dungeon_manager.lua # World generation, map carving, room grid, room lifecycle
-│   ├── camera_manager.lua  # Camera following, room centering, and transitions
-│   ├── room.lua            # Room class (stores bounds, types, and lifecycle FSM)
-│   └── room_renderer.lua   # Room rendering: door masking, void coverage, adjacent room hiding
-├── physics/              # Physics & collision module (moved from systems/)
-│   ├── collision.lua     # Main collision detection and resolution
-│   ├── spatial_grid.lua  # SpatialGrid class for broad-phase collision (64px cells)
-│   ├── collision_filter.lua # CollisionFilter class for bitmasking layer checks
-│   └── handlers.lua      # Collision response handlers (entity-entity, map, tile)
-├── ai/                   # Individual enemy AI behaviors
-│   ├── chaser.lua        # Chase behavior (Skulker, Skull)
-│   ├── shooter.lua       # Ranged behavior (Shooter)
-│   └── dasher.lua        # FSM-based dashing behavior (Dasher)
-├── entities/             # Entity factory modules
-│   ├── init.lua          # Aggregates all entity factories
-│   ├── player.lua        # Player entity with movement, health, shooting
-│   ├── enemy.lua         # Type Object factory for Skulker, Shooter, Dasher
-│   ├── projectile.lua    # Type Object factory for all bullets
-│   ├── pickup.lua        # Type Object factory for all collectibles
-│   └── shadow.lua        # Shadow entity factory
-├── utils/                # Reusable utilities
-│   ├── hitbox_utils.lua  # Hitbox calculation (used by collision, AI, rendering)
-│   └── entity_utils.lua  # Shared entity helpers: spawning, direction conversion, config lookup
-├── systems/              # ECS system modules
-│   ├── init.lua          # Aggregates all systems
-│   ├── spawner.lua       # Enemy population and skull timer management
-│   ├── physics.lua       # Movement: controllable, acceleration, velocity (sub-pixel)
-│   ├── combat.lua        # Shooter, health_regen, invulnerability_tick, health_manager
-│   ├── ai.lua            # AI system dispatcher (delegates to src/ai/)
-│   ├── lifecycle.lua     # FSM state management
+├── constants.lua         # Game configuration
+├── world/                # World management module
+│   ├── init.lua          # World aggregator
+│   ├── dungeon_manager.lua # World generation, map carving, room grid
+│   ├── camera_manager.lua  # Camera following and transitions
+│   ├── room.lua            # Room class and lifecycle FSM
+│   └── room_renderer.lua   # Room rendering: door masking, void coverage
+├── physics/              # Physics & collision module
+│   ├── init.lua          # Physics aggregator
+│   ├── collision.lua     # Main collision logic
+│   ├── spatial_grid.lua  # Spatial broad-phase
+│   ├── collision_filter.lua # Bitmasking layer checks
+│   └── handlers.lua      # Collision response handlers
+├── ai/                   # AI logic
+│   ├── init.lua          # AI aggregator
+│   ├── chaser_behavior.lua
+│   ├── shooter_behavior.lua
+│   ├── dasher_behavior.lua
+│   └── wanderer_behavior.lua
+├── entities/             # Entity factory module
+│   ├── init.lua          # Entities aggregator
+│   ├── player.lua
+│   ├── enemy.lua         # Type Object factory (Skulker, Shooter, etc)
+│   ├── projectile.lua    # Type Object factory (all bullets)
+│   ├── pickup.lua        # Type Object factory (all collectibles)
+│   └── shadow.lua
+├── utils/                # Utility module
+│   ├── init.lua          # Utils aggregator
+│   ├── hitbox_utils.lua
+│   └── entity_utils.lua
+├── systems/              # ECS system module
+│   ├── init.lua          # Systems aggregator
+│   ├── spawner.lua
+│   ├── physics.lua       # Movement: controllable, acceleration, velocity
+│   ├── ai.lua            # AI system dispatcher
+│   ├── shooter.lua       # Generic shooter system (shooter tag)
+│   ├── timers.lua        # Generic countdown system (timers tag)
+│   ├── health_regen.lua  # Generic health recovery (health_regen tag)
 │   ├── animation.lua     # FSM-based animation logic
 │   ├── input.lua         # Input reading system
-│   ├── rendering.lua     # Sprite drawing, spotlight/shadow, health bars, doors
-│   ├── sprite_rotator.lua # Dynamic sprite rotation utility
-│   ├── emotions.lua      # Enemy emotion display system
-│   └── effects.lua       # Screen shake, sprite flash, particles, knockback
-└── scenes/               # Game scenes (states)
-    ├── title.lua         # Title screen
-    ├── play.lua          # Main gameplay loop
-    └── game_over.lua     # Game over screen
+│   ├── rendering.lua     # Sprite drawing, spotlight, UI
+│   ├── sprite_rotator.lua
+│   ├── emotions.lua
+│   └── effects.lua       # Shake, flash, particles, knockback
+└── scenes/               # Game scene module
+    ├── init.lua          # Scenes aggregator
+    ├── title.lua
+    ├── play.lua
+    └── game_over.lua
 ```
 
 ## ECS Architecture

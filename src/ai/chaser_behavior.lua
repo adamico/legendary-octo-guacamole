@@ -1,6 +1,6 @@
 local machine = require("lua-state-machine/statemachine")
-local wanderer = require("wanderer")
-local Emotions = require("emotions")
+local wanderer = require("ai/wanderer_behavior")
+local Emotions = require("systems/emotions")
 
 local PUZZLED_DURATION = 60 -- frames to stay puzzled before wandering
 

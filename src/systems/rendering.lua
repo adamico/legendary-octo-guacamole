@@ -1,7 +1,7 @@
-local HitboxUtils = require("hitbox_utils")
+local HitboxUtils = require("utils/hitbox_utils")
 local qsort = require("qsort")
-local Effects = require("effects")
-local Rotator = require("sprite_rotator")
+local Effects = require("systems/effects")
+local Rotator = require("systems/sprite_rotator")
 
 local Rendering = {}
 
@@ -104,7 +104,7 @@ function Rendering.change_sprite(entity)
     local sprite_index
     local flip = false
 
-    local EntityUtils = require("entity_utils")
+    local EntityUtils = require("utils/entity_utils")
     local config = EntityUtils.get_config(entity)
     if not config then return end
 
@@ -128,7 +128,7 @@ function Rendering.animatable(entity)
     entity.sprite_index = base + anim_offset
 end
 
--- Internal sprite drawer (combines flask check and standard drawing)
+-- Internal sprite drawer (combines flash check and standard drawing)
 local function draw_sprite(entity)
     local was_flashing = entity.flash_timer and entity.flash_timer > 0
     Effects.update_flash(entity)

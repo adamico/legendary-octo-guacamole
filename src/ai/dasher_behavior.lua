@@ -1,13 +1,13 @@
 local machine = require("lua-state-machine/statemachine")
-local EntityUtils = require("entity_utils")
-local Emotions = require("emotions")
+local EntityUtils = require("utils/entity_utils")
+local Emotions = require("systems/emotions")
 
 -- Cardinal directions for patrol: {dx, dy}
 local CARDINAL_DIRS = {
-   {0,  -1},  -- up
-   {0,  1},   -- down
-   {-1, 0},   -- left
-   {1,  0},   -- right
+   {0,  -1}, -- up
+   {0,  1},  -- down
+   {-1, 0},  -- left
+   {1,  0},  -- right
 }
 
 -- Get orthogonal directions to current direction
@@ -46,10 +46,10 @@ local function init_dasher_fsm(entity)
    entity.dasher_fsm = machine.create({
       initial = "patrol",
       events = {
-         {name = "spot",    from = "patrol", to = "windup"},    -- Player spotted, facing them
-         {name = "charge",  from = "windup", to = "dash"},      -- Windup complete
-         {name = "collide", from = "dash",   to = "stun"},      -- Hit wall or player
-         {name = "recover", from = "stun",   to = "patrol"},    -- Stun timer finished
+         {name = "spot",    from = "patrol", to = "windup"}, -- Player spotted, facing them
+         {name = "charge",  from = "windup", to = "dash"},   -- Windup complete
+         {name = "collide", from = "dash",   to = "stun"},   -- Hit wall or player
+         {name = "recover", from = "stun",   to = "patrol"}, -- Stun timer finished
       },
       callbacks = {
          onenterwindup = function()
@@ -114,7 +114,7 @@ local function dasher_behavior(entity, player)
          local choice = ortho[flr(rnd(2)) + 1]
          entity.patrol_dir_x = choice[1]
          entity.patrol_dir_y = choice[2]
-         entity.hit_wall = false    -- Clear flag
+         entity.hit_wall = false -- Clear flag
       end
 
       -- Move in patrol direction
@@ -174,7 +174,7 @@ local function dasher_behavior(entity, player)
       -- Transition: collision with wall (hit_wall) or player (dasher_collision)
       if entity.dasher_collision or entity.hit_wall then
          fsm:collide()
-         entity.hit_wall = false    -- Clear flag
+         entity.hit_wall = false -- Clear flag
       end
    elseif fsm:is("stun") then
       -- Stay idle (already set by callback)

@@ -1,29 +1,27 @@
-local AI = {}
-local chaser_behavior = require("chaser")
-local shooter_behavior = require("shooter")
-local dasher_behavior = require("dasher")
+local AI = require("ai")
+local AISystem = {}
 
--- Enemy AI system: simple chase behavior
-function AI.update(entity)
-   -- Find player
+-- Enemy AI system: orchestrates AI updates for all enemies
+function AISystem.update(world)
+   -- Find player once per frame
    local player = nil
    world.sys("player", function(p) player = p end)()
 
+   -- If no player, stop all enemies
    if not player then
-      entity.vel_x = 0
-      entity.vel_y = 0
-      entity.dir_x = 0
-      entity.dir_y = 0
+      world.sys("enemy", function(entity)
+         entity.vel_x = 0
+         entity.vel_y = 0
+         entity.dir_x = 0
+         entity.dir_y = 0
+      end)()
       return
    end
 
-   if entity.enemy_type == "Skulker" or entity.enemy_type == "Skull" then
-      chaser_behavior(entity, player)
-   elseif entity.enemy_type == "Shooter" then
-      shooter_behavior(entity, player)
-   elseif entity.enemy_type == "Dasher" then
-      dasher_behavior(entity, player)
-   end
+   -- Execute AI dispatch for all enemies
+   world.sys("enemy", function(entity)
+      AI.dispatch(entity, player)
+   end)()
 end
 
-return AI
+return AISystem

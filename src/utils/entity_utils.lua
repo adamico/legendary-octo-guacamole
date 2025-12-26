@@ -46,7 +46,7 @@ function Utils.spawn_entity(world, tags, entity_data)
 
     -- Auto-spawn shadow if entity has "shadow" tag
     if tags:find("shadow") then
-        local Shadow = require("shadow")
+        local Shadow = require("entities/shadow")
         Shadow.spawn(world, ent)
     end
 

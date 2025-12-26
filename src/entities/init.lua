@@ -1,8 +1,8 @@
 -- Main entities module: aggregates all entity factories
-local Player = require("player")
-local Projectile = require("projectile")
-local Enemy = require("enemy")
-local Pickup = require("pickup")
+local Player = require("entities/player")
+local Projectile = require("entities/projectile")
+local Enemy = require("entities/enemy")
+local Pickup = require("entities/pickup")
 
 local Entities = {}
 
@@ -16,6 +16,7 @@ end
 Entities.spawn_enemy_projectile = function(world, x, y, dx, dy)
     return Projectile.spawn(world, x, y, dx, dy, "EnemyBullet")
 end
+Entities.spawn_centered_projectile = Projectile.spawn_centered
 
 -- Pickup spawners (convenience wrappers for Type Object pattern)
 Entities.spawn_pickup_projectile = Pickup.spawn_projectile

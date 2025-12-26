@@ -2,7 +2,7 @@
 -- All enemy types are defined as pure data in GameConstants.Enemy
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("constants")
-local EntityUtils = require("entity_utils")
+local EntityUtils = require("utils/entity_utils")
 
 local Enemy = {}
 
@@ -57,7 +57,13 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
     end
 
     if enemy.is_shooter then
-        enemy.shoot_timer = enemy.shoot_delay or 60
+        -- Properties for generic shooter system
+        enemy.shoot_cooldown = 0
+        enemy.shoot_cooldown_duration = enemy.shoot_delay or 60
+        enemy.projectile_type = "EnemyBullet"
+        enemy.health_as_ammo = false -- Enemies have unlimited ammo
+
+        -- Note: shooter and timers tags should be added in constants.lua enemy config
     end
 
     -- 5. Apply instance overrides

@@ -1,7 +1,7 @@
 local CameraManager = Class("CameraManager")
 CameraManager:include(Stateful)
 
-local DungeonManager = require("dungeon_manager")
+local DungeonManager = require("world/dungeon_manager")
 
 -- Camera manager responsible for following the player and handling transitions
 function CameraManager:initialize(player)

@@ -1,4 +1,4 @@
-local Room = require("room")
+local Room = require("world/room")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles
