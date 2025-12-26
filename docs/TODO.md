@@ -1,12 +1,13 @@
 # TODO
 
-- [x] add a weak melee attack to the player to allow inflicting damage without spending health [BRAINSTORM]
+- player attack animation is too fast, last frame should linger for a bit [BRAINSTORM]
 
+- add minimap system [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 - add a pub/sub system to allow entities to notify other entities of events [BRAINSTORM]
 - should we scale the sprites up? 24x24? 32x32? [BRAINSTORM]
 - add enemy group patterns similar to the ones in The Binding of Isaac: Rebirth [BRAINSTORM]
 - add room carvings patterns similar to the ones in The Binding of Isaac: Rebirth [BRAINSTORM]
 - add room floor patterns to avoid having floors that are too random [BRAINSTORM]
-- add room features system to allow creating solid obstacles which impede entities movement , block line of sight, etc. [BRAINSTORM]
+- add room features system to allow creating solid obstacles which impede entities movement, block line of sight, etc. [BRAINSTORM]
 - maybe add a mechanic to react to the player being hurt (blood lost, etc.) [BRAINSTORM]

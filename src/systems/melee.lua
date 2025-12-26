@@ -9,9 +9,7 @@ function Melee.update(world)
    -- Only players can melee for now
    world.sys("player,controllable", function(player)
       -- Check cooldown
-      if player.melee_cooldown and player.melee_cooldown > 0 then
-         return
-      end
+      if player.melee_cooldown and player.melee_cooldown > 0 then return end
 
       local input_pressed = btn(GameConstants.controls.melee)
 
@@ -28,10 +26,10 @@ function Melee.update(world)
          -- So it DOES cost health.
 
          -- Set cooldown
-         player.melee_cooldown = GameConstants.Player.melee_cooldown or 60
+         player.melee_cooldown = GameConstants.Player.melee_cooldown
 
          -- Calculate spawn position and rotation
-         local range = GameConstants.Player.melee_range or 20
+         local range = GameConstants.Player.melee_range
 
          -- Use facing direction (persistent) per user request
          local dir = player.current_direction or "down"
@@ -42,7 +40,6 @@ function Melee.update(world)
          local spawn_y = player.y + dy * range + offset_y
 
          -- Determine rotation angle (0=Up, 90=Right, 180=Down, 270=Left)
-         -- Base sprite 31 is oriented UP
          local angle = 0
          if math.abs(dx) > math.abs(dy) then
             if dx > 0 then angle = 90 else angle = 270 end
@@ -51,9 +48,8 @@ function Melee.update(world)
          end
 
          -- Calculate damage based on missing health
-         -- (max_health - current_health) / 2
-         local damage = math.floor((player.max_hp - player.hp) / 2)
-         damage = math.max(1, damage) -- Minimum 1 damage
+         local damage = math.floor((player.max_hp - player.hp) / 4)
+         damage = math.max(1, damage)
 
          -- Spawn MeleeHitbox
          local hitbox = {
@@ -65,14 +61,14 @@ function Melee.update(world)
             offset_x = dx * range + offset_x,
             offset_y = dy * range + offset_y,
 
-            width = GameConstants.Player.melee_width or 9,
-            height = GameConstants.Player.melee_height or 16,
+            width = GameConstants.Player.melee_width,
+            height = GameConstants.Player.melee_height,
             -- Visual properties
-            sprite_index = GameConstants.Player.melee_sprite or 31,
+            sprite_index = GameConstants.Player.melee_sprite,
             rotation_angle = angle,
             outline_color = 1, -- White outline? Match player?
             -- System tags (added 'melee_hitbox' tag for syncing)
-            lifespan = GameConstants.Player.melee_duration or 6,
+            lifespan = GameConstants.Player.melee_duration,
             owner_entity = player,
             melee_damage = damage,
             -- Adjust hitbox centering
