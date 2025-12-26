@@ -13,6 +13,19 @@ function Timers.update(world)
       if entity.shoot_cooldown and entity.shoot_cooldown > 0 then
          entity.shoot_cooldown -= 1
       end
+
+      -- Melee cooldown
+      if entity.melee_cooldown and entity.melee_cooldown > 0 then
+         entity.melee_cooldown -= 1
+      end
+
+      -- Entity lifespan (for temporary hitboxes)
+      if entity.lifespan then
+         entity.lifespan -= 1
+         if entity.lifespan <= 0 then
+            world.del(entity)
+         end
+      end
    end)()
 end
 

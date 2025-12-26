@@ -77,6 +77,9 @@ function Play:update()
    -- Input
    world.sys("controllable", Systems.read_input)()
 
+   -- Melee (health-gated attack)
+   Systems.melee(world)
+
    -- Physics (self-iterating)
    Systems.acceleration(world)
    world.sys("map_collidable,velocity", function(e)

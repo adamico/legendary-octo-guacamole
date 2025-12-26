@@ -1,8 +1,9 @@
 # TODO
 
-- add a pub/sub system to allow entities to notify other entities of events [BRAINSTORM]
+- [x] add a weak melee attack to the player to allow inflicting damage without spending health [BRAINSTORM]
+
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
-- add a weak melee attack to the player to allow inflicting damage without spending health [BRAINSTORM]
+- add a pub/sub system to allow entities to notify other entities of events [BRAINSTORM]
 - should we scale the sprites up? 24x24? 32x32? [BRAINSTORM]
 - add enemy group patterns similar to the ones in The Binding of Isaac: Rebirth [BRAINSTORM]
 - add room carvings patterns similar to the ones in The Binding of Isaac: Rebirth [BRAINSTORM]

@@ -36,6 +36,17 @@ function Utils.get_direction_name(dx, dy, default)
     return default
 end
 
+-- Convert direction name string to vector (dx, dy)
+-- @param dir_name - "right", "left", "up", or "down"
+-- @return dx, dy
+function Utils.get_direction_vector(dir_name)
+    if dir_name == "up" then return 0, -1 end
+    if dir_name == "down" then return 0, 1 end
+    if dir_name == "left" then return -1, 0 end
+    if dir_name == "right" then return 1, 0 end
+    return 0, 1 -- Default to down
+end
+
 -- Centralized entity spawning with automatic shadow creation
 -- @param world - ECS world
 -- @param tags - comma-separated tag string (include "shadow" for auto shadow creation)

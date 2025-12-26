@@ -23,6 +23,34 @@ PickupEffects.health = function(player, pickup)
     FloatingText.spawn_at_entity(player, heal_amount, "heal")
 end
 
+-- Handler for MeleeHitbox hitting Enemy
+Handlers.entity["MeleeHitbox,Enemy"] = function(hitbox, enemy)
+    -- Deal damage to enemy
+    local damage = hitbox.melee_damage or 10
+    enemy.hp = enemy.hp - damage
+    FloatingText.spawn_at_entity(enemy, -damage, "damage")
+    Effects.hit_impact(hitbox, enemy)
+    Effects.apply_knockback(hitbox, enemy, 8)
+
+    -- Vampiric healing: Heal player for damage dealt (capped at missing health or full damage?)
+    -- User said: "100% vampiric effect"
+    local owner = hitbox.owner_entity
+    if owner and owner.type == "Player" then
+        -- Cap heal to 100% of damage dealt
+        local heal_amount = damage
+        owner.hp = math.min(owner.hp + heal_amount, owner.max_hp)
+        FloatingText.spawn_at_entity(owner, heal_amount, "heal")
+    end
+
+    -- Hitbox is destroyed on first contact? Or multi-hit?
+    -- Usually melee goes through enemies (multi-hit) but with a duration of 6 frames, it might hit same enemy multiple times.
+    -- For simplicity and balance, maybe delete it to prevent multi-proc?
+    -- But then it's single target.
+    -- If we keep it, we need an invulnerability list on the hitbox.
+    -- Let's stick to simple single-hit for now, delete on contact.
+    world.del(hitbox)
+end
+
 local function handle_pickup_collection(player, pickup)
     local effect_type = pickup.pickup_effect or "health"
     local effect_handler = PickupEffects[effect_type]

@@ -43,6 +43,8 @@ function Player.spawn(world, x, y)
         time_since_shot = 0,
         overflow_hp = 0,
         shoot_cooldown = 0,
+        melee_cooldown = 0,
+        melee_cost = GameConstants.Player.melee_cost,
         invuln_timer = 0,      -- Frames of invulnerability remaining after taking damage
         -- Shooter system properties
         health_as_ammo = true, -- Shooting costs HP

@@ -90,6 +90,26 @@ local GameConstants = {
       shadow_offset = 1,
       shadow_width = 13,
       outline_color = 1,
+      -- Melee settings
+      melee_cost = 10,
+      melee_cooldown = 60,
+      melee_sprite = 31,
+      melee_range = 14,
+      melee_hitboxes = {
+         down  = {w = 9, h = 12, ox = 4, oy = 4},
+         up    = {w = 9, h = 12, ox = 2, oy = 0},
+         right = {w = 12, h = 9, ox = 4, oy = 2},
+         left  = {w = 12, h = 9, ox = 0, oy = 2},
+      },
+      melee_offsets = {
+         down = {-4, -2},
+         up = {4, 4},
+         right = {-4, 4},
+         left = {4, 4},
+      },
+      melee_width = 9,
+      melee_height = 16,
+      melee_duration = 6,
    },
    Projectile = {
       -- Player's laser projectile
@@ -416,6 +436,7 @@ local GameConstants = {
 }
 
 GameConstants.controls = {
+   melee = GameConstants.buttons.o,
    move_up = GameConstants.buttons.up,
    move_down = GameConstants.buttons.down,
    move_left = GameConstants.buttons.left,

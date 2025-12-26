@@ -11,7 +11,7 @@ A **Binding of Isaac-style dungeon crawler** where **health is your ammunition**
 1. **Shoot** → Lose HP
 2. **Projectile hits wall** → Becomes pickup
 3. **Collect pickup** → Recover HP
-4. **Passive regen** → Slow HP recovery when not shooting
+4. **Health regen** → Slow HP recovery when not shooting or clearing rooms
 
 ### Example Player Stats (Base Values)
 
