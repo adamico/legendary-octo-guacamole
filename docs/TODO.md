@@ -1,4 +1,12 @@
-# TODOx
+# TODO
+
+- add warnings for enemy attacks (dash, shoot) [PENDING]
+- add a visual effect when the player projectile hits a solid tile to show that it falls down [PENDING]
+- fix door guidance system [PENDING]
+- fix shadow not rendering over certain colors [PENDING]
+- fix health pickup shadow not deleted after pickup [PENDING]
+- add a function to draw sprites with outlines for better visibility over the background [PENDING]
+- GameConstants is a global, search for it to find all usages [PENDING]
 
 ## Ideas
 
