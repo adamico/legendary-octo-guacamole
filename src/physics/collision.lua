@@ -44,32 +44,32 @@ Collision.is_solid = is_solid
 
 -- Apply door guidance to nudge player toward nearby unlocked doors
 -- This helps players "slide" into doorways when moving along walls
-local function apply_door_guidance(entity, hb)
-    local function get_guidance(tx, ty, axis)
-        -- Check 4 neighbors for an open door
-        local neighbors = {
-            {dx = 1, dy = 0}, {dx = -1, dy = 0},
-            {dx = 0, dy = 1}, {dx = 0, dy = -1}
-        }
-        for _, n in ipairs(neighbors) do
-            local ntx, nty = tx + n.dx, ty + n.dy
-            local tile = mget(ntx, nty)
-            if tile == DOOR_OPEN_TILE then
-                if axis == "x" and n.dy ~= 0 then return 0, n.dy end
-                if axis == "y" and n.dx ~= 0 then return n.dx, 0 end
+local function apply_door_guidance(entity, tx, ty, room)
+    if not room or not room.doors then return end
+
+    for dir, door in pairs(room.doors) do
+        -- Only guide toward open doors
+        if door.sprite == DOOR_OPEN_TILE then
+            local dpos = room:get_door_tile(dir)
+            if dpos then
+                -- Door is in same column?
+                if tx == dpos.tx then
+                    -- Door is adjacent on Y axis?
+                    if abs(ty - dpos.ty) == 1 then
+                        entity.vel_y = (dpos.ty > ty and 1 or -1) * DOOR_GUIDANCE_MULTIPLIER
+                        return -- Stop after first match
+                    end
+                end
+                -- Door is in same row?
+                if ty == dpos.ty then
+                    -- Door is adjacent on X axis?
+                    if abs(tx - dpos.tx) == 1 then
+                        entity.vel_x = (dpos.tx > tx and 1 or -1) * DOOR_GUIDANCE_MULTIPLIER
+                        return -- Stop after first match
+                    end
+                end
             end
         end
-        return 0, 0
-    end
-
-    -- Find solid tile player is hitting
-    local tx, ty = find_solid_tile(hb.x, hb.y, hb.w, hb.h)
-    if tx then
-        local gdx, gdy = get_guidance(tx, ty, "x")
-        if gdx ~= 0 then entity.vel_x = gdx * DOOR_GUIDANCE_MULTIPLIER end
-
-        gdx, gdy = get_guidance(tx, ty, "y")
-        if gdy ~= 0 then entity.vel_y = gdy * DOOR_GUIDANCE_MULTIPLIER end
     end
 end
 
@@ -144,12 +144,13 @@ function Collision.resolve_map(entity, room, camera_manager)
         local cx = x + vox + (axis == "x" and move or 0)
         local cy = y + voy + (axis == "y" and move or 0)
 
-        if is_solid(cx, cy, w, h) then
+        local stx, sty = find_solid_tile(cx, cy, w, h)
+        if stx then
             if handler then handler(entity, cx, cy) end
 
             -- Apply door guidance for player only
             if entity.type == "Player" then
-                apply_door_guidance(entity, {x = cx, y = cy, w = w, h = h})
+                apply_door_guidance(entity, stx, sty, room)
             end
 
             entity["vel_"..axis] = 0
