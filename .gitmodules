@@ -4,3 +4,6 @@
 [submodule "lib/lua-state-machine"]
 	path = lib/lua-state-machine
 	url = https://github.com/kyleconroy/lua-state-machine.git
+[submodule "lib/beholder.lua"]
+	path = lib/beholder.lua
+	url = https://github.com/kikito/beholder.lua
