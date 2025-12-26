@@ -263,12 +263,31 @@ The game uses a dual-manager system for handling its world:
 - **Map Carving**: Writes tiles directly to a custom Picotron `userdata` map.
 - **World Positioning**: Calculates where rooms sit on the absolute world map.
 - **Spawn Logic**: Calculates precise world coordinates for player teleportation between doors.
+- **Room Clear Hook**: Dispatches `on_room_clear(room)` when all enemies in a room are defeated. Used by `play.lua` to heal the player by 1 segment.
 
 ### CameraManager
 
 - **Smoothing & Transitions**: Handles camera movement and player repositioning during room transitions.
 - **Centering**: Automatically centers rooms smaller than the screen.
-- **Transition Hook**: Dispatches `on_transition` events to clean up entities (projectiles, pickups) when moving between rooms.
+- **Transition Hook**: Dispatches `on_transition(new_room)` to clean up entities (projectiles, pickups) when moving between rooms.
+
+### Event Callbacks
+
+Both managers use a simple callback pattern for cross-system communication:
+
+```lua
+-- play.lua hooks into manager events
+DungeonManager.on_room_clear = function(room)
+   player.hp = min(player.hp + player.max_hp / 5, player.max_hp)
+end
+
+camera_manager.on_transition = function(new_room)
+   -- cleanup projectiles, pickups, skulls
+end
+```
+
+> [!NOTE]
+> Consider upgrading to a pub/sub event system when: multiple listeners need the same event, callbacks proliferate across managers, or cross-system communication becomes complex.
 
 ## Technical Details
 

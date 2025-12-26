@@ -1,5 +1,6 @@
 # TODO
 
+- add a pub/sub system to allow entities to notify other entities of events [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 - add a weak melee attack to the player to allow inflicting damage without spending health [BRAINSTORM]
 - should we scale the sprites up? 24x24? 32x32? [BRAINSTORM]

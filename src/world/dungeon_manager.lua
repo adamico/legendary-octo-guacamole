@@ -402,6 +402,11 @@ function DungeonManager.check_room_clear(room, world)
    if enemy_count == 0 then
       room.lifecycle:clear()
       DungeonManager.apply_door_sprites(room)
+
+      -- Notify listeners (play.lua hooks this for player healing, etc.)
+      if DungeonManager.on_room_clear then
+         DungeonManager.on_room_clear(room)
+      end
    end
 end
 

@@ -43,6 +43,12 @@ function Play:enteredState()
       world.sys("skull", function(e) world.del(e) end)()
    end
 
+   -- Define room clear behavior (heal player by 1 segment)
+   DungeonManager.on_room_clear = function(room)
+      local segment_hp = player.max_hp / 5
+      player.hp = min(player.hp + segment_hp, player.max_hp)
+   end
+
    -- Setup initial room
    DungeonManager.setup_room(current_room, player, world)
 end
