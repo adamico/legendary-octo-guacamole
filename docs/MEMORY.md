@@ -20,6 +20,7 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Unified Entity Spawning for Shadows**: Refactored all entity factories (`Player`, `Enemy`, `Projectile`, `Pickup`) to use `Utils.spawn_entity`, ensuring that any entity with the "shadow" tag automatically spawns a linked shadow entity. Specifically updated `pickup.lua` which was previously using `world.ent` directly.
 - **Refactored Lighting and Shadow Palette Logic**: Centralized common code between lighting and shadow systems:
   - **New `src/utils/palette.lua`**: Contains Picotron base colors and `init_extended_palette()` logic for generating lighter/darker color variants.
   - **Centralized Constants**: Moved `LIGHTING_SPOTLIGHT_COLOR` and `LIGHTING_SHADOW_COLOR` to `src/constants.lua`.

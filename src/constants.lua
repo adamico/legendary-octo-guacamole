@@ -205,7 +205,7 @@ local GameConstants = {
       -- Health pickup spawned when enemies die
       HealthPickup = {
          entity_type = "HealthPickup",
-         tags = "pickup,collidable,drawable,sprite,background",
+         tags = "pickup,collidable,drawable,sprite,background,shadow",
          pickup_effect = "health",
          width = 16,
          height = 16,
@@ -214,6 +214,8 @@ local GameConstants = {
          hitbox_height = 12,
          hitbox_offset_x = 2,
          hitbox_offset_y = 2,
+         shadow_offset = 3,
+         shadow_width = 5,
       },
    },
    Enemy = {

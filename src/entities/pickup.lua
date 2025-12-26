@@ -61,7 +61,7 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
     end
 
     -- 6. Create entity with tags from config
-    return world.ent(config.tags, pickup)
+    return EntityUtils.spawn_entity(world, config.tags, pickup)
 end
 
 -- Convenience: Spawn projectile-based pickup (from wall collisions)
