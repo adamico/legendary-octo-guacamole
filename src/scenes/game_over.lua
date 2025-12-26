@@ -51,7 +51,7 @@ function GameOver:draw()
    local game_over = "GAME OVER!"
    camera()
    rectfill(120, 20, 350, 230, 1)
-   PrintInGrid(game_over, 13, 4, 7)
+   print(game_over, 13, 4, 7)
    pgui:draw()
 end
 

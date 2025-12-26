@@ -49,7 +49,7 @@ end
 function Title:draw()
 	cls(1)
 	camera()
-	local game_title_label = GAME_TITLE
+	local game_title_label = "Pizak"
 	print(game_title_label, SCREEN_WIDTH / 2 - #game_title_label * 5 / 2, 10, 7)
 	pgui:draw()
 end
