@@ -75,12 +75,16 @@ drive/src/
 │   ├── spatial_grid.lua  # Spatial broad-phase
 │   ├── collision_filter.lua # Bitmasking layer checks
 │   └── handlers.lua      # Collision response handlers
-├── ai/                   # AI logic
-│   ├── init.lua          # AI aggregator
-│   ├── chaser_behavior.lua
-│   ├── shooter_behavior.lua
-│   ├── dasher_behavior.lua
-│   └── wanderer_behavior.lua
+├── ai/                   # AI logic (primitives + enemy profiles)
+│   ├── init.lua          # AI aggregator + dispatch
+│   ├── primitives/       # Stateless, reusable movement helpers
+│   │   ├── wander.lua    # Random destination seeking
+│   │   └── chase.lua     # Move toward/away/maintain distance
+│   └── enemies/          # Per-enemy-type FSM controllers
+│       ├── skulker.lua   # FSM: wander ↔ chase ↔ puzzled
+│       ├── skull.lua     # Simple: always chase
+│       ├── shooter.lua   # FSM: wander ↔ engage ↔ puzzled
+│       └── dasher.lua    # FSM: patrol → windup → dash → stun
 ├── entities/             # Entity factory module
 │   ├── init.lua          # Entities aggregator
 │   ├── player.lua

@@ -1,3 +1,7 @@
+-- Dasher enemy AI profile
+-- FSM: patrol -> windup -> dash -> stun -> patrol
+-- Self-contained (doesn't use wander/chase primitives due to unique movement)
+
 local machine = require("lua-state-machine/statemachine")
 local EntityUtils = require("utils/entity_utils")
 local Emotions = require("systems/emotions")
@@ -37,7 +41,7 @@ local function is_facing_player(entity, player)
 end
 
 -- Initialize Dasher FSM on entity
-local function init_dasher_fsm(entity)
+local function init_fsm(entity)
    -- Pick initial random direction
    local initial_dir = CARDINAL_DIRS[flr(rnd(4)) + 1]
    entity.patrol_dir_x = initial_dir[1]
@@ -93,10 +97,13 @@ local function init_dasher_fsm(entity)
    })
 end
 
-local function dasher_behavior(entity, player)
+--- Main AI update for Dasher enemy type
+-- @param entity The dasher entity
+-- @param player The player entity (target)
+local function dasher_ai(entity, player)
    -- Initialize FSM if needed
    if not entity.dasher_fsm then
-      init_dasher_fsm(entity)
+      init_fsm(entity)
    end
 
    local fsm = entity.dasher_fsm
@@ -188,4 +195,4 @@ local function dasher_behavior(entity, player)
    end
 end
 
-return dasher_behavior
+return dasher_ai

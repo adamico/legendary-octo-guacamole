@@ -1,27 +1,39 @@
 -- AI module aggregator
-local chaser = require("ai/chaser_behavior")
-local shooter = require("ai/shooter_behavior")
-local dasher = require("ai/dasher_behavior")
-local wanderer = require("ai/wanderer_behavior")
+-- Exposes primitives for composition and enemy-type dispatch
+
+-- Primitives (reusable building blocks)
+local Wander = require("ai/primitives/wander")
+local Chase = require("ai/primitives/chase")
+
+-- Enemy AI profiles (per-enemy-type controllers)
+local skulker_ai = require("ai/enemies/skulker")
+local skull_ai = require("ai/enemies/skull")
+local shooter_ai = require("ai/enemies/shooter")
+local dasher_ai = require("ai/enemies/dasher")
 
 local AI = {}
 
-AI.chaser = chaser
-AI.shooter = shooter
-AI.dasher = dasher
-AI.wanderer = wanderer
+-- Expose primitives for external use (testing, custom compositions)
+AI.primitives = {
+   wander = Wander,
+   chase = Chase,
+}
 
---- Main AI dispatch function to route to specific behaviors
--- @param entity The entity processing AI
--- @param player The player entity (for targeting)
+-- Enemy AI lookup table (maps enemy_type to AI function)
+local enemy_profiles = {
+   Skulker = skulker_ai,
+   Skull = skull_ai,
+   Shooter = shooter_ai,
+   Dasher = dasher_ai,
+}
+
+--- Dispatch AI update to the appropriate enemy profile
+-- @param entity The entity to process
+-- @param player The player entity (target)
 function AI.dispatch(entity, player)
-   local enemy_type = entity.enemy_type
-   if enemy_type == "Skulker" or enemy_type == "Skull" then
-      AI.chaser(entity, player)
-   elseif enemy_type == "Shooter" then
-      AI.shooter(entity, player)
-   elseif enemy_type == "Dasher" then
-      AI.dasher(entity, player)
+   local profile = enemy_profiles[entity.enemy_type]
+   if profile then
+      profile(entity, player)
    end
 end
 

@@ -31,7 +31,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **New `systems/timers.lua`**: Generic countdown timer system for entities with `timers` tag. Handles `invuln_timer` and `shoot_cooldown`.
   - **New `systems/health_regen.lua`**: Generic health regeneration for entities with `health_regen` tag. Configurable triggers and optional overflow banking.
   - **New `lifecycle/death_handlers.lua`**: Entity death behavior registry for FSM-based deaths (loot, game over). This is a registry/utility, not an ECS system.
-  - **Renamed AI behaviors**: All AI behavior files renamed to `*_behavior.lua` pattern (`chaser_behavior.lua`, `shooter_behavior.lua`, `dasher_behavior.lua`, `wanderer_behavior.lua`) to resolve namespace conflicts with `systems/shooter.lua`.
+  - **Restructured AI Module**: Moved from flat `*_behavior.lua` files to a `primitives/ + enemies/` hierarchy:
+    - `ai/primitives/wander.lua` - Stateless random movement helper
+    - `ai/primitives/chase.lua` - Stateless chase/flee/orbit helper
+    - `ai/enemies/{skulker,skull,shooter,dasher}.lua` - Per-enemy-type FSM controllers that compose primitives
+  - Enemy profiles now match `enemy_type` names in `constants.lua` for trivial dispatch lookup.
   - **Player entity updated**: Added `health_regen`, `timers`, `shooter` tags and new properties (`health_as_ammo`, `overflow_banking`, `regen_trigger_field`).
   - **Shooter enemy updated**: Added `shooter`, `timers` tags in `constants.lua`. AI now sets `shoot_dir_x/y` while system handles spawning.
   - **Added `Projectile.spawn_centered()`**: Helper for hitbox-centered projectile spawning, now exported via `entities/init.lua`.
