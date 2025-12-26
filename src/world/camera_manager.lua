@@ -1,3 +1,4 @@
+local GameConstants = require("constants")
 local CameraManager = Class("CameraManager")
 CameraManager:include(Stateful)
 

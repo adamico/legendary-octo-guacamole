@@ -7,7 +7,6 @@ add_module_path("src/")
 
 Class = require("middleclass")
 Stateful = require("stateful")
-GameConstants = require("constants")
 
 Log = require("log")
 Log.init("trace")

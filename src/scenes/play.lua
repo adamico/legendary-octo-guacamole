@@ -1,3 +1,4 @@
+local GameConstants = require("constants")
 local World = require("world")
 local Entities = require("entities")
 local Systems = require("systems")
