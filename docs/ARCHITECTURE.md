@@ -269,25 +269,27 @@ The game uses a dual-manager system for handling its world:
 
 - **Smoothing & Transitions**: Handles camera movement and player repositioning during room transitions.
 - **Centering**: Automatically centers rooms smaller than the screen.
-- **Transition Hook**: Dispatches `on_transition(new_room)` to clean up entities (projectiles, pickups) when moving between rooms.
 
-### Event Callbacks
+### Event System (Pub/Sub)
 
-Both managers use a simple callback pattern for cross-system communication:
+Cross-system communication uses a centralized pub/sub event system via `Events` module (wrapper around [beholder.lua](file:///home/kc00l/game_dev/pizak/lib/beholder.lua/beholder.lua)):
 
 ```lua
--- play.lua hooks into manager events
-DungeonManager.on_room_clear = function(room)
+-- Event Constants (typed, not strings)
+Events.ROOM_CLEAR      -- Fired when all enemies in a room are defeated
+Events.ROOM_TRANSITION -- Fired when player transitions to a new room
+
+-- Subscribing (in play.lua enteredState)
+Events.on(Events.ROOM_CLEAR, function(room)
    player.hp = min(player.hp + player.max_hp / 5, player.max_hp)
-end
+end)
 
-camera_manager.on_transition = function(new_room)
-   -- cleanup projectiles, pickups, skulls
-end
+-- Emitting (in DungeonManager/CameraManager)
+Events.emit(Events.ROOM_CLEAR, room)
+
+-- Cleanup (in play.lua exitedState)
+Events.reset()
 ```
-
-> [!NOTE]
-> Consider upgrading to a pub/sub event system when: multiple listeners need the same event, callbacks proliferate across managers, or cross-system communication becomes complex.
 
 ## Technical Details
 

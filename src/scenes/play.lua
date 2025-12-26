@@ -3,6 +3,7 @@ local World = require("src/world")
 local Entities = require("src/entities")
 local Systems = require("src/systems")
 local Emotions = require("src/systems/emotions")
+local Events = require("src/utils/events")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -34,18 +35,18 @@ function Play:enteredState()
    current_room = room
    camera_manager:set_room(current_room)
 
-   -- Define transition behavior
-   camera_manager.on_transition = function(new_room)
+   -- Subscribe to room transition events
+   Events.on(Events.ROOM_TRANSITION, function(new_room)
       current_room = new_room
       DungeonManager.setup_room(current_room, player, world)
       world.sys("projectile", function(e) world.del(e) end)()
       world.sys("pickup", function(e) world.del(e) end)()
       world.sys("skull", function(e) world.del(e) end)()
       Systems.FloatingText.clear()
-   end
+   end)
 
-   -- Define room clear behavior (heal player by 1 segment)
-   DungeonManager.on_room_clear = function(room)
+   -- Subscribe to room clear events (heal player by 1 segment)
+   Events.on(Events.ROOM_CLEAR, function(room)
       local segment_hp = player.max_hp / 5
       local old_hp = player.hp
       player.hp = min(player.hp + segment_hp, player.max_hp)
@@ -53,7 +54,7 @@ function Play:enteredState()
       if actual_heal > 0 then
          Systems.FloatingText.spawn_at_entity(player, actual_heal, "heal")
       end
-   end
+   end)
 
    -- Setup initial room
    DungeonManager.setup_room(current_room, player, world)
@@ -174,6 +175,7 @@ end
 
 function Play:exitedState()
    Log.trace("Exited Play scene")
+   Events.reset() -- Clear all event subscriptions
 end
 
 return Play

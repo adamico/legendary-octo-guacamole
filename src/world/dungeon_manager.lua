@@ -1,4 +1,5 @@
 local Room = require("src/world/room")
+local Events = require("src/utils/events")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles
@@ -403,10 +404,8 @@ function DungeonManager.check_room_clear(room, world)
       room.lifecycle:clear()
       DungeonManager.apply_door_sprites(room)
 
-      -- Notify listeners (play.lua hooks this for player healing, etc.)
-      if DungeonManager.on_room_clear then
-         DungeonManager.on_room_clear(room)
-      end
+      -- Notify listeners via pub/sub (play.lua subscribes for player healing, etc.)
+      Events.emit(Events.ROOM_CLEAR, room)
    end
 end
 

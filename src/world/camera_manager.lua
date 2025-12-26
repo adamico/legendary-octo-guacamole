@@ -1,4 +1,5 @@
 local GameConstants = require("src/constants")
+local Events = require("src/utils/events")
 local CameraManager = Class("CameraManager")
 CameraManager:include(Stateful)
 
@@ -65,10 +66,8 @@ function Scrolling:enteredState(new_room, dir_gx, dir_gy)
     self.timer = 0
     self.duration = 30 -- Faster transition (45 was a bit long)
 
-    -- Trigger transition events (spawns enemies in new room, clears old entities) at START
-    if self.on_transition then
-        self.on_transition(new_room)
-    end
+    -- Trigger transition events via pub/sub (spawns enemies, clears entities)
+    Events.emit(Events.ROOM_TRANSITION, new_room)
 
     self.start_x = self.x
     self.start_y = self.y

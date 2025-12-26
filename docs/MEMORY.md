@@ -20,6 +20,10 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Pub/Sub Event System**: Replaced callback hooks (`on_room_clear`, `on_transition`) with centralized pub/sub using [beholder.lua](file:///home/kc00l/game_dev/pizak/lib/beholder.lua/beholder.lua):
+  - **New `src/utils/events.lua`**: Wrapper with typed constants (`Events.ROOM_CLEAR`, `Events.ROOM_TRANSITION`) and API (`on`, `off`, `emit`, `reset`).
+  - **DungeonManager/CameraManager**: Now use `Events.emit()` instead of callback fields.
+  - **play.lua**: Uses `Events.on()` subscriptions and `Events.reset()` on scene exit.
 - **Implemented Floating Damage/Heal Numbers**:
   - **New `systems/floating_text.lua`**: Displays floating text above entities when they take damage (red) or heal (green). Numbers rise upward and fade out over configurable duration.
   - **Integration Points**: Collision handlers spawn damage text on hit; pickup collection and room-clear callbacks spawn heal text.
