@@ -8,7 +8,7 @@ local AISys = require("src/systems/ai")
 local Rendering = require("src/systems/rendering")
 local Effects = require("src/systems/effects")
 local Animation = require("src/systems/animation")
-local LocalInput = require("src/systems/input")
+local Input = require("src/input")
 local Spawner = require("src/systems/spawner")
 local Lifecycle = require("src/lifecycle") -- Aggregator for lifecycle & death handlers
 
@@ -21,7 +21,7 @@ Systems.resolve_entities = PhysicsCore.resolve_entities
 Systems.resolve_map = PhysicsCore.resolve_map
 
 -- Physics systems (from PhysicsSys)
-Systems.read_input = LocalInput.read_input
+Systems.read_input = Input.read_input
 Systems.acceleration = PhysicsSys.acceleration
 Systems.velocity = PhysicsSys.velocity
 
