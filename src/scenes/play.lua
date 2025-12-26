@@ -41,12 +41,18 @@ function Play:enteredState()
       world.sys("projectile", function(e) world.del(e) end)()
       world.sys("pickup", function(e) world.del(e) end)()
       world.sys("skull", function(e) world.del(e) end)()
+      Systems.FloatingText.clear()
    end
 
    -- Define room clear behavior (heal player by 1 segment)
    DungeonManager.on_room_clear = function(room)
       local segment_hp = player.max_hp / 5
+      local old_hp = player.hp
       player.hp = min(player.hp + segment_hp, player.max_hp)
+      local actual_heal = player.hp - old_hp
+      if actual_heal > 0 then
+         Systems.FloatingText.spawn_at_entity(player, actual_heal, "heal")
+      end
    end
 
    -- Setup initial room
@@ -97,6 +103,7 @@ function Play:update()
 
    -- Effects
    Systems.Effects.update_shake()
+   Systems.FloatingText.update()
 
    if keyp("f3") then
       GameConstants.cheats.godmode = not GameConstants.cheats.godmode
@@ -135,6 +142,7 @@ function Play:draw()
    -- 2. Middleground Layer: Characters (Y-Sorted)
    Systems.draw_layer(world, "middleground,drawable", true)
    Emotions.draw(world)
+   Systems.FloatingText.draw()
 
    -- 3. Global Effects & Debug
    Systems.apply_palette_swaps(world)

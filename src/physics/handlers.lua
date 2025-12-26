@@ -1,6 +1,7 @@
 local Entities = require("src/entities")
 local GameConstants = require("src/constants")
 local Effects = require("src/systems/effects")
+local FloatingText = require("src/systems/floating_text")
 
 local Handlers = {
     entity = {},
@@ -11,12 +12,15 @@ local Handlers = {
 local PickupEffects = {}
 
 PickupEffects.health = function(player, pickup)
-    player.hp = player.hp + (pickup.recovery_amount or 16)
+    local heal_amount = pickup.recovery_amount or 16
+    player.hp = player.hp + heal_amount
 
     if player.hp > player.max_hp then
         player.overflow_hp = (player.overflow_hp or 0) + (player.hp - player.max_hp)
         player.hp = player.max_hp
     end
+
+    FloatingText.spawn_at_entity(player, heal_amount, "heal")
 end
 
 local function handle_pickup_collection(player, pickup)
@@ -50,7 +54,9 @@ Handlers.map["Enemy"] = function(enemy, map_x, map_y)
 end
 
 Handlers.entity["Projectile,Enemy"] = function(projectile, enemy)
-    enemy.hp = enemy.hp - (projectile.damage or GameConstants.Projectile.damage or 10)
+    local damage = projectile.damage or GameConstants.Projectile.damage or 10
+    enemy.hp = enemy.hp - damage
+    FloatingText.spawn_at_entity(enemy, -damage, "damage")
     Effects.hit_impact(projectile, enemy)
     Effects.apply_knockback(projectile, enemy, 6)
     world.del(projectile)
@@ -63,8 +69,10 @@ Handlers.entity["Player,Enemy"] = function(player, enemy)
     if player.invuln_timer and player.invuln_timer > 0 then
         return
     end
+    local damage = enemy.contact_damage or 10
     if not GameConstants.cheats.godmode then
-        player.hp = player.hp - (enemy.contact_damage or 10)
+        player.hp = player.hp - damage
+        FloatingText.spawn_at_entity(player, -damage, "damage")
     end
     Effects.hit_impact(enemy, player, "heavy_shake")
     Effects.apply_knockback(enemy, player, 16)
@@ -76,8 +84,10 @@ Handlers.entity["Player,Skull"] = function(player, skull)
     if player.invuln_timer and player.invuln_timer > 0 then
         return
     end
+    local damage = skull.contact_damage or 20
     if not GameConstants.cheats.godmode then
-        player.hp = player.hp - (skull.contact_damage or 20)
+        player.hp = player.hp - damage
+        FloatingText.spawn_at_entity(player, -damage, "damage")
     end
     skull.hp = skull.hp - 1
     Effects.hit_impact(skull, player, "heavy_shake")
@@ -90,8 +100,10 @@ Handlers.entity["EnemyProjectile,Player"] = function(projectile, player)
     if player.invuln_timer and player.invuln_timer > 0 then
         return
     end
+    local damage = projectile.damage or 10
     if not GameConstants.cheats.godmode then
-        player.hp = player.hp - (projectile.damage or 10)
+        player.hp = player.hp - damage
+        FloatingText.spawn_at_entity(player, -damage, "damage")
     end
     Effects.hit_impact(projectile, player, "heavy_shake")
     Effects.apply_knockback(projectile, player, 8)

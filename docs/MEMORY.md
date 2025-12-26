@@ -20,6 +20,10 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Floating Damage/Heal Numbers**:
+  - **New `systems/floating_text.lua`**: Displays floating text above entities when they take damage (red) or heal (green). Numbers rise upward and fade out over configurable duration.
+  - **Integration Points**: Collision handlers spawn damage text on hit; pickup collection and room-clear callbacks spawn heal text.
+  - **Configuration**: `GameConstants.FloatingText` provides tweakable parameters (rise speed, duration, colors, spread).
 - **Implemented Visual Effects**:
   - **Pickup Shadow**: Added `shadow` tag and properties to `ProjectilePickup` in `constants.lua` so embedded projectiles render with shadows.
   - **Batch-Optimized Sprite Outline**: Added `Rendering.draw_outlined()` function using Picotron's batch GFX operations (`userdata("f64")` + batch `spr()`) for 8 outline draws in a single call.

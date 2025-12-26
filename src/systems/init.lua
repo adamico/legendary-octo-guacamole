@@ -14,6 +14,7 @@ local Animation = require("src/systems/animation")
 local Input = require("src/input")
 local Spawner = require("src/systems/spawner")
 local Lifecycle = require("src/lifecycle")
+local FloatingText = require("src/systems/floating_text")
 
 -- Merge all modules into a single Systems table for backward compatibility
 local Systems = {}
@@ -67,5 +68,8 @@ Systems.Effects = Effects
 
 -- Spawner system
 Systems.Spawner = Spawner
+
+-- Floating Text system
+Systems.FloatingText = FloatingText
 
 return Systems

@@ -375,6 +375,16 @@ local GameConstants = {
       bounce_height = 2, -- Bounce amplitude in pixels
       outline_color = 0, -- Black outline for visibility
    },
+   FloatingText = {
+      rise_speed = 0.5,   -- Pixels per frame to rise
+      duration = 45,      -- Total frames before removal
+      fade_duration = 15, -- Frames for fade out (part of total duration)
+      damage_color = 8,   -- Red for damage
+      heal_color = 11,    -- Green for healing
+      outline_color = 0,  -- Black outline for visibility
+      offset_y = -8,      -- Initial vertical offset from entity top
+      spread = 8,         -- Horizontal spread for multiple texts
+   },
    title = "Pizak",
    debug = {
       show_hitboxes = false,

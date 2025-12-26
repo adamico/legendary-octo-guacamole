@@ -51,20 +51,15 @@ function Emotions.draw(world)
         -- Calculate position above entity center
         local cx = entity.x + (entity.width or 16) / 2 - 2
         local cy = entity.y + offset_y
-
         -- Add bounce animation
         local phase = entity.emotion_phase or 0
         local bounce = sin((t() * bounce_speed + phase) * 2 * 3.14159) * bounce_height
-        cy = cy + bounce
-
-        -- Build p8scii string with outline for visibility
-        -- Format: \^o{outline_color}{neighbor_bits}{text}
-        -- ff = all 8 neighbors for full outline
-        local outline_hex = string.format("%x", outline_col)
-        local text_str = string.format("\^o%sff%s", outline_hex, config.text)
 
         -- Draw the emotion text with outline
-        print(text_str, cx, cy, config.color)
+        local TextUtils = require("src/utils/text_utils")
+        local cx = entity.x + (entity.width or 16) / 2 - 2
+        local cy = entity.y + offset_y + bounce
+        TextUtils.print_outlined(config.text, cx, cy, config.color, outline_col)
     end)()
 end
 
