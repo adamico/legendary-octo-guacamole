@@ -1,7 +1,5 @@
 # TODO
 
-- add a visual effect when the player projectile hits a solid tile to show that it falls down [BRAINSTORM]
-- add a function to draw sprites with outlines for better visibility over the background [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 - add a weak melee attack to the player to allow inflicting damage without spending health [BRAINSTORM]
 - should we scale the sprites up? 24x24? 32x32? [BRAINSTORM]

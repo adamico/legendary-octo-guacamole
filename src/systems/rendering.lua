@@ -68,37 +68,36 @@ local function draw_sprite(entity)
 
     -- Check for composite sprite (top + bottom halves)
     if entity.sprite_top ~= nil and entity.sprite_bottom ~= nil then
-        -- Use dynamic split_row (defaults to height/2)
         local width = entity.width or 16
         local height = entity.height or 16
         local split_row = entity.split_row or flr(height / 2)
-        local bottom_height = height - split_row
 
-        -- Draw top half
-        sspr(
-            entity.sprite_top,
-            0, 0,
-            width, split_row,
-            sx, sy,
-            width, split_row,
-            flip_x, flip_y
-        )
-        -- Draw bottom half
-        sspr(
-            entity.sprite_bottom,
-            0, split_row,
-            width, bottom_height,
-            sx, sy + split_row,
-            width, bottom_height,
-            flip_x, flip_y
-        )
+        if entity.outline_color ~= nil then
+            Rendering.draw_outlined_composite(
+                entity.sprite_top, entity.sprite_bottom,
+                sx, sy, width, height, split_row,
+                entity.outline_color, flip_x, flip_y
+            )
+        else
+            local bottom_height = height - split_row
+            -- Draw top half
+            sspr(entity.sprite_top, 0, 0, width, split_row, sx, sy, width, split_row, flip_x, flip_y)
+            -- Draw bottom half
+            sspr(entity.sprite_bottom, 0, split_row, width, bottom_height, sx, sy + split_row, width, bottom_height,
+                flip_x, flip_y)
+        end
     else
         -- Standard single sprite
         local drawable = entity.sprite_index
         if entity.rotation_angle and entity.rotation_angle ~= 0 then
             drawable = Rotator.get(entity.sprite_index, entity.rotation_angle)
         end
-        spr(drawable, sx, sy, flip_x, flip_y)
+
+        if entity.outline_color ~= nil then
+            Rendering.draw_outlined(drawable, sx, sy, entity.outline_color, flip_x, flip_y)
+        else
+            spr(drawable, sx, sy, flip_x, flip_y)
+        end
     end
 
     if was_flashing then
@@ -145,6 +144,70 @@ end
 -- @param world - ECS world
 function Rendering.apply_palette_swaps(world)
     world.sys("palette_swappable", apply_palette_swaps)()
+end
+
+-- Outline offsets for 8-neighbor technique
+local OUTLINE_OFFSETS = {
+    {-1, 0}, {1, 0}, {0, -1}, {0, 1},
+    {-1, -1}, {1, -1}, {-1, 1}, {1, 1}
+}
+
+-- Draw a sprite with a colored outline
+-- @param sprite_index - Sprite to draw
+-- @param x, y - Position
+-- @param outline_color - Color for outline (default: 0 black)
+-- @param flip_x, flip_y - Optional flip flags
+function Rendering.draw_outlined(sprite_index, x, y, outline_color, flip_x, flip_y)
+    outline_color = outline_color or 0
+
+    -- Set all colors to outline color
+    for i = 1, 63 do pal(i, outline_color, 0) end
+
+    -- Draw 8 outline sprites at offset positions
+    for _, o in ipairs(OUTLINE_OFFSETS) do
+        spr(sprite_index, x + o[1], y + o[2], flip_x, flip_y)
+    end
+
+    -- Reset palette and draw center sprite
+    pal()
+    spr(sprite_index, x, y, flip_x, flip_y)
+end
+
+-- Draw a composite sprite (top + bottom halves) with a colored outline
+-- @param sprite_top - Sprite index for top half
+-- @param sprite_bottom - Sprite index for bottom half
+-- @param x, y - Position
+-- @param width, height - Sprite dimensions
+-- @param split_row - Row where top/bottom split occurs
+-- @param outline_color - Color for outline (default: 0 black)
+-- @param flip_x, flip_y - Optional flip flags
+function Rendering.draw_outlined_composite(sprite_top, sprite_bottom, x, y, width, height, split_row, outline_color,
+                                           flip_x, flip_y)
+    outline_color = outline_color or 0
+    split_row = split_row or flr(height / 2)
+    local bottom_height = height - split_row
+
+    -- Helper to draw the composite sprite
+    local function draw_composite(ox, oy)
+        -- Draw top half
+        sspr(sprite_top, 0, 0, width, split_row, x + ox, y + oy, width, split_row, flip_x, flip_y)
+        -- Draw bottom half
+        sspr(sprite_bottom, 0, split_row, width, bottom_height, x + ox, y + oy + split_row, width, bottom_height, flip_x,
+            flip_y)
+    end
+
+    -- Set all colors to outline color (keep color 0 transparent)
+    for i = 1, 63 do pal(i, outline_color, 0) end
+
+    -- Draw 8 outline offsets
+    for _, o in ipairs(OUTLINE_OFFSETS) do
+        draw_composite(o[1], o[2])
+    end
+
+    pal()
+
+    -- Draw center composite normally
+    draw_composite(0, 0)
 end
 
 return Rendering

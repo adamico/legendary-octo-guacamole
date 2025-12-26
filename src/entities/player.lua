@@ -51,6 +51,8 @@ function Player.spawn(world, x, y)
         -- Health regen properties
         regen_trigger_field = "time_since_shot", -- Trigger for regen
         overflow_banking = true,                 -- Bank overflow HP
+        -- Visual properties
+        outline_color = GameConstants.Player.outline_color,
     }
 
     -- Create entity with shadow tag (shadow auto-spawned)

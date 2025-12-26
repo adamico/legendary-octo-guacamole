@@ -20,6 +20,9 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Visual Effects**:
+  - **Pickup Shadow**: Added `shadow` tag and properties to `ProjectilePickup` in `constants.lua` so embedded projectiles render with shadows.
+  - **Batch-Optimized Sprite Outline**: Added `Rendering.draw_outlined()` function using Picotron's batch GFX operations (`userdata("f64")` + batch `spr()`) for 8 outline draws in a single call.
 - **Fixed Door Guidance System**: Resolved a long-standing issue where the wall-sliding guidance was broken due to incorrect door detection (checking for map tiles instead of room metadata) and buggy velocity calculation.
   - Refactored `apply_door_guidance` to use `Room` metadata for robust door detection.
   - Corrected the nudge logic to apply velocity to the orthogonal axis (e.g., nudge Y when colliding on X).

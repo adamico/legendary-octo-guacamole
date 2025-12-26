@@ -87,7 +87,9 @@ local GameConstants = {
          left = 9,
          up = 16,
       },
-      shadow_offset = 0,
+      shadow_offset = 1,
+      shadow_width = 13,
+      outline_color = 1,
    },
    Projectile = {
       -- Player's laser projectile
@@ -189,7 +191,7 @@ local GameConstants = {
       -- Pickup spawned when player projectile hits wall (recoverable health)
       ProjectilePickup = {
          entity_type = "ProjectilePickup",
-         tags = "pickup,collidable,drawable,sprite,background",
+         tags = "pickup,collidable,drawable,sprite,background,shadow",
          pickup_effect = "health",
          width = 16,
          height = 16,
@@ -201,6 +203,8 @@ local GameConstants = {
             left = 19,
             up = 20,
          },
+         shadow_offset = 2,
+         shadow_width = 6,
       },
       -- Health pickup spawned when enemies die
       HealthPickup = {
@@ -215,7 +219,7 @@ local GameConstants = {
          hitbox_offset_x = 2,
          hitbox_offset_y = 2,
          shadow_offset = 3,
-         shadow_width = 5,
+         shadow_width = 11,
       },
    },
    Enemy = {
@@ -246,8 +250,9 @@ local GameConstants = {
          hitbox_height = 10,
          hitbox_offset_x = 2,
          hitbox_offset_y = 3,
-         shadow_offset = 2,
-         shadow_width = 12,
+         shadow_offset = 3,
+         shadow_width = 15,
+         outline_color = 1,
       },
       Shooter = {
          entity_type = "Enemy",
@@ -280,8 +285,9 @@ local GameConstants = {
             idle = {indices = {33, 34}, durations = {30, 30}},
             death = {indices = {33}, durations = {30}}
          },
-         shadow_offset = 3,
-         shadow_width = 12,
+         shadow_offset = 4,
+         shadow_width = 17,
+         outline_color = 1,
       },
       Skull = {
          entity_type = "Skull",
@@ -301,8 +307,9 @@ local GameConstants = {
          hitbox_height = 16,
          hitbox_offset_x = 0,
          hitbox_offset_y = 0,
-         shadow_offset = 0,
+         shadow_offset = 5,
          shadow_width = 13,
+         outline_color = 1,
       },
       Dasher = {
          entity_type = "Enemy",
@@ -353,7 +360,9 @@ local GameConstants = {
                death     = {indices = {37}, durations = {30}, flip = true}
             }
          },
-         shadow_offset = 2,
+         shadow_offset = 3,
+         shadow_width = 17,
+         outline_color = 1,
       },
    },
    Emotions = {
