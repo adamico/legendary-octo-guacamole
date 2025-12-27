@@ -1,9 +1,8 @@
 # TODO
 
-- implement player stats system [BRAINSTORM]
-- add pickups (bombs, keys, etc.) [BRAINSTORM]
-- add powerups (see PICKUP_SYSTEM.md)
-- add treasure room for powerups[BRAINSTORM]
+- add more pickup items (bombs, keys, coins) [BRAINSTORM]
+- add powerups (see PICKUP_SYSTEM.md) [BRAINSTORM]
+- add locked treasure room for powerups[BRAINSTORM]
 
 - add shop room with items[BRAINSTORM]
 

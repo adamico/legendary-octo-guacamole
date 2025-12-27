@@ -54,7 +54,7 @@ local GameConstants = {
       -- Stats
       shot_speed = 4,
       max_hp_to_damage_ratio = 0.2, -- Damage = max_hp * ratio
-      range = 100,                  -- Max distance in pixels
+      range = 200,                  -- Max distance in pixels
       fire_rate = 15,               -- Frames between shots (was shoot_cooldown_duration)
       base_knockback = 4,           -- Base knockback applied to all player attacks
       vampiric_heal = 0.3,          -- Heal player for 30% of damage dealt

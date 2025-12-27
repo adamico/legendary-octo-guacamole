@@ -1,5 +1,6 @@
 -- Physics and movement systems
 -- Handles acceleration, friction, and velocity application
+local Entities = require("src/entities")
 
 local Physics = {}
 
@@ -100,6 +101,52 @@ function Physics.knockback_post(world)
             entity.knockback_vel_y = kb_y * KNOCKBACK_FRICTION
             if abs(entity.knockback_vel_x) < 0.1 then entity.knockback_vel_x = 0 end
             if abs(entity.knockback_vel_y) < 0.1 then entity.knockback_vel_y = 0 end
+        end
+    end)()
+end
+
+-- Update Z-axis physics (gravity, movement, ground collision)
+-- @param world - ECS world
+function Physics.z_axis(world)
+    world.sys("velocity", function(entity)
+        -- Only process entities with Z-axis properties
+        if not entity.z and not entity.vel_z then return end
+
+        entity.z = entity.z or 0
+        entity.vel_z = entity.vel_z or 0
+        entity.gravity_z = entity.gravity_z or -0.15
+
+        -- Update age (if using projectile flight mechanics)
+        if entity.age and entity.max_age then
+            entity.age = entity.age + 1
+            -- Only apply gravity in the last 25% of the flight
+            -- T_drop_start = max_age * 0.75
+            local drop_start = entity.max_age * 0.75
+            if entity.age >= drop_start then
+                entity.vel_z = entity.vel_z + entity.gravity_z
+            end
+        else
+            -- Standard gravity for non-projectiles or if age not tracked
+            entity.vel_z = entity.vel_z + entity.gravity_z
+        end
+
+        -- Apply velocity
+        entity.z = entity.z + entity.vel_z
+
+        -- Ground collision
+        if entity.z <= 0 then
+            entity.z = 0
+
+            -- Player Projectile Logic: spawn pickup on landing
+            if entity.tags and string.find(entity.tags, "projectile") and entity.owner == "player" then
+                -- Spawn pickup at landing spot
+                Entities.spawn_pickup_projectile(world, entity.x, entity.y, entity.dir_x, entity.dir_y)
+            end
+
+            -- Destroy projectile on ground impact
+            if entity.tags and string.find(entity.tags, "projectile") then
+                world.del(entity)
+            end
         end
     end)()
 end

@@ -33,6 +33,7 @@ Systems.acceleration = PhysicsSys.acceleration
 Systems.velocity = PhysicsSys.velocity
 Systems.knockback_pre = PhysicsSys.knockback_pre
 Systems.knockback_post = PhysicsSys.knockback_post
+Systems.z_axis = PhysicsSys.z_axis
 
 -- Shooting & Health systems (self-iterating)
 Systems.shooter = Shooter.update

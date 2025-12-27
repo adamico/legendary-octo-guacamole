@@ -26,6 +26,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Inventory**: Added `coins`, `keys`, `bombs` slots to the player entity.
   - **Refactored Shooting**: `Projectile.spawn` and `Shooter` system now accept stat overrides, allowing the shooter's current stats to dictate projectile behavior.
   - **Debug UI**: Added a **Player Stats** group to the F1 debug panel displaying real-time combat stats and inventory counts.
+- **Implemented Projectile Range & Visual Arc**:
+  - **Z-Axis Simulation**: Projectiles now have `z`, `vel_z`, and `gravity_z` properties. Physics system updates Z position and applies gravity.
+  - **Visual Arc**: Rendering system offsets sprite Y by Z height (`y - z`), creating a 3D parabolic effect while keeping the logical hitbox grounded.
+  - **Delayed Gravity**: Gravity is applied only in the last 25% of the projectile's lifetime, creating a horizontal flight phase followed by a drop.
+  - **Ground Impact**: When projectiles hit the ground (Z=0 at range limit), they spawn a `ProjectilePickup` (chance for hearts).
+  - **Range Stat**: Player `range` stat determines projectile lifetime.
 - **Enhanced Minimap with Smart Rotation**:
   - Implemented a 4-quadrant rotation system (TR -> BR -> BL -> TL) where the minimap flees the player.
   - **Smart Approach Logic**: Uses player velocity to determine rotation direction (CW/ACW). Horizontal approach triggers vertical flee; vertical approach triggers horizontal flee.

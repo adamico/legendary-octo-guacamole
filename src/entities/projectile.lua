@@ -54,6 +54,19 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         projectile.vel_y = dy * projectile.speed
     end
 
+    -- 2d. Initialize Z-axis data (simulated height)
+    projectile.z = instance_data.z or 8 -- Default start height
+    projectile.age = 0
+    projectile.max_age = instance_data.lifetime or 60
+    projectile.vel_z = 0 -- Start with no vertical velocity (horizontal flight)
+
+    -- Calculate gravity to drop from z to 0 in the last 25% of lifetime
+    -- T_drop = max_age * 0.25
+    -- 0 = z0 + 0*t + 0.5*g*t^2  => g = -2*z0 / t^2
+    local drop_duration = projectile.max_age * 0.25
+    if drop_duration < 1 then drop_duration = 1 end -- Prevent division by zero
+    projectile.gravity_z = (-2 * projectile.z) / (drop_duration * drop_duration)
+
     -- 3. Static table references
     projectile.hitbox = config.hitbox
     projectile.animations = config.animations

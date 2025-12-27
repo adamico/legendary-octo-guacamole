@@ -16,7 +16,8 @@ local function draw_sprite(entity)
     local flip_x = entity.flip_x or entity.flip or false
     local flip_y = entity.flip_y or false
     local sx = entity.x + (entity.sprite_offset_x or 0)
-    local sy = entity.y + (entity.sprite_offset_y or 0)
+    -- Subtract Z for visual height (higher Z = higher on screen)
+    local sy = entity.y + (entity.sprite_offset_y or 0) - (entity.z or 0)
 
     -- Check for death state to apply procedural effects
     if entity.fsm and entity.fsm:is("death") then
