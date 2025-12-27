@@ -67,6 +67,7 @@ function Effects.spawn_particles(x, y, ptype, count)
 end
 
 -- Apply knockback to target entity, pushing away from source
+-- Uses separate knockback velocity that decays with friction
 function Effects.apply_knockback(source, target, strength)
     strength = strength or 3
 
@@ -90,38 +91,10 @@ function Effects.apply_knockback(source, target, strength)
         dy = -1
     end
 
-    -- Apply velocity impulse with simple wall check (to prevent getting stuck)
-    -- Avoid circular dependency by requiring Collision here
-    local Collision = require("src/physics/collision")
-    local HitboxUtils = require("src/utils/hitbox_utils")
-
-    local hb = HitboxUtils.get_hitbox(target)
-    local check_dist = strength
-
-    -- Simple lookahead: Check if target position is solid
-    -- Only check solid if entity is map_collidable
-    if target.map_collidable or (target.tags and target.tags:find("map_collidable")) then
-        local dest_x = hb.x + dx * check_dist
-        local dest_y = hb.y + dy * check_dist
-
-        -- If direct path is blocked, try sliding (zero out blocked axis)
-        if Collision.is_solid(dest_x, dest_y, hb.w, hb.h) then
-            -- Try X only
-            if not Collision.is_solid(dest_x, hb.y, hb.w, hb.h) then
-                dy = 0
-                -- Try Y only
-            elseif not Collision.is_solid(hb.x, dest_y, hb.w, hb.h) then
-                dx = 0
-            else
-                -- both blocked, stop
-                dx = 0
-                dy = 0
-            end
-        end
-    end
-
-    target.vel_x = (target.vel_x or 0) + dx * strength
-    target.vel_y = (target.vel_y or 0) + dy * strength
+    -- Set knockback velocity (separate from movement velocity)
+    -- This will be processed and decayed in the physics system
+    target.knockback_vel_x = dx * strength
+    target.knockback_vel_y = dy * strength
 end
 
 -- Generic hit impact effect (reusable)

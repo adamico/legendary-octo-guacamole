@@ -1,9 +1,8 @@
 # TODO
 
-- fix knockback teleports enemies (or makes them move too fast) [BRAINSTORM]
+- separate upper and lower body animations [BRAINSTORM]
 - separate game config from game state [BRAINSTORM]
 - implement player stats system [BRAINSTORM]
-- player attack animation is too fast, last frame should linger for a bit [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 
 - add pickups (bombs, keys, etc.) [BRAINSTORM]
@@ -13,7 +12,7 @@
 - add minimap system [BRAINSTORM]
 - add shop room with items[BRAINSTORM]
 
-- add boss room with boss[BRAINSTORM]
+- add boss room with special enemy[BRAINSTORM]
 
 - add room carvings patterns similar to the ones in The Binding of Isaac: Rebirth [BRAINSTORM]
 - add room floor patterns to avoid having floors that are too random [BRAINSTORM]

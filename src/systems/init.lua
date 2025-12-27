@@ -31,6 +31,8 @@ Systems.read_input = Input.read_input
 -- Physics systems (self-iterating)
 Systems.acceleration = PhysicsSys.acceleration
 Systems.velocity = PhysicsSys.velocity
+Systems.knockback_pre = PhysicsSys.knockback_pre
+Systems.knockback_post = PhysicsSys.knockback_post
 
 -- Shooting & Health systems (self-iterating)
 Systems.shooter = Shooter.update

@@ -19,6 +19,9 @@ function Melee.update(world)
       local low_health = player.hp < health_threshold or GameConstants.cheats.free_attacks
 
       if input_pressed and low_health then
+         -- Trigger attack animation
+         if player.fsm then player.fsm:attack() end
+
          -- Pay health cost (skip if free_attacks cheat active)
          if not GameConstants.cheats.free_attacks then
             local cost = player.melee_cost or 10
@@ -34,10 +37,9 @@ function Melee.update(world)
          -- Use facing direction (persistent) per user request
          local dir = player.current_direction or "down"
          local dx, dy = EntityUtils.get_direction_vector(dir)
-         local offset_x = GameConstants.Player.melee_offsets[dir][1]
-         local offset_y = GameConstants.Player.melee_offsets[dir][2]
-         local spawn_x = player.x + dx * range + offset_x
-         local spawn_y = player.y + dy * range + offset_y
+         local hb_config = GameConstants.Player.melee_hitboxes[dir]
+         local spawn_x = player.x + dx * range + hb_config.ox
+         local spawn_y = player.y + dy * range + hb_config.oy
 
          -- Determine rotation angle (0=Up, 90=Right, 180=Down, 270=Left)
          local angle = 0
@@ -58,24 +60,24 @@ function Melee.update(world)
             x = spawn_x,
             y = spawn_y,
             -- Store relative offset for position syncing
-            offset_x = dx * range + offset_x,
-            offset_y = dy * range + offset_y,
+            offset_x = dx * range + hb_config.ox,
+            offset_y = dy * range + hb_config.oy,
 
             width = GameConstants.Player.melee_width,
             height = GameConstants.Player.melee_height,
             -- Visual properties
             sprite_index = GameConstants.Player.melee_sprite,
             rotation_angle = angle,
-            outline_color = 1, -- White outline? Match player?
+            outline_color = 1,
             -- System tags (added 'melee_hitbox' tag for syncing)
             lifespan = GameConstants.Player.melee_duration,
             owner_entity = player,
             melee_damage = damage,
             -- Adjust hitbox centering
-            hitbox_width = GameConstants.Player.melee_hitboxes[dir].w,
-            hitbox_height = GameConstants.Player.melee_hitboxes[dir].h,
-            hitbox_offset_x = GameConstants.Player.melee_hitboxes[dir].ox,
-            hitbox_offset_y = GameConstants.Player.melee_hitboxes[dir].oy,
+            hitbox_width = hb_config.w,
+            hitbox_height = hb_config.h,
+            hitbox_offset_x = hb_config.ox,
+            hitbox_offset_y = hb_config.oy,
             -- Track enemies already hit (prevents multi-proc on same enemy)
             hit_list = {}
          }

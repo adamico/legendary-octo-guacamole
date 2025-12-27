@@ -111,10 +111,12 @@ function Play:update()
 
    -- Physics (self-iterating)
    Systems.acceleration(world)
+   Systems.knockback_pre(world) -- Add knockback to velocity before collision
    world.sys("map_collidable,velocity", function(e)
       Systems.resolve_map(e, current_room, camera_manager)
    end)()
    Systems.velocity(world)
+   Systems.knockback_post(world) -- Decay knockback after movement
 
    -- Animation & Lifecycle (self-iterating)
    Systems.update_lifecycle(world)

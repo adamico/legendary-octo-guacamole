@@ -1,6 +1,7 @@
 -- Generic shooting system for ANY entity with "shooter" tag
 local Entities = require("src/entities")
 local GameConstants = require("src/constants")
+local EntityUtils = require("src/utils/entity_utils")
 
 local Shooter = {}
 
@@ -21,6 +22,12 @@ function Shooter.update(world)
       end
 
       if wants_to_shoot and has_ammo and cooldown_ready then
+         -- Update facing direction to shoot direction (attack direction takes priority)
+         entity.current_direction = EntityUtils.get_direction_name(sx, sy, entity.current_direction)
+
+         -- Trigger attack animation for entities with FSM
+         if entity.fsm then entity.fsm:attack() end
+
          -- Consume ammo if using health (skip if free_attacks cheat active)
          if entity.health_as_ammo and not GameConstants.cheats.free_attacks then
             entity.hp -= (entity.shot_cost or 20)

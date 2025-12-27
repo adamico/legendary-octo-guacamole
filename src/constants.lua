@@ -56,28 +56,28 @@ local GameConstants = {
          down = {
             idle      = {indices = {1, 2}, durations = {30, 30}},
             walking   = {top_indices = {3}, bottom_indices = {3, 18}, durations = {8, 8}, split_row = 9},
-            attacking = {indices = {4, 5}, durations = {4, 22}},
+            attacking = {indices = {4, 5}, durations = {4, 15}},
             hurt      = {indices = {6}, durations = {30}},
             death     = {indices = {7}, durations = {8}}
          },
          right = {
             idle      = {indices = {9, 10}, durations = {30, 30}},
             walking   = {indices = {11, 12}, durations = {8, 8}},
-            attacking = {indices = {13, 14}, durations = {4, 22}},
+            attacking = {indices = {13, 14}, durations = {4, 15}},
             hurt      = {indices = {15}, durations = {30}},
             death     = {indices = {7}, durations = {8}}
          },
          up = {
             idle      = {indices = {16, 17}, durations = {30, 30}},
             walking   = {top_indices = {18}, bottom_indices = {18, 3}, durations = {8, 8}, split_row = 9},
-            attacking = {indices = {16}, durations = {8, 22}},
+            attacking = {indices = {16}, durations = {8, 15}},
             hurt      = {indices = {6}, durations = {30}},
             death     = {indices = {7}, durations = {8}}
          },
          left = {
             idle      = {indices = {9, 10}, durations = {30, 30}, flip = true},
             walking   = {indices = {11, 12}, durations = {8, 8}, flip = true},
-            attacking = {indices = {13, 14}, durations = {4, 22}, flip = true},
+            attacking = {indices = {13, 14}, durations = {4, 15}, flip = true},
             hurt      = {indices = {15}, durations = {30}, flip = true},
             death     = {indices = {7}, durations = {8}, flip = true}
          }
@@ -91,27 +91,20 @@ local GameConstants = {
       shadow_offset = 1,
       shadow_width = 13,
       outline_color = 1,
-      -- Melee settings
       melee_cost = 10,
       melee_cooldown = 60,
       melee_sprite = 31,
       melee_range = 14,
       melee_hitboxes = {
-         down  = {w = 9, h = 12, ox = 4, oy = 4},
-         up    = {w = 9, h = 12, ox = 2, oy = 0},
-         right = {w = 12, h = 9, ox = 4, oy = 2},
-         left  = {w = 12, h = 9, ox = 0, oy = 2},
-      },
-      melee_offsets = {
-         down = {-4, -2},
-         up = {4, 4},
-         right = {-4, 4},
-         left = {4, 4},
+         down  = {w = 9, h = 12, ox = 6, oy = -4},
+         up    = {w = 9, h = 12, ox = 3, oy = 3},
+         right = {w = 12, h = 9, ox = -5, oy = 3},
+         left  = {w = 12, h = 9, ox = 5, oy = 3},
       },
       melee_width = 9,
       melee_height = 16,
       melee_duration = 15,
-      melee_knockback = 6, -- Added to base_knockback for total knockback
+      melee_knockback = 6,
    },
    Projectile = {
       -- Player's laser projectile
@@ -441,14 +434,14 @@ local GameConstants = {
 
 GameConstants.controls = {
    melee = GameConstants.buttons.o,
-   move_up = GameConstants.buttons.up,
-   move_down = GameConstants.buttons.down,
-   move_left = GameConstants.buttons.left,
-   move_right = GameConstants.buttons.right,
-   shoot_up = GameConstants.buttons.up2,
-   shoot_down = GameConstants.buttons.down2,
-   shoot_left = GameConstants.buttons.left2,
-   shoot_right = GameConstants.buttons.right2,
+   shoot_up = GameConstants.buttons.up,
+   shoot_down = GameConstants.buttons.down,
+   shoot_left = GameConstants.buttons.left,
+   shoot_right = GameConstants.buttons.right,
+   move_up = GameConstants.buttons.up2,
+   move_down = GameConstants.buttons.down2,
+   move_left = GameConstants.buttons.left2,
+   move_right = GameConstants.buttons.right2,
 }
 
 -- Collision layers (bitmasking for fast collision filtering)

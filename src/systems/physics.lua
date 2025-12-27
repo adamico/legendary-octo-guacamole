@@ -75,4 +75,33 @@ function Physics.velocity(world)
     world.sys("velocity", apply_velocity)()
 end
 
+-- Apply knockback to velocity BEFORE collision resolution
+function Physics.knockback_pre(world)
+    world.sys("velocity", function(entity)
+        local kb_x = entity.knockback_vel_x or 0
+        local kb_y = entity.knockback_vel_y or 0
+        if kb_x ~= 0 or kb_y ~= 0 then
+            entity.vel_x = (entity.vel_x or 0) + kb_x
+            entity.vel_y = (entity.vel_y or 0) + kb_y
+        end
+    end)()
+end
+
+-- Decay knockback AFTER velocity is applied
+function Physics.knockback_post(world)
+    world.sys("velocity", function(entity)
+        local kb_x = entity.knockback_vel_x or 0
+        local kb_y = entity.knockback_vel_y or 0
+        if kb_x ~= 0 or kb_y ~= 0 then
+            entity.vel_x = (entity.vel_x or 0) - kb_x
+            entity.vel_y = (entity.vel_y or 0) - kb_y
+            local KNOCKBACK_FRICTION = 0.75
+            entity.knockback_vel_x = kb_x * KNOCKBACK_FRICTION
+            entity.knockback_vel_y = kb_y * KNOCKBACK_FRICTION
+            if abs(entity.knockback_vel_x) < 0.1 then entity.knockback_vel_x = 0 end
+            if abs(entity.knockback_vel_y) < 0.1 then entity.knockback_vel_y = 0 end
+        end
+    end)()
+end
+
 return Physics
