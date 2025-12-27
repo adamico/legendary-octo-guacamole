@@ -7,6 +7,10 @@ local quit_clicked     = false
 
 function Title:enteredState()
 	Log.trace("Entered Title scene")
+	pal()
+	palt()
+	camera()
+	poke(0x550b, 0)
 end
 
 function Title:update()

@@ -15,7 +15,7 @@ local GRID_STRIDE_X = ROOM_TILES_W - 1 -- Rooms overlap by 1 tile (shared wall)
 local GRID_STRIDE_Y = ROOM_TILES_H - 1 -- Rooms overlap by 1 tile (shared wall)
 local BASE_OFFSET_X = 64               -- Center offset for grid 0,0
 local BASE_OFFSET_Y = 64               -- Center offset for grid 0,0
-local TARGET_ROOM_COUNT = 8
+local TARGET_ROOM_COUNT = 12
 local DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 
 local DungeonManager = {}
@@ -382,8 +382,8 @@ function DungeonManager.setup_room(room, player, world)
    if room.contents_config and room.contents_config.wave_pattern then
       local pattern = room.contents_config.wave_pattern
       Log.info("Entering room ("..
-      room.grid_x..
-      ","..room.grid_y..") pattern='"..tostring(pattern.name).."' difficulty="..tostring(pattern.difficulty))
+         room.grid_x..
+         ","..room.grid_y..") pattern='"..tostring(pattern.name).."' difficulty="..tostring(pattern.difficulty))
    end
 
    Systems.Spawner.populate(room, player)

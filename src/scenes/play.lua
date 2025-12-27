@@ -21,6 +21,7 @@ local current_room
 
 function Play:enteredState()
    Log.trace("Entered Play scene")
+   world = eggs() -- MUST re-initialize world on every entry for Restart to work
    Systems.init_extended_palette()
    Systems.init_spotlight()
    DungeonManager.init()
@@ -39,11 +40,17 @@ function Play:enteredState()
    -- Subscribe to room transition events
    Events.on(Events.ROOM_TRANSITION, function(new_room)
       current_room = new_room
+      camera_manager:set_room(current_room)
       DungeonManager.setup_room(current_room, player, world)
       world.sys("projectile", function(e) world.del(e) end)()
       world.sys("pickup", function(e) world.del(e) end)()
       world.sys("skull", function(e) world.del(e) end)()
       Systems.FloatingText.clear()
+   end)
+
+   -- Subscribe to Game Over event
+   Events.on(Events.GAME_OVER, function()
+      self:gotoState("GameOver")
    end)
 
    -- Subscribe to room clear events (heal player by 1 segment)
@@ -212,7 +219,10 @@ end
 
 function Play:exitedState()
    Log.trace("Exited Play scene")
-   Events.reset() -- Clear all event subscriptions
+   Events.reset()  -- Clear all event subscriptions
+   pal()           -- Reset GFX color remaps
+   palt()          -- Reset transparency
+   poke(0x550b, 0) -- Reset pen palette row to 0
 end
 
 return Play

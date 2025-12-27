@@ -1,12 +1,13 @@
 -- Entity death behavior registry
 local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
+local Events = require("src/game/events")
 
 local DeathHandlers = {}
 
 DeathHandlers.Player = function(world, entity)
    Log.trace("Player died!")
-   -- Future: SceneManager:gotoState("GameOver")
+   Events.emit(Events.GAME_OVER)
 end
 
 DeathHandlers.Enemy = function(world, entity)

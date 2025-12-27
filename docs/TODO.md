@@ -1,6 +1,5 @@
 # TODO
 
-- implement simple gameover screen [BRAINSTORM]
 - implement player stats system [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 

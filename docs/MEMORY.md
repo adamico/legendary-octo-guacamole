@@ -20,6 +20,13 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Game Over Screen & Scene Transition**:
+  - Added `Events.GAME_OVER` to handle scene changes from anywhere.
+  - Updated `DeathHandlers.Player` to emit `Events.GAME_OVER` when the player dies.
+  - Refactored `main.lua` to listen for the event and switch to the "GameOver" state.
+  - Polished `src/scenes/game_over.lua` with better visuals (centered Band, red text, and pgui buttons).
+  - Fixed a bug in `play.lua` by moving ECS world initialization into `enteredState` to ensure a fresh start on restart.
+- **Increased Room Generation Count**: Updated `TARGET_ROOM_COUNT` to 12 in `dungeon_manager.lua` for larger dungeons.
 - **Separated Game Config from State**: Created new `src/game/` folder containing:
   - `game_config.lua` (immutable configuration, renamed from constants.lua)
   - `game_state.lua` (mutable runtime state: cheats, debug flags)

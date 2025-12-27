@@ -6,6 +6,7 @@ local Events = {}
 -- Event Constants (use these instead of strings)
 Events.ROOM_CLEAR = "room:clear"
 Events.ROOM_TRANSITION = "room:transition"
+Events.GAME_OVER = "game:over"
 
 --- Subscribe to an event
 -- @param event The event constant (e.g., Events.ROOM_CLEAR)
