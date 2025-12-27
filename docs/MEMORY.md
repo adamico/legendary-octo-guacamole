@@ -20,6 +20,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Player Stats System**: Decoupled combat stats from static projectile configuration, moving them to the `Player` entity to enable dynamic builds and powerups.
+  - **Stats**: `shot_speed`, `range` (lifetime), `fire_rate`, and `knockback` are now player properties.
+  - **Dynamic Damage**: Introduced `max_hp_to_damage_ratio` (default 0.2). Damage is derived as `max_hp * ratio`, creating a synergy where Health Up items also increase Damage.
+  - **Inventory**: Added `coins`, `keys`, `bombs` slots to the player entity.
+  - **Refactored Shooting**: `Projectile.spawn` and `Shooter` system now accept stat overrides, allowing the shooter's current stats to dictate projectile behavior.
+  - **Debug UI**: Added a **Player Stats** group to the F1 debug panel displaying real-time combat stats and inventory counts.
 - **Enhanced Minimap with Smart Rotation**:
   - Implemented a 4-quadrant rotation system (TR -> BR -> BL -> TL) where the minimap flees the player.
   - **Smart Approach Logic**: Uses player velocity to determine rotation direction (CW/ACW). Horizontal approach triggers vertical flee; vertical approach triggers horizontal flee.

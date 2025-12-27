@@ -49,10 +49,19 @@ local GameConstants = {
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
-      regen_rate = 0,      -- Disabled for now; room-clear regen is used instead
+      regen_rate = 0, -- Disabled for now; room-clear regen is used instead
       regen_delay = 1.5,
-      base_knockback = 4,  -- Base knockback applied to all player attacks
-      vampiric_heal = 0.3, -- Heal player for 30% of damage dealt
+      -- Stats
+      shot_speed = 4,
+      max_hp_to_damage_ratio = 0.2, -- Damage = max_hp * ratio
+      range = 100,                  -- Max distance in pixels
+      fire_rate = 15,               -- Frames between shots (was shoot_cooldown_duration)
+      base_knockback = 4,           -- Base knockback applied to all player attacks
+      vampiric_heal = 0.3,          -- Heal player for 30% of damage dealt
+      -- Inventory
+      coins = 0,
+      keys = 0,
+      bombs = 0,
       animations = {
          down = {
             idle      = {indices = {1, 2}, durations = {30, 30}},
@@ -113,9 +122,8 @@ local GameConstants = {
          entity_type = "Projectile",
          tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,shadow,middleground",
          owner = "player",
-         speed = 4,
-         damage = 20,
-         knockback = 2, -- Added to base_knockback for total knockback
+         speed = 0,     -- Speed and damage are now provided by the shooter
+         knockback = 0, -- Added to base_knockback for total knockback
          width = 16,
          height = 16,
          hitbox = {

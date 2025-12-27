@@ -99,6 +99,25 @@ function Play:enteredState()
       function(self) GameState.debug.show_hitboxes = not GameState.debug.show_hitboxes end)
    add(debugui.elements, hitboxes_toggle)
 
+   -- Player Stats Group (Real-time monitoring)
+   local stats_group = debugui.create_group(7, debugui.config._ACCENT2_color, true,
+      function(self)
+         if not player then return end
+         self.vars = {
+            "[== player stats ==]",
+            "damage: "..tostring(player.damage),
+            "shot_speed: "..tostring(player.shot_speed),
+            "range: "..tostring(player.range),
+            "fire_rate: "..tostring(player.fire_rate),
+            "hp ratio: "..tostring(player.max_hp_to_damage_ratio),
+            "[== inventory ==]",
+            "coins: "..tostring(player.coins),
+            "keys: "..tostring(player.keys),
+            "bombs: "..tostring(player.bombs),
+         }
+      end)
+   add(debugui.elements, stats_group)
+
    -- Setup initial room
    DungeonManager.setup_room(current_room, player, world)
 end

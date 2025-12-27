@@ -43,13 +43,26 @@ function Player.spawn(world, x, y)
         time_since_shot = 0,
         overflow_hp = 0,
         shoot_cooldown = 0,
+        -- Combat Stats
+        shot_speed = GameConstants.Player.shot_speed,
+        max_hp_to_damage_ratio = GameConstants.Player.max_hp_to_damage_ratio,
+        damage = GameConstants.Player.max_health * GameConstants.Player.max_hp_to_damage_ratio, -- Derived: 100 * 0.2 = 20
+        knockback = GameConstants.Player.base_knockback,
+        range = GameConstants.Player.range,
+        fire_rate = GameConstants.Player.fire_rate,
+
         melee_cooldown = 0,
         melee_cost = GameConstants.Player.melee_cost,
-        invuln_timer = 0,      -- Frames of invulnerability remaining after taking damage
+        invuln_timer = 0, -- Frames of invulnerability remaining after taking damage
+
+        -- Inventory
+        coins = GameConstants.Player.coins,
+        keys = GameConstants.Player.keys,
+        bombs = GameConstants.Player.bombs,
         -- Shooter system properties
         health_as_ammo = true, -- Shooting costs HP
         projectile_type = "Laser",
-        shoot_cooldown_duration = 15,
+        shoot_cooldown_duration = GameConstants.Player.fire_rate,
         -- Health regen properties
         regen_trigger_field = "time_since_shot", -- Trigger for regen
         overflow_banking = true,                 -- Bank overflow HP

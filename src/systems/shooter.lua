@@ -39,7 +39,14 @@ function Shooter.update(world)
          local projectile_type = entity.projectile_type or "Laser"
          Entities.spawn_centered_projectile(
             world, entity, sx, sy, projectile_type,
-            {recovery_percent = entity.recovery_percent, shot_cost = entity.shot_cost}
+            {
+               speed = entity.shot_speed,
+               damage = entity.damage,
+               knockback = entity.knockback,
+               recovery_percent = entity.recovery_percent,
+               shot_cost = entity.shot_cost,
+               lifetime = (entity.range and entity.shot_speed) and (entity.range / entity.shot_speed) or 60
+            }
          )
 
          entity.shoot_cooldown = entity.shoot_cooldown_duration or 15

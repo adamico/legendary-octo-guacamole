@@ -216,6 +216,15 @@ Uses handler registries for decoupled collision responses:
 - **Entity-Entity handlers**: Keyed by `"Type1,Type2"` (e.g., `"Player,Enemy"`). Handle damage, knockback, invulnerability.
 - **Entity-Map handlers**: Keyed by entity type (e.g., `"Projectile"`). Handle particles and deletion on wall hits.
 
+## Player Stats System
+
+Decouples combat statistics from static projectile definitions to enable dynamic builds and powerup synergies.
+
+- **Ownership**: Combat stats (`shot_speed`, `damage`, `range`, `knockback`, `fire_rate`) are owned by the `Player` entity, not the projectile config.
+- **Dynamic Damage**: Calculating as `player.max_hp * player.max_hp_to_damage_ratio`. Use `max_hp_to_damage_ratio` to tune DPS relative to health scaling.
+- **Inheritance**: `Projectile.spawn` accepts an `instance_data` table. The `Shooter` system passes the player's *current* stats into this table when firing, ensuring bullets reflect the player's state at the moment of shooting.
+- **Inventory**: Player entity tracks `coins`, `keys`, and `bombs`.
+
 ## Game Loop (Play Scene)
 
 The Play scene (`src/scenes/play.lua`) manages the game loop and room transitions via `DungeonManager` and `CameraManager`.

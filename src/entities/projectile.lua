@@ -33,17 +33,25 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         direction = direction,
         dir_x = dx,
         dir_y = dy,
-        vel_x = dx * (config.speed or 1),
-        vel_y = dy * (config.speed or 1),
         sub_x = 0,
         sub_y = 0,
     }
-
     -- 2. Bulk copy all non-table values from config (stats, bounds, offsets)
     for k, v in pairs(config) do
         if type(v) ~= "table" then
             projectile[k] = v
         end
+    end
+
+    -- 2b. Apply instance-specific overrides EARLY to ensure derived stats (velocity) use correct values
+    for k, v in pairs(instance_data) do
+        projectile[k] = v
+    end
+
+    -- 2c. Recalculate velocity with final speed
+    if projectile.speed then
+        projectile.vel_x = dx * projectile.speed
+        projectile.vel_y = dy * projectile.speed
     end
 
     -- 3. Static table references
