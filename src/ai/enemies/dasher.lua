@@ -60,7 +60,6 @@ local function init_fsm(entity)
       },
       callbacks = {
          onenterwindup = function()
-            Log.trace("Dasher enters windup")
             Emotions.set(entity, "alert")
             entity.dasher_timer = entity.windup_duration
             entity.vel_x = 0

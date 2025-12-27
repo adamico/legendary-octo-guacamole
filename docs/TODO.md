@@ -12,7 +12,6 @@
 
 - add boss room with boss[BRAINSTORM]
 
-- add enemy group patterns similar to the ones in The Binding of Isaac: Rebirth [BRAINSTORM]
 - add room carvings patterns similar to the ones in The Binding of Isaac: Rebirth [BRAINSTORM]
 - add room floor patterns to avoid having floors that are too random [BRAINSTORM]
 - add room features system to allow creating solid obstacles which impede entities movement, block line of sight, etc. [BRAINSTORM]

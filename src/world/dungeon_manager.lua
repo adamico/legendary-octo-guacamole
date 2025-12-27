@@ -244,12 +244,16 @@ function DungeonManager.assign_room_types()
       leaves[3].room_type = "shop"
    end
 
-   -- Remaining rooms are combat rooms with enemies
-   local combat_enemy_types = {"Skulker", "Skulker", "Shooter", "Dasher"} -- Weighted toward Skulker
+   -- Remaining rooms are combat rooms with wave patterns
+   local WavePatterns = require("src/world/wave_patterns")
    for _, room in pairs(DungeonManager.rooms) do
       if not room.room_type then
          room.room_type = "combat"
-         DungeonManager.assign_enemies(room, nil, nil, combat_enemy_types)
+         -- Difficulty scales with distance: 1-2 = easy, 3-4 = medium, 5+ = hard
+         local difficulty = min(3, flr(room.distance / 2) + 1)
+         local pattern = WavePatterns.get_random_pattern(difficulty)
+         room.contents_config = {wave_pattern = pattern}
+         Log.info("Room ("..room.grid_x..","..room.grid_y..") assigned wave pattern, difficulty="..difficulty)
       end
    end
 end
@@ -373,6 +377,15 @@ end
 -- @param world The ECS world instance
 function DungeonManager.setup_room(room, player, world)
    local Systems = require("src/systems")
+
+   -- Log room entry with wave pattern info
+   if room.contents_config and room.contents_config.wave_pattern then
+      local pattern = room.contents_config.wave_pattern
+      Log.info("Entering room ("..
+      room.grid_x..
+      ","..room.grid_y..") pattern='"..tostring(pattern.name).."' difficulty="..tostring(pattern.difficulty))
+   end
+
    Systems.Spawner.populate(room, player)
 
    -- If enemies assigned and room is populated, trigger enter to lock doors

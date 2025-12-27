@@ -20,6 +20,13 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Isaac-Style Wave Pattern System**: Replaced random enemy spawning with pre-defined patterns using a positional DSL:
+  - **New `src/world/wave_patterns.lua`**: Contains ASCII grid-based patterns (S=Skulker, H=Shooter, D=Dasher) with difficulty ratings (1-3).
+  - **DSL Interpreter**: Maps grid positions to room pixel coordinates proportionally.
+  - **Patterns**: 9 patterns across 3 difficulty levels (skulker_pair, lone_shooter, ambush, chaos, etc.).
+  - **Difficulty Scaling**: Rooms select patterns based on distance from start (1-2 tiles = easy, 3-4 = medium, 5+ = hard).
+  - **Updated `spawner.lua`**: Pattern-based spawning with legacy fallback.
+  - **Updated `dungeon_manager.lua`**: Uses `WavePatterns.get_random_pattern(difficulty)` for combat rooms.
 - **Implemented Pub/Sub Event System**: Replaced callback hooks (`on_room_clear`, `on_transition`) with centralized pub/sub using [beholder.lua](file:///home/kc00l/game_dev/pizak/lib/beholder.lua/beholder.lua):
   - **New `src/utils/events.lua`**: Wrapper with typed constants (`Events.ROOM_CLEAR`, `Events.ROOM_TRANSITION`) and API (`on`, `off`, `emit`, `reset`).
   - **DungeonManager/CameraManager**: Now use `Events.emit()` instead of callback fields.

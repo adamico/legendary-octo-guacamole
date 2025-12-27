@@ -52,11 +52,26 @@ function Spawner.is_free_space(room, x, y)
 end
 
 -- Populate room with enemies based on configuration
--- config: { enemies = { count = N, min_dist = D, types = {...} } }
+-- config: { wave_pattern = pattern } or legacy { enemies = { count, types } }
 function Spawner.populate(room, player)
     -- Early exit if not in populated state or no config
     if not room or not room.lifecycle:is("populated") or not room.contents_config then return end
 
+    local WavePatterns = require("src/world/wave_patterns")
+
+    -- NEW: Pattern-based spawning (preferred)
+    if room.contents_config.wave_pattern then
+        local pattern = room.contents_config.wave_pattern
+        room.enemy_positions = WavePatterns.calculate_positions(
+            pattern, room:get_inner_bounds()
+        )
+        if #room.enemy_positions > 0 then
+            room.spawn_timer = 60
+        end
+        return
+    end
+
+    -- LEGACY: Random spawning fallback
     local enemy_config = room.contents_config.enemies
     if not enemy_config or not enemy_config.count or enemy_config.count <= 0 then return end
 

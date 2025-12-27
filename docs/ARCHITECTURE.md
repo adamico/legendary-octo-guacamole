@@ -68,7 +68,8 @@ drive/src/
 │   ├── dungeon_manager.lua # World generation, map carving, room grid
 │   ├── camera_manager.lua  # Camera following and transitions
 │   ├── room.lua            # Room class and lifecycle FSM
-│   └── room_renderer.lua   # Room rendering: door masking, void coverage
+│   ├── room_renderer.lua   # Room rendering: door masking, void coverage
+│   └── wave_patterns.lua   # Isaac-style enemy spawn patterns (DSL)
 ├── physics/              # Physics & collision module
 │   ├── init.lua          # Physics aggregator
 │   ├── collision.lua     # Main collision logic
@@ -264,6 +265,26 @@ The game uses a dual-manager system for handling its world:
 - **World Positioning**: Calculates where rooms sit on the absolute world map.
 - **Spawn Logic**: Calculates precise world coordinates for player teleportation between doors.
 - **Room Clear Hook**: Dispatches `on_room_clear(room)` when all enemies in a room are defeated. Used by `play.lua` to heal the player by 1 segment.
+
+### WavePatterns (Positional DSL)
+
+Enemy spawning uses a positional DSL defined in `wave_patterns.lua`:
+
+```lua
+-- Legend: S=Skulker, H=Shooter, D=Dasher, .=empty
+ambush = {
+   difficulty = 2,
+   grid = {
+      "S . . . S",
+      ". . H . .",
+      "S . . . S",
+   }
+}
+```
+
+- **Grid Mapping**: ASCII grids are normalized to room inner bounds.
+- **Difficulty Scaling**: Rooms select patterns based on distance from start (1-2=easy, 3-4=medium, 5+=hard).
+- **API**: `WavePatterns.get_random_pattern(difficulty)` returns a pattern for room assignment.
 
 ### CameraManager
 
