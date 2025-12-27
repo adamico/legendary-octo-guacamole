@@ -1,5 +1,5 @@
 local GameConstants = require("src/game/game_config")
-local Events = require("src/utils/events")
+local Events = require("src/game/events")
 local CameraManager = Class("CameraManager")
 CameraManager:include(Stateful)
 

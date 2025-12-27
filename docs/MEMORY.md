@@ -23,20 +23,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Separated Game Config from State**: Created new `src/game/` folder containing:
   - `game_config.lua` (immutable configuration, renamed from constants.lua)
   - `game_state.lua` (mutable runtime state: cheats, debug flags)
-  - `init.lua` aggregator exposing `Game.Config` and `Game.State`
+  - `events.lua` (pub/sub event system, moved from utils/)
+  - `init.lua` aggregator exposing `Game.Config`, `Game.State`, and `Game.Events`
 - **Implemented Friction-Based Knockback**: Refactored `Effects.apply_knockback()` to use separate `knockback_vel_x/y` properties that decay at 0.75 friction per frame in `physics.lua`. Knockback strength now directly controls initial velocity, with natural deceleration over ~5 frames.
-- **Fixed Missing Attack Animation**: Added `fsm:attack()` calls to `shooter.lua` and `melee.lua` to trigger the player's attack animation when firing/meleeing. Extended attack animation linger from 22 to 38 ticks (~0.37s → ~0.63s) for better visual feedback.
-- **Implemented Isaac-Style Wave Pattern System**: Replaced random enemy spawning with pre-defined patterns using a positional DSL:
-  - **New `src/world/wave_patterns.lua`**: Contains ASCII grid-based patterns (S=Skulker, H=Shooter, D=Dasher) with difficulty ratings (1-3).
-  - **DSL Interpreter**: Maps grid positions to room pixel coordinates proportionally.
-  - **Patterns**: 9 patterns across 3 difficulty levels (skulker_pair, lone_shooter, ambush, chaos, etc.).
-  - **Difficulty Scaling**: Rooms select patterns based on distance from start (1-2 tiles = easy, 3-4 = medium, 5+ = hard).
-  - **Updated `spawner.lua`**: Pattern-based spawning with legacy fallback.
-  - **Updated `dungeon_manager.lua`**: Uses `WavePatterns.get_random_pattern(difficulty)` for combat rooms.
-- **Implemented Pub/Sub Event System**: Replaced callback hooks (`on_room_clear`, `on_transition`) with centralized pub/sub using [beholder.lua](file:///home/kc00l/game_dev/pizak/lib/beholder.lua/beholder.lua):
-  - **New `src/utils/events.lua`**: Wrapper with typed constants (`Events.ROOM_CLEAR`, `Events.ROOM_TRANSITION`) and API (`on`, `off`, `emit`, `reset`).
-  - **DungeonManager/CameraManager**: Now use `Events.emit()` instead of callback fields.
-  - **play.lua**: Uses `Events.on()` subscriptions and `Events.reset()` on scene exit.
+- **Fixed Missing Attack Animation**: Added `fsm:attack()` calls to `shooter.lua` and `melee.lua` to trigger the player's attack animation when firing/meleeing.
+- **Implemented Isaac-Style Wave Pattern System**: Replaced random enemy spawning with pre-defined patterns using a positional DSL in `src/world/wave_patterns.lua`.
+- **Implemented Pub/Sub Event System**: Centralized event handling using [beholder.lua](file:///home/kc00l/game_dev/pizak/lib/beholder.lua/beholder.lua) with typed constants (`Events.ROOM_CLEAR`, `Events.ROOM_TRANSITION`).
 - **Implemented Floating Damage/Heal Numbers**:
   - **New `systems/floating_text.lua`**: Displays floating text above entities when they take damage (red) or heal (green). Numbers rise upward and fade out over configurable duration.
   - **Integration Points**: Collision handlers spawn damage text on hit; pickup collection and room-clear callbacks spawn heal text.

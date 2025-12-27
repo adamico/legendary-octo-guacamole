@@ -1,5 +1,5 @@
 local Room = require("src/world/room")
-local Events = require("src/utils/events")
+local Events = require("src/game/events")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles

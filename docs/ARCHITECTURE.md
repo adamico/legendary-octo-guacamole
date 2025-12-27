@@ -62,7 +62,11 @@ drive/src/
 ├── entities.lua          # Namespace redirect (returns entities/init)
 ├── systems.lua           # Namespace redirect (returns systems/init)
 ├── scene_manager.lua     # State machine for scene transitions
-├── constants.lua         # Game configuration
+├── game/                 # Game configuration, state, and events
+│   ├── init.lua          # Aggregator (Config, State, Events)
+│   ├── game_config.lua   # Immutable game configuration
+│   ├── game_state.lua    # Mutable runtime state (cheats, debug)
+│   └── events.lua        # Pub/sub event system
 ├── world/                # World management module
 │   ├── init.lua          # World aggregator
 │   ├── dungeon_manager.lua # World generation, map carving, room grid

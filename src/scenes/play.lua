@@ -4,7 +4,7 @@ local World = require("src/world")
 local Entities = require("src/entities")
 local Systems = require("src/systems")
 local Emotions = require("src/systems/emotions")
-local Events = require("src/utils/events")
+local Events = require("src/game/events")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
