@@ -128,14 +128,6 @@ function Minimap.draw(current_room)
    -- Calculate viewport size in pixels
    local cell_total = cfg.cell_size + cfg.padding
    local viewport_width = cfg.viewport_w * cell_total - cfg.padding
-   local viewport_height = cfg.viewport_h * cell_total - cfg.padding
-
-   -- Calculate top-left position of minimap
-   local map_x = SCREEN_WIDTH - cfg.margin_x - viewport_width
-   local map_y = cfg.margin_y
-
-   -- Draw border around minimap viewport (for debugging positioning)
-   rect(map_x - 1, map_y - 1, map_x + viewport_width, map_y + viewport_height, 8)
 
    -- First pass: draw unexplored but adjacent rooms (fog of war)
    for _, room in pairs(DungeonManager.rooms) do

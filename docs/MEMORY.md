@@ -276,9 +276,13 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **1-Tile Walls Between Rooms**: Rooms are placed with a stride of `ROOM_TILES - 1`, overlapping by 1 tile. Simplified carving: `fill_map_with_walls()` fills entire map with walls first, then `carve_room_floor()` carves floors for each room, then `carve_corridors()` clears door tiles.
 - **Skull Pressure Mechanic**: Cleared combat rooms initialize a `SKULL_SPAWN_TIMER` (in `constants.lua`). If the player remains in a cleared room while below max health, a projectile-immune "skull" enemy spawns offscreen at the farthest corner to force progression. The skull can pass through walls (`collidable` but not `map_collidable`).
 - **Implemented Health-Gated Melee Attack**:
-  - **Mechanic**: Added a risk-reward melee attack available only when HP < max_hp / 5 (one segment).
+  - **Mechanic**: Added a risk-reward melee attack available only when HP <= max_hp / 5 (one segment).
   - **Logic**: Inflicts dynamic damage `(max_hp - current_hp) / 2` and refunds the health cost on hit (vampiric).
   - **Implementation**: New `systems/melee.lua` checks input/health and spawns a temporary `MeleeHitbox` entity.
   - **Dynamics**: Hitbox moves with the player and always follows facing direction.
   - **Visuals**: Uses sprite 31 rotated to match player direction.
   - **Integration**: Added collision handler in `handlers.lua` to apply damage and healing.
+- **Fixed Attack Edge Cases**:
+  - **Shooting**: Changed health check from `hp > cost` to `hp >= cost` so player can shoot when HP exactly equals shot cost.
+  - **Melee**: Changed health threshold from `hp < threshold` to `hp <= threshold` to allow melee at exactly one segment.
+  - **Hitbox Offsets**: Fixed melee hitbox offsets being applied twice (once to position, once to hitbox properties). Now offsets are applied only to position with hitbox offsets set to 0.

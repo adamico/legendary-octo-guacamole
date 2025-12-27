@@ -14,10 +14,10 @@ function Melee.update(world)
 
       local input_pressed = btn(GameConstants.controls.melee)
 
-      -- Health gating: Only allowed if HP < max_hp / 5 (one segment)
+      -- Health gating: Only allowed if HP <= max_hp / 5 (one segment)
       -- free_attacks cheat bypasses this check
       local health_threshold = player.max_hp / 5
-      local low_health = player.hp < health_threshold or GameState.cheats.free_attacks
+      local low_health = player.hp <= health_threshold or GameState.cheats.free_attacks
 
       if input_pressed and low_health then
          -- Trigger attack animation
@@ -74,11 +74,11 @@ function Melee.update(world)
             lifespan = GameConstants.Player.melee_duration,
             owner_entity = player,
             melee_damage = damage,
-            -- Adjust hitbox centering
+            -- Adjust hitbox centering (offsets already applied to position, so use 0 here)
             hitbox_width = hb_config.w,
             hitbox_height = hb_config.h,
-            hitbox_offset_x = hb_config.ox,
-            hitbox_offset_y = hb_config.oy,
+            hitbox_offset_x = 0,
+            hitbox_offset_y = 0,
             -- Track enemies already hit (prevents multi-proc on same enemy)
             hit_list = {}
          }

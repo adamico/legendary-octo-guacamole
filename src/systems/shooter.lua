@@ -19,7 +19,7 @@ function Shooter.update(world)
       -- free_attacks cheat bypasses ammo check
       local has_ammo = true
       if entity.health_as_ammo and entity.hp and not GameState.cheats.free_attacks then
-         has_ammo = entity.hp > (entity.shot_cost or 20)
+         has_ammo = entity.hp >= (entity.shot_cost or 20)
       end
 
       if wants_to_shoot and has_ammo and cooldown_ready then

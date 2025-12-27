@@ -1,8 +1,5 @@
 # TODO
 
-- fix the edge case where the player's current health is = shooting cost hence the player can't shoot nor use melee attacks [BRAINSTORM]
-- hitbox for melee attacks is not respecting the offsets [BRAINSTORM]
-
 - implement player stats system [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 
