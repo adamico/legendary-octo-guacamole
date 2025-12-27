@@ -1,4 +1,4 @@
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
 local Utils = {}
 
 -- Get the configuration table for an entity based on its type and enemy_type

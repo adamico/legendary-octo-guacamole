@@ -1,5 +1,6 @@
 local Entities = require("src/entities")
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
+local GameState = require("src/game/game_state")
 local Effects = require("src/systems/effects")
 local FloatingText = require("src/systems/floating_text")
 
@@ -99,7 +100,7 @@ Handlers.entity["Player,Enemy"] = function(player, enemy)
         return
     end
     local damage = enemy.contact_damage or 10
-    if not GameConstants.cheats.godmode then
+    if not GameState.cheats.godmode then
         player.hp = player.hp - damage
         FloatingText.spawn_at_entity(player, -damage, "damage")
     end
@@ -114,7 +115,7 @@ Handlers.entity["Player,Skull"] = function(player, skull)
         return
     end
     local damage = skull.contact_damage or 20
-    if not GameConstants.cheats.godmode then
+    if not GameState.cheats.godmode then
         player.hp = player.hp - damage
         FloatingText.spawn_at_entity(player, -damage, "damage")
     end
@@ -130,7 +131,7 @@ Handlers.entity["EnemyProjectile,Player"] = function(projectile, player)
         return
     end
     local damage = projectile.damage or 10
-    if not GameConstants.cheats.godmode then
+    if not GameState.cheats.godmode then
         player.hp = player.hp - damage
         FloatingText.spawn_at_entity(player, -damage, "damage")
     end

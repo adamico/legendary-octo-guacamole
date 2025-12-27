@@ -1,5 +1,5 @@
 -- Floating Text System: displays damage/heal numbers above entities
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
 
 local FloatingText = {}
 

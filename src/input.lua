@@ -1,6 +1,6 @@
 -- Input module: consolidates all input handling
 -- This is a top-level module (not an ECS system) that maps hardware input to entity properties
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
 
 local Input = {}
 

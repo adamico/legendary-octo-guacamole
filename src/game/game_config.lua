@@ -402,14 +402,6 @@ local GameConstants = {
       spread = 8,         -- Horizontal spread for multiple texts
    },
    title = "Pizak",
-   debug = {
-      show_hitboxes = false,
-   },
-   cheats = {
-      noclip = false,
-      godmode = false,
-      free_attacks = false, -- Removes shot/melee costs and activation conditions
-   },
    buttons = {
       -- first stick
       left = 0,

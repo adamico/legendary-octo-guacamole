@@ -1,5 +1,6 @@
 -- Melee attack system
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
+local GameState = require("src/game/game_state")
 local Render = require("src/systems/rendering")
 local EntityUtils = require("src/utils/entity_utils")
 
@@ -9,21 +10,21 @@ function Melee.update(world)
    -- Only players can melee for now
    world.sys("player,controllable", function(player)
       -- Check cooldown (free_attacks cheat bypasses cooldown)
-      if not GameConstants.cheats.free_attacks and player.melee_cooldown and player.melee_cooldown > 0 then return end
+      if not GameState.cheats.free_attacks and player.melee_cooldown and player.melee_cooldown > 0 then return end
 
       local input_pressed = btn(GameConstants.controls.melee)
 
       -- Health gating: Only allowed if HP < max_hp / 5 (one segment)
       -- free_attacks cheat bypasses this check
       local health_threshold = player.max_hp / 5
-      local low_health = player.hp < health_threshold or GameConstants.cheats.free_attacks
+      local low_health = player.hp < health_threshold or GameState.cheats.free_attacks
 
       if input_pressed and low_health then
          -- Trigger attack animation
          if player.fsm then player.fsm:attack() end
 
          -- Pay health cost (skip if free_attacks cheat active)
-         if not GameConstants.cheats.free_attacks then
+         if not GameState.cheats.free_attacks then
             local cost = player.melee_cost or 10
             player.hp = math.max(1, player.hp - cost)
          end

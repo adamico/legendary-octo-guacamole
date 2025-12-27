@@ -1,7 +1,7 @@
 -- Enemy entity factory (Type Object pattern)
 -- All enemy types are defined as pure data in GameConstants.Enemy
 -- This factory simply instantiates entities from their type config
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
 
 local Enemy = {}

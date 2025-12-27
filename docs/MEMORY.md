@@ -20,6 +20,10 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Separated Game Config from State**: Created new `src/game/` folder containing:
+  - `game_config.lua` (immutable configuration, renamed from constants.lua)
+  - `game_state.lua` (mutable runtime state: cheats, debug flags)
+  - `init.lua` aggregator exposing `Game.Config` and `Game.State`
 - **Implemented Friction-Based Knockback**: Refactored `Effects.apply_knockback()` to use separate `knockback_vel_x/y` properties that decay at 0.75 friction per frame in `physics.lua`. Knockback strength now directly controls initial velocity, with natural deceleration over ~5 frames.
 - **Fixed Missing Attack Animation**: Added `fsm:attack()` calls to `shooter.lua` and `melee.lua` to trigger the player's attack animation when firing/meleeing. Extended attack animation linger from 22 to 38 ticks (~0.37s → ~0.63s) for better visual feedback.
 - **Implemented Isaac-Style Wave Pattern System**: Replaced random enemy spawning with pre-defined patterns using a positional DSL:

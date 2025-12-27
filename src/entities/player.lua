@@ -1,5 +1,5 @@
 -- Player entity factory
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
 
 local Player = {}

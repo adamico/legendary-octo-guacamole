@@ -1,7 +1,7 @@
 -- Projectile entity factory (Type Object pattern)
 -- All projectile types are defined as pure data in GameConstants.Projectile
 -- This factory simply instantiates entities from their type config
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
 
 local Projectile = {}

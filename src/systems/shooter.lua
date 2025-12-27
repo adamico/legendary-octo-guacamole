@@ -1,6 +1,7 @@
 -- Generic shooting system for ANY entity with "shooter" tag
 local Entities = require("src/entities")
-local GameConstants = require("src/constants")
+local GameConstants = require("src/game/game_config")
+local GameState = require("src/game/game_state")
 local EntityUtils = require("src/utils/entity_utils")
 
 local Shooter = {}
@@ -17,7 +18,7 @@ function Shooter.update(world)
       -- Check ammo (HP for entities with health_as_ammo, unlimited otherwise)
       -- free_attacks cheat bypasses ammo check
       local has_ammo = true
-      if entity.health_as_ammo and entity.hp and not GameConstants.cheats.free_attacks then
+      if entity.health_as_ammo and entity.hp and not GameState.cheats.free_attacks then
          has_ammo = entity.hp > (entity.shot_cost or 20)
       end
 
@@ -29,7 +30,7 @@ function Shooter.update(world)
          if entity.fsm then entity.fsm:attack() end
 
          -- Consume ammo if using health (skip if free_attacks cheat active)
-         if entity.health_as_ammo and not GameConstants.cheats.free_attacks then
+         if entity.health_as_ammo and not GameState.cheats.free_attacks then
             entity.hp -= (entity.shot_cost or 20)
             entity.time_since_shot = 0
          end
