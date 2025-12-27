@@ -112,6 +112,10 @@ function Play:update()
       return
    end
 
+   -- Update minimap logic (trigger detection and tweening)
+   Minimap.update_trigger(player, camera_manager)
+   Minimap.update()
+
    -- Update spawner
    Systems.Spawner.update(world, current_room)
 

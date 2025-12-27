@@ -7,6 +7,8 @@ local Events = {}
 Events.ROOM_CLEAR = "room:clear"
 Events.ROOM_TRANSITION = "room:transition"
 Events.GAME_OVER = "game:over"
+Events.MINIMAP_ZONE_ENTER = "minimap:zone_enter"
+Events.MINIMAP_ZONE_EXIT = "minimap:zone_exit"
 
 --- Subscribe to an event
 -- @param event The event constant (e.g., Events.ROOM_CLEAR)

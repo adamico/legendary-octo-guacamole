@@ -117,7 +117,7 @@ drive/src/
 │   └── effects.lua       # Shake, flash, particles, knockback
 ├── ui/                   # UI module
 │   ├── init.lua          # UI aggregator
-│   └── minimap.lua       # Isaac-style minimap (rooms, fog of war, icons)
+│   └── minimap.lua       # Isaac-style minimap (rooms, icons, smart rotation)
 └── scenes/               # Game scene module
     ├── init.lua          # Scenes aggregator
     ├── title.lua

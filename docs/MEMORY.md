@@ -20,6 +20,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Enhanced Minimap with Smart Rotation**:
+  - Implemented a 4-quadrant rotation system (TR -> BR -> BL -> TL) where the minimap flees the player.
+  - **Smart Approach Logic**: Uses player velocity to determine rotation direction (CW/ACW). Horizontal approach triggers vertical flee; vertical approach triggers horizontal flee.
+  - **Smooth Tweening**: Refactored `minimap.lua` to interpolate both X and Y coordinates for fluid transitions.
+  - **Dynamic Trigger**: Overlap detection now follows the minimap's visual position.
 - **Implemented Isaac-Style Minimap UI**:
   - **New `src/ui/minimap.lua`**: Displays dungeon layout in top-right corner with:
     - Visited rooms as filled cells (light gray)
