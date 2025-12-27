@@ -8,22 +8,22 @@ local Melee = {}
 function Melee.update(world)
    -- Only players can melee for now
    world.sys("player,controllable", function(player)
-      -- Check cooldown
-      if player.melee_cooldown and player.melee_cooldown > 0 then return end
+      -- Check cooldown (free_attacks cheat bypasses cooldown)
+      if not GameConstants.cheats.free_attacks and player.melee_cooldown and player.melee_cooldown > 0 then return end
 
       local input_pressed = btn(GameConstants.controls.melee)
 
       -- Health gating: Only allowed if HP < max_hp / 5 (one segment)
+      -- free_attacks cheat bypasses this check
       local health_threshold = player.max_hp / 5
-      local low_health = player.hp < health_threshold
+      local low_health = player.hp < health_threshold or GameConstants.cheats.free_attacks
 
       if input_pressed and low_health then
-         -- Pay health cost
-         local cost = player.melee_cost or 10
-         player.hp = math.max(1, player.hp - cost) -- Don't kill self with cost? Warn user: "allows inflicting damage without spending health"?
-         -- User request: "let's brainstorm this. what's the simplest way to control a melee attack? the easiest way would be to only allow it when current health is < max_health/5"
-         -- And later: "health cost is half the projectile attack but has a 100% vampiric effect"
-         -- So it DOES cost health.
+         -- Pay health cost (skip if free_attacks cheat active)
+         if not GameConstants.cheats.free_attacks then
+            local cost = player.melee_cost or 10
+            player.hp = math.max(1, player.hp - cost)
+         end
 
          -- Set cooldown
          player.melee_cooldown = GameConstants.Player.melee_cooldown
@@ -75,7 +75,9 @@ function Melee.update(world)
             hitbox_width = GameConstants.Player.melee_hitboxes[dir].w,
             hitbox_height = GameConstants.Player.melee_hitboxes[dir].h,
             hitbox_offset_x = GameConstants.Player.melee_hitboxes[dir].ox,
-            hitbox_offset_y = GameConstants.Player.melee_hitboxes[dir].oy
+            hitbox_offset_y = GameConstants.Player.melee_hitboxes[dir].oy,
+            -- Track enemies already hit (prevents multi-proc on same enemy)
+            hit_list = {}
          }
 
          EntityUtils.spawn_entity(world, "collidable,drawable,timers,middleground,melee_hitbox", hitbox)

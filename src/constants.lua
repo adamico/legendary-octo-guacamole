@@ -49,8 +49,9 @@ local GameConstants = {
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
-      regen_rate = 0, -- Disabled for now; room-clear regen is used instead
+      regen_rate = 0,     -- Disabled for now; room-clear regen is used instead
       regen_delay = 1.5,
+      base_knockback = 4, -- Base knockback applied to all player attacks
       animations = {
          down = {
             idle      = {indices = {1, 2}, durations = {30, 30}},
@@ -109,7 +110,8 @@ local GameConstants = {
       },
       melee_width = 9,
       melee_height = 16,
-      melee_duration = 6,
+      melee_duration = 15,
+      melee_knockback = 6, -- Added to base_knockback for total knockback
    },
    Projectile = {
       -- Player's laser projectile
@@ -119,6 +121,7 @@ local GameConstants = {
          owner = "player",
          speed = 4,
          damage = 20,
+         knockback = 2, -- Added to base_knockback for total knockback
          width = 16,
          height = 16,
          hitbox = {
@@ -245,7 +248,7 @@ local GameConstants = {
    Enemy = {
       Skulker = {
          entity_type = "Enemy",
-         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 20,
          speed = 0.5,
          contact_damage = 10,
@@ -333,7 +336,7 @@ local GameConstants = {
       },
       Dasher = {
          entity_type = "Enemy",
-         tags = "enemy,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 60,                    -- Higher HP (tank)
          speed = 0.2,                -- Very slow base speed
          contact_damage = 15,
@@ -412,6 +415,7 @@ local GameConstants = {
    cheats = {
       noclip = false,
       godmode = false,
+      free_attacks = false, -- Removes shot/melee costs and activation conditions
    },
    buttons = {
       -- first stick

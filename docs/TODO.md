@@ -1,5 +1,8 @@
 # TODO
 
+- fix knockback teleports enemies (or makes them move too fast) [BRAINSTORM]
+- separate game config from game state [BRAINSTORM]
+- implement player stats system [BRAINSTORM]
 - player attack animation is too fast, last frame should linger for a bit [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 

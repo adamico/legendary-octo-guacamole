@@ -56,6 +56,34 @@ function Play:enteredState()
       end
    end)
 
+   -- Setup debugui cheats toggles (clickable)
+   -- Helper to sync toggle visual state without triggering tap callback
+   local function sync_toggle_visual(toggle, cheat_value)
+      if toggle.on ~= cheat_value then
+         toggle.on = cheat_value
+         -- Swap colors to reflect state
+         toggle.bg_col, toggle.text_col = toggle.text_col, toggle.bg_col
+      end
+   end
+
+   local godmode_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "godmode",
+      function(self) sync_toggle_visual(self, GameConstants.cheats.godmode) end,
+      nil,
+      function(self) GameConstants.cheats.godmode = not GameConstants.cheats.godmode end)
+   add(debugui.elements, godmode_toggle)
+
+   local free_attacks_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "free_attacks",
+      function(self) sync_toggle_visual(self, GameConstants.cheats.free_attacks) end,
+      nil,
+      function(self) GameConstants.cheats.free_attacks = not GameConstants.cheats.free_attacks end)
+   add(debugui.elements, free_attacks_toggle)
+
+   local hitboxes_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_hitboxes",
+      function(self) sync_toggle_visual(self, GameConstants.debug.show_hitboxes) end,
+      nil,
+      function(self) GameConstants.debug.show_hitboxes = not GameConstants.debug.show_hitboxes end)
+   add(debugui.elements, hitboxes_toggle)
+
    -- Setup initial room
    DungeonManager.setup_room(current_room, player, world)
 end
@@ -109,8 +137,14 @@ function Play:update()
    Systems.Effects.update_shake()
    Systems.FloatingText.update()
 
+   if keyp("f2") then
+      GameConstants.debug.show_hitboxes = not GameConstants.debug.show_hitboxes
+   end
    if keyp("f3") then
       GameConstants.cheats.godmode = not GameConstants.cheats.godmode
+   end
+   if keyp("f4") then
+      GameConstants.cheats.free_attacks = not GameConstants.cheats.free_attacks
    end
 end
 
@@ -156,7 +190,7 @@ function Play:draw()
 
    -- 4. Foreground Layer: Entity UI (Health Bars, Hitboxes)
    Systems.draw_health_bars(world)
-   if key("f2") then
+   if GameConstants.debug.show_hitboxes then
       Systems.draw_hitboxes(world)
    end
 

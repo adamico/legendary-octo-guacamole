@@ -1,5 +1,6 @@
 -- Generic shooting system for ANY entity with "shooter" tag
 local Entities = require("src/entities")
+local GameConstants = require("src/constants")
 
 local Shooter = {}
 
@@ -13,14 +14,15 @@ function Shooter.update(world)
       local wants_to_shoot = sx ~= 0 or sy ~= 0
 
       -- Check ammo (HP for entities with health_as_ammo, unlimited otherwise)
+      -- free_attacks cheat bypasses ammo check
       local has_ammo = true
-      if entity.health_as_ammo and entity.hp then
+      if entity.health_as_ammo and entity.hp and not GameConstants.cheats.free_attacks then
          has_ammo = entity.hp > (entity.shot_cost or 20)
       end
 
       if wants_to_shoot and has_ammo and cooldown_ready then
-         -- Consume ammo if using health
-         if entity.health_as_ammo then
+         -- Consume ammo if using health (skip if free_attacks cheat active)
+         if entity.health_as_ammo and not GameConstants.cheats.free_attacks then
             entity.hp -= (entity.shot_cost or 20)
             entity.time_since_shot = 0
          end
