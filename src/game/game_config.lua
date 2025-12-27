@@ -402,6 +402,25 @@ local GameConstants = {
       offset_y = -8,      -- Initial vertical offset from entity top
       spread = 8,         -- Horizontal spread for multiple texts
    },
+   Minimap = {
+      cell_size = 11,       -- Size of each room cell in pixels (10x10 sprite + padding)
+      padding = 1,          -- Padding between cells
+      margin_x = 10,        -- Distance from right screen edge
+      margin_y = 10,        -- Distance from top screen edge
+      viewport_w = 5,       -- Max visible rooms horizontally
+      viewport_h = 5,       -- Max visible rooms vertically
+      border_color = 5,     -- Dark gray for borders
+      visited_color = 6,    -- Light gray for visited rooms
+      current_color = 7,    -- White for current room
+      unexplored_color = 1, -- Dark blue for unexplored but discovered (adjacent to visited)
+      icon_size = 10,       -- Special room icon sprite size
+      icons = {             -- Special room sprites (10x10)
+         start = 192,
+         shop = 193,
+         treasure = 194,
+         boss = 195,
+      },
+   },
    title = "Pizak",
    buttons = {
       -- first stick
