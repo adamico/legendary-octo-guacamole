@@ -18,8 +18,19 @@ function Shooter.update(world)
       -- Check ammo (HP for entities with health_as_ammo, unlimited otherwise)
       -- free_attacks cheat bypasses ammo check
       local has_ammo = true
+      local shot_cost = 0
+
+      if entity.health_as_ammo then
+         local max_hp = entity.max_hp or 100
+         local ratio = entity.max_hp_to_shot_cost_ratio or (GameConstants.Player.max_hp_to_shot_cost_ratio)
+         shot_cost = max_hp * ratio
+      end
+
+      -- If entity explicitly specifies shot_cost (overriding dynamic calc), use it
+      if entity.shot_cost then shot_cost = entity.shot_cost end
+
       if entity.health_as_ammo and entity.hp and not GameState.cheats.free_attacks then
-         has_ammo = entity.hp >= (entity.shot_cost or 20)
+         has_ammo = entity.hp >= shot_cost
       end
 
       if wants_to_shoot and has_ammo and cooldown_ready then
@@ -31,20 +42,26 @@ function Shooter.update(world)
 
          -- Consume ammo if using health (skip if free_attacks cheat active)
          if entity.health_as_ammo and not GameState.cheats.free_attacks then
-            entity.hp -= (entity.shot_cost or 20)
+            entity.hp -= shot_cost
             entity.time_since_shot = 0
          end
 
          -- Spawn projectile
          local projectile_type = entity.projectile_type or "Laser"
+         -- Calculate damage dynamically
+         local damage = entity.damage
+         if not damage and entity.max_hp_to_damage_ratio then
+            damage = (entity.max_hp or 100) * entity.max_hp_to_damage_ratio
+         end
+
          Entities.spawn_centered_projectile(
             world, entity, sx, sy, projectile_type,
             {
                speed = entity.shot_speed,
-               damage = entity.damage,
+               damage = damage,
                knockback = entity.knockback,
                recovery_percent = entity.recovery_percent,
-               shot_cost = entity.shot_cost,
+               shot_cost = shot_cost,
                lifetime = (entity.range and entity.shot_speed) and (entity.range / entity.shot_speed) or 60
             }
          )

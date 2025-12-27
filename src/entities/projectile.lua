@@ -55,7 +55,7 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     end
 
     -- 2d. Initialize Z-axis data (simulated height)
-    projectile.z = instance_data.z or 8 -- Default start height
+    projectile.z = instance_data.z or projectile.z or 8 -- Default start height
     projectile.age = 0
     projectile.max_age = instance_data.lifetime or 60
     projectile.vel_z = 0 -- Start with no vertical velocity (horizontal flight)
@@ -93,11 +93,11 @@ end
 -- Spawn projectile centered on shooter's hitbox
 function Projectile.spawn_centered(world, shooter, dx, dy, projectile_type, instance_data)
     local HitboxUtils = require("src/utils/hitbox_utils")
-    local shooter_hb = HitboxUtils.get_hitbox(shooter)
-    local proj_config = GameConstants.Projectile[projectile_type or "Laser"]
+    local shooter_hitbox = HitboxUtils.get_hitbox(shooter)
+    local projectile_config = GameConstants.Projectile[projectile_type or "Laser"]
 
-    local spawn_x = shooter_hb.x + (shooter_hb.w / 2) - (proj_config.width / 2)
-    local spawn_y = shooter_hb.y + (shooter_hb.h / 2) - (proj_config.height / 2)
+    local spawn_x = shooter_hitbox.x + (shooter_hitbox.w / 2) - (projectile_config.width / 2)
+    local spawn_y = shooter_hitbox.y + (shooter_hitbox.h / 2) - (projectile_config.height / 2)
 
     return Projectile.spawn(world, spawn_x, spawn_y, dx, dy, projectile_type, instance_data)
 end

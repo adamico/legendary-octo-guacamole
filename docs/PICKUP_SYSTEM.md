@@ -18,9 +18,10 @@ All pickups must have:
 
 - `type`: Entity identifier (e.g., "ProjectilePickup", "HealthPickup", "CoinPickup")
 - `pickup_type`: Effect identifier (e.g., "health", "ammo", "speed_boost")
-- Effect parameters (e.g., `recovery_amount`, `boost_duration`)
+- `effect properties`: (e.g., `recovery_amount`, `boost_duration`)
+- `z`: Z-height for physics/gravity (optional, inherited from projectile)
 
-**Internal Helper**: `spawn_base(config)` eliminates duplication by handling common pickup properties.
+**Internal Helper**: `spawn_base(config)` eliminates duplication by handling common pickup properties (including shadows).
 
 ### 2. Effect Registry
 
@@ -110,8 +111,8 @@ end
 
 | Type | Entity | Sprite | Effect |
 |------|--------|--------|--------|
-| `health` | ProjectilePickup | 77/78 | Restore HP, bank overflow |
-| `health` | HealthPickup | 64 | Restore HP, bank overflow |
+| `health` | ProjectilePickup | 77/78 | Restore HP, bank overflow (inherits Z-height + gravity) |
+| `health` | HealthPickup | 64 | Restore HP, bank overflow (static ground spawn) |
 
 ## Future Pickup Ideas
 

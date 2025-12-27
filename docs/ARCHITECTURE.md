@@ -222,7 +222,7 @@ Uses handler registries for decoupled collision responses:
 Decouples combat statistics from static projectile definitions to enable dynamic builds and powerup synergies.
 
 - **Ownership**: Combat stats (`shot_speed`, `damage`, `range`, `knockback`, `fire_rate`) are owned by the `Player` entity, not the projectile config.
-- **Dynamic Damage**: Calculating as `player.max_hp * player.max_hp_to_damage_ratio`. Use `max_hp_to_damage_ratio` to tune DPS relative to health scaling.
+- **Dynamic Damage & Cost**: Damage is calculated as `max_hp * max_hp_to_damage_ratio`. Shot cost is `max_hp * max_hp_to_shot_cost_ratio`.
 - **Inheritance**: `Projectile.spawn` accepts an `instance_data` table. The `Shooter` system passes the player's *current* stats into this table when firing, ensuring bullets reflect the player's state at the moment of shooting.
 - **Inventory**: Player entity tracks `coins`, `keys`, and `bombs`.
 
@@ -337,7 +337,8 @@ Events.reset()
 - **Directly Adjacent Rooms**: Following the *The Binding of Isaac* style, rooms are carved at contiguous grid positions (e.g., Room 1 at grid `0,0` and Room 2 at `1,0`). This results in a 2-tile thick wall boundary between rooms, which is pierced by clearing the door tiles in both rooms when they are connected.
 - **Skull Pressure Mechanic**: Cleared combat rooms initialize a `SKULL_SPAWN_TIMER` (in `constants.lua`). If the player remains in a cleared room while below max health, a projectile-immune "skull" enemy spawns offscreen at the farthest corner to force progression. The skull can pass through walls (`collidable` but not `map_collidable`).
 - **Z-Axis Physics**: Projectiles simulate 3D height using `z`, `vel_z`, and `gravity_z` components. The **Physics** system updates these independently of the X/Y logical position.
-  - **Visuals**: `Rendering.draw_sprite` subtracts `z` from the Y coordinate (`sy = y - z`), creating a 2.5D "lofted" look. Shadows remain grounded at the entity's logical `y` position.
+  - **Visuals**: `Rendering.draw_sprite` subtracts `z` from the Y coordinate (`sy = y - z`), creating a 2.5D "lofted" look. `Projectile.spawn` accounts for this by aligning the visual center with the shooter's aim (chest height).
+  - **Z-Height Inheritance**: `ProjectilePickup` inherits the Z-height of its parent projectile and uses gravity (`velocity` tag) to fall naturally if spawned in mid-air (e.g., hitting a wall).
   - **Mechanics**: Projectiles have a "delayed gravity" mechanic where they fly horizontally for 75% of their lifetime, then arc down in the final 25%.
   - **Ground Impact**: When `z <= 0`, the entity hits the ground. For player projectiles, this spawns a randomized `ProjectilePickup` (chance for hearts) and destroys the projectile.
 - **Module Path Resolution**: The game uses a custom `require` implementation (see `lib/require.lua`) that allows loading modules by name without specifying their subdirectory. Root directories for module resolution (e.g., `src/systems/`, `src/ai/`, `src/physics/`, `src/utils/`, `src/world/`) are configured in `src/main.lua` via `add_module_path()`. This keeps `require` statements clean and decoupled from the internal folder structure.

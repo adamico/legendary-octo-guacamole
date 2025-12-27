@@ -6,6 +6,7 @@ local machine = require("lib/lua-state-machine/statemachine")
 local Wander = require("src/ai/primitives/wander")
 local Chase = require("src/ai/primitives/chase")
 local Emotions = require("src/systems/emotions")
+local EntityUtils = require("src/utils/entity_utils")
 
 local SHOOTER_VISION_RANGE = 200
 local SHOOTER_TARGET_DIST = 100
@@ -55,8 +56,15 @@ local function shooter_ai(entity, player)
    local dist = math.huge
    local dx, dy = 0, 0
    if player then
-      dx = player.x - entity.x
-      dy = player.y - entity.y
+      local my_cx, my_cy = EntityUtils.get_center(entity)
+      local target_cx, target_cy = EntityUtils.get_center(player)
+
+      -- Account for z-axis (aim at visual height)
+      if player.z then target_cy = target_cy - player.z end
+      if entity.z then my_cy = my_cy - entity.z end
+
+      dx = target_cx - my_cx
+      dy = target_cy - my_cy
       dist = sqrt(dx * dx + dy * dy)
    end
 

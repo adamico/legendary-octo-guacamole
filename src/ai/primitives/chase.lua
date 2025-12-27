@@ -14,7 +14,7 @@ function Chase.toward(entity, target_x, target_y, speed_mult)
    local dx = target_x - entity.x
    local dy = target_y - entity.y
    local dist = sqrt(dx * dx + dy * dy)
-   local speed = entity.speed * (speed_mult or 1.0)
+   local speed = entity.max_speed * (speed_mult or 1.0)
 
    if dist > 0 then
       entity.vel_x = (dx / dist) * speed
@@ -36,12 +36,12 @@ function Chase.away(entity, target_x, target_y, speed_mult)
    local dx = target_x - entity.x
    local dy = target_y - entity.y
    local dist = sqrt(dx * dx + dy * dy)
-   local speed = entity.speed * (speed_mult or 1.0)
+   local speed = entity.max_speed * (speed_mult or 1.0)
 
    if dist > 0 then
       entity.vel_x = -(dx / dist) * speed
       entity.vel_y = -(dy / dist) * speed
-      entity.dir_x = sgn(dx)   -- Face toward target even when fleeing
+      entity.dir_x = sgn(dx) -- Face toward target even when fleeing
       entity.dir_y = sgn(dy)
    end
 

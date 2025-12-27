@@ -65,7 +65,7 @@ Handlers.entity["Player,HealthPickup"] = handle_pickup_collection
 Handlers.map["Projectile"] = function(projectile, map_x, map_y)
     local recovery = (projectile.shot_cost) * (projectile.recovery_percent)
     Entities.spawn_pickup_projectile(world, projectile.x, projectile.y, projectile.dir_x, projectile.dir_y, recovery,
-        projectile.sprite_index)
+        projectile.sprite_index, projectile.z)
     world.del(projectile)
 end
 

@@ -134,8 +134,8 @@ local function dasher_ai(entity, player)
       end
 
       -- Move in patrol direction
-      entity.vel_x = entity.patrol_dir_x * entity.speed
-      entity.vel_y = entity.patrol_dir_y * entity.speed
+      entity.vel_x = entity.patrol_dir_x * entity.max_speed
+      entity.vel_y = entity.patrol_dir_y * entity.max_speed
       entity.dir_x = entity.patrol_dir_x ~= 0 and entity.patrol_dir_x or entity.dir_x
       entity.dir_y = entity.patrol_dir_y ~= 0 and entity.patrol_dir_y or entity.dir_y
 
@@ -173,7 +173,7 @@ local function dasher_ai(entity, player)
       end
    elseif fsm:is("dash") then
       -- Move at 4x speed in cached direction
-      local dash_speed = entity.speed * entity.dash_speed_multiplier
+      local dash_speed = entity.max_speed * entity.dash_speed_multiplier
       entity.vel_x = entity.dash_target_dx * dash_speed
       entity.vel_y = entity.dash_target_dy * dash_speed
       entity.dir_x = sgn(entity.dash_target_dx)

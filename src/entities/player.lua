@@ -24,7 +24,7 @@ function Player.spawn(world, x, y)
         shadow_heights = GameConstants.Player.shadow_heights,
         -- Movement properties (BoI-style: instant response, almost no slide)
         accel = 1.2,
-        max_speed = 2,
+        max_speed = GameConstants.Player.max_speed,
         friction = 0.5,
         vel_x = 0,
         vel_y = 0,
@@ -36,7 +36,10 @@ function Player.spawn(world, x, y)
         -- Health components
         hp = GameConstants.Player.max_health,
         max_hp = GameConstants.Player.max_health,
-        shot_cost = GameConstants.Player.shot_cost,
+        max_hp_to_shot_cost_ratio = GameConstants.Player.max_hp_to_shot_cost_ratio,
+
+        -- Calculated properties (removed to ensure dynamic calculation)
+        -- shot_cost is calculated by systems based on max_hp * ratio
         recovery_percent = GameConstants.Player.recovery_percent,
         regen_rate = GameConstants.Player.regen_rate,
         regen_delay = GameConstants.Player.regen_delay,
@@ -46,7 +49,6 @@ function Player.spawn(world, x, y)
         -- Combat Stats
         shot_speed = GameConstants.Player.shot_speed,
         max_hp_to_damage_ratio = GameConstants.Player.max_hp_to_damage_ratio,
-        damage = GameConstants.Player.max_health * GameConstants.Player.max_hp_to_damage_ratio, -- Derived: 100 * 0.2 = 20
         knockback = GameConstants.Player.base_knockback,
         range = GameConstants.Player.range,
         fire_rate = GameConstants.Player.fire_rate,

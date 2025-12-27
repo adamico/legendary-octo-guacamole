@@ -11,7 +11,8 @@ DeathHandlers.Player = function(world, entity)
 end
 
 DeathHandlers.Enemy = function(world, entity)
-   local recovery = GameConstants.Player.shot_cost * GameConstants.Player.recovery_percent
+   local base_recovery = GameConstants.Pickup.HealthPickup.recovery_amount
+   local recovery = base_recovery * GameConstants.Player.recovery_percent
    Entities.spawn_health_pickup(world, entity.x, entity.y, recovery)
    world.del(entity)
 end

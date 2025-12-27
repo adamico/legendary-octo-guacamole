@@ -47,11 +47,12 @@ local GameConstants = {
       hitbox_offset_x = 3,
       hitbox_offset_y = 4,
       max_health = 100,
-      shot_cost = 20,
+      max_hp_to_shot_cost_ratio = 0.2,
       recovery_percent = 0.8,
-      regen_rate = 0, -- Disabled for now; room-clear regen is used instead
+      regen_rate = 0,
       regen_delay = 1.5,
       -- Stats
+      max_speed = 2,                -- Movement speed
       shot_speed = 4,
       max_hp_to_damage_ratio = 0.2, -- Damage = max_hp * ratio
       range = 200,                  -- Max distance in pixels
@@ -138,7 +139,7 @@ local GameConstants = {
             left = 20,
             up = 19,
          },
-         sprite_offset_y = 0,
+         sprite_offset_y = 6,
          animations = {
             down = {
                indices = {20, 20},
@@ -207,16 +208,17 @@ local GameConstants = {
          animations = {
             idle = {indices = {25, 26}, durations = {8, 8}}
          },
-         sprite_offset_y = -5,
+         sprite_offset_y = 5,
          shadow_offset = 3,
          shadow_width = 4,
+         z = 6,
       },
    },
    Pickup = {
       -- Pickup spawned when player projectile hits wall (recoverable health)
       ProjectilePickup = {
          entity_type = "ProjectilePickup",
-         tags = "pickup,collidable,drawable,sprite,background,shadow",
+         tags = "pickup,velocity,collidable,drawable,sprite,background,shadow",
          pickup_effect = "health",
          width = 16,
          height = 16,
@@ -228,7 +230,8 @@ local GameConstants = {
             left = 19,
             up = 20,
          },
-         shadow_offset = 2,
+         sprite_offset_y = 6,
+         shadow_offset = 4,
          shadow_width = 6,
       },
       -- Health pickup spawned when enemies die
@@ -245,6 +248,7 @@ local GameConstants = {
          hitbox_offset_y = 2,
          shadow_offset = 3,
          shadow_width = 11,
+         recovery_amount = 20, -- Base recovery amount (flat value)
       },
    },
    Enemy = {
@@ -252,7 +256,7 @@ local GameConstants = {
          entity_type = "Enemy",
          tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 20,
-         speed = 0.5,
+         max_speed = 0.5,
          contact_damage = 10,
          vision_range = 120,
          -- Wandering configuration
@@ -284,7 +288,10 @@ local GameConstants = {
          tags =
          "enemy,shooter,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 30,
-         speed = 0.3,
+         max_speed = 0.3,
+         shot_speed = 1.5,
+         damage = 10,
+         range = 200,
          contact_damage = 10,
          shoot_delay = 120,
          vision_range = 200,
@@ -318,7 +325,7 @@ local GameConstants = {
          entity_type = "Skull",
          tags = "skull,enemy,velocity,collidable,health,drawable,sprite,shadow,middleground",
          hp = 1,
-         speed = 0.6,
+         max_speed = 0.6,
          contact_damage = 20,
          sprite_index_offsets = {
             down = 40,
@@ -340,7 +347,7 @@ local GameConstants = {
          entity_type = "Enemy",
          tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 60,                    -- Higher HP (tank)
-         speed = 0.2,                -- Very slow base speed
+         max_speed = 0.2,            -- Very slow base speed
          contact_damage = 15,
          vision_range = 150,         -- Increased by 50% (was 100)
          windup_duration = 60,       -- Frames before dash

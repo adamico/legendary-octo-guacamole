@@ -10,8 +10,8 @@ local Wander = {}
 -- Pick a random destination within radius of current position
 local function pick_wander_target(entity)
    local radius = entity.wander_radius or 48
-   local angle = rnd(1) * 2 * 3.14159             -- Random angle in radians
-   local dist = rnd(radius * 0.5) + radius * 0.5  -- Between 50-100% of radius
+   local angle = rnd(1) * 2 * 3.14159            -- Random angle in radians
+   local dist = rnd(radius * 0.5) + radius * 0.5 -- Between 50-100% of radius
 
    entity.wander_target_x = entity.x + cos(angle / (2 * 3.14159)) * dist
    entity.wander_target_y = entity.y + sin(angle / (2 * 3.14159)) * dist
@@ -26,7 +26,7 @@ end
 local function init_wandering(entity)
    if not entity.wander_initialized then
       entity.wander_initialized = true
-      entity.wander_state = "moving"   -- "moving" or "pausing"
+      entity.wander_state = "moving" -- "moving" or "pausing"
       entity.wander_timer = 0
       pick_wander_target(entity)
    end
@@ -39,7 +39,7 @@ function Wander.update(entity)
    init_wandering(entity)
 
    local speed_mult = entity.wander_speed_mult or 0.5
-   local speed = entity.speed * speed_mult
+   local speed = entity.max_speed * speed_mult
 
    if entity.wander_state == "pausing" then
       -- Stand still during pause

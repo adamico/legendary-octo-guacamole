@@ -140,7 +140,8 @@ function Physics.z_axis(world)
             -- Player Projectile Logic: spawn pickup on landing
             if entity.tags and string.find(entity.tags, "projectile") and entity.owner == "player" then
                 -- Spawn pickup at landing spot
-                Entities.spawn_pickup_projectile(world, entity.x, entity.y, entity.dir_x, entity.dir_y)
+                Entities.spawn_pickup_projectile(world, entity.x, entity.y, entity.dir_x, entity.dir_y, nil, nil,
+                    entity.z)
             end
 
             -- Destroy projectile on ground impact

@@ -32,6 +32,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Delayed Gravity**: Gravity is applied only in the last 25% of the projectile's lifetime, creating a horizontal flight phase followed by a drop.
   - **Ground Impact**: When projectiles hit the ground (Z=0 at range limit), they spawn a `ProjectilePickup` (chance for hearts).
   - **Range Stat**: Player `range` stat determines projectile lifetime.
+- **Refactored Stats & Combat**:
+  - **Dynamic Player Stats**: Converted flat `shot_cost` and `damage` to dynamic ratios (`max_hp_to_shot_cost_ratio`, `max_hp_to_damage_ratio`), allowing stats to scale with max HP.
+  - **Enemy Stats Standardization**: Renamed `speed` to `max_speed` across all enemies and AI scripts for consistency. Added proper combat stats (`shot_speed`, `damage`, `range`) to Shooter enemies.
+  - **Precision Aiming**: Updated Shooter AI and `EntityUtils.get_center()` to target the player's visual center (accounting for Z-height) rather than top-left corner.
+  - **Visual Alignment**: Adjusted `Projectile.spawn` and `Laser` configuration to align projectile sprites with the shooter's visual center vs collision hitbox.
+  - **Pickup Physics**: `ProjectilePickup` now inherits `z` height from its parent projectile and uses gravity (`velocity` tag) to fall naturally when spawning on walls/air.
 - **Enhanced Minimap with Smart Rotation**:
   - Implemented a 4-quadrant rotation system (TR -> BR -> BL -> TL) where the minimap flees the player.
   - **Smart Approach Logic**: Uses player velocity to determine rotation direction (CW/ACW). Horizontal approach triggers vertical flee; vertical approach triggers horizontal flee.

@@ -36,6 +36,13 @@ function Utils.get_direction_name(dx, dy, default)
     return default
 end
 
+-- Get center coordinates of an entity
+-- @param entity
+-- @return cx, cy
+function Utils.get_center(entity)
+    return entity.x + (entity.width or 16) / 2, entity.y + (entity.height or 16) / 2
+end
+
 -- Convert direction name string to vector (dx, dy)
 -- @param dir_name - "right", "left", "up", or "down"
 -- @return dx, dy

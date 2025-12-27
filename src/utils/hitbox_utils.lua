@@ -27,7 +27,7 @@ function HitboxUtils.get_hitbox(entity)
 
     return {
         x = entity.x + ox + (entity.sprite_offset_x or 0),
-        y = entity.y + oy + (entity.sprite_offset_y or 0),
+        y = entity.y + oy + (entity.sprite_offset_y or 0) - (entity.z or 0),
         w = w,
         h = h
     }

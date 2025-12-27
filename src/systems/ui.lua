@@ -8,27 +8,51 @@ local UI = {}
 local function draw_health_bar(entity)
    if not entity.hp or entity.type == "Skull" then return end
 
-   local shot_cost = entity.shot_cost or 20
-   local segments = ceil(entity.max_hp / shot_cost)
-   local seg_w = 6
    local bar_h = 3
-   local gap = 1
-   local total_w = (seg_w + gap) * segments - gap
-   local px = flr(entity.x + (entity.width or 16) / 2 - total_w / 2)
    local py = flr(entity.y - 8)
 
-   for i = 0, segments - 1 do
-      local start_x = px + i * (seg_w + gap)
-      local segment_hp = min(shot_cost, max(0, entity.hp - (i * shot_cost)))
+   if entity.health_as_ammo then
+      -- Segmented bar for ammo-based entities (Player)
+      local shot_cost = entity.shot_cost
+      if not shot_cost and entity.max_hp_to_shot_cost_ratio then
+         shot_cost = entity.max_hp * entity.max_hp_to_shot_cost_ratio
+      end
+      shot_cost = shot_cost or 20 -- Fallback
 
-      if segment_hp >= shot_cost then
-         rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 11)
-      elseif segment_hp > 0 then
-         rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
-         local fill_w = ceil((segment_hp / shot_cost) * seg_w)
-         rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 9)
-      else
-         rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
+      local segments = ceil(entity.max_hp / shot_cost)
+      local seg_w = 6
+      local gap = 1
+      local total_w = (seg_w + gap) * segments - gap
+      local px = flr(entity.x + (entity.width or 16) / 2 - total_w / 2)
+
+      for i = 0, segments - 1 do
+         local start_x = px + i * (seg_w + gap)
+         local segment_hp = min(shot_cost, max(0, entity.hp - (i * shot_cost)))
+
+         if segment_hp >= shot_cost then
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 11)
+         elseif segment_hp > 0 then
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
+            local fill_w = ceil((segment_hp / shot_cost) * seg_w)
+            rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 9)
+         else
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
+         end
+      end
+   else
+      -- Continuous bar for standard entities (Enemies)
+      local total_w = entity.width or 16
+      local px = flr(entity.x + (entity.width or 16) / 2 - total_w / 2)
+
+      -- Background
+      rectfill(px, py, px + total_w - 1, py + bar_h, 8)
+
+      -- Foreground
+      if entity.max_hp and entity.max_hp > 0 then
+         local fill_w = ceil((entity.hp / entity.max_hp) * total_w)
+         if fill_w > 0 then
+            rectfill(px, py, px + fill_w - 1, py + bar_h, 11)
+         end
       end
    end
 end

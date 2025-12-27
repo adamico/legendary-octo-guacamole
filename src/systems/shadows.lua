@@ -60,7 +60,7 @@ local function draw_shadow(world, shadow, clip_square)
    end
 
    local cx = flr(hb.x + hb.w / 2)
-   local ground_y = flr((hb.y + hb.h) - (parent.sprite_offset_y or 0))
+   local ground_y = flr((hb.y + hb.h) + (parent.z or 0) - (parent.sprite_offset_y or 0))
    local cy = ground_y + offset_y
 
    local x1 = cx - flr(sw / 2)

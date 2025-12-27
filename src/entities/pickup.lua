@@ -65,7 +65,7 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
 end
 
 -- Convenience: Spawn projectile-based pickup (from wall collisions)
-function Pickup.spawn_projectile(world, x, y, dir_x, dir_y, amount, sprite_index)
+function Pickup.spawn_projectile(world, x, y, dir_x, dir_y, amount, sprite_index, z)
     local direction = EntityUtils.get_direction_name(dir_x, dir_y)
     return Pickup.spawn(world, x, y, "ProjectilePickup", {
         direction = direction,
@@ -73,6 +73,7 @@ function Pickup.spawn_projectile(world, x, y, dir_x, dir_y, amount, sprite_index
         dir_y = dir_y,
         recovery_amount = amount,
         sprite_index = sprite_index,
+        z = z, -- Inherit Z height
     })
 end
 
