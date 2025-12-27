@@ -85,7 +85,7 @@ end
 --- @param view_min_gx Top-left grid X of viewport
 --- @param view_min_gy Top-left grid Y of viewport
 --- @param viewport_width Viewport width in pixels
---- @return screen_x, screen_y, is_visible
+--- @return number screen_x, number screen_y, boolean is_visible
 function Minimap.grid_to_screen_viewport(gx, gy, view_min_gx, view_min_gy, viewport_width)
    local cfg = GameConstants.Minimap
    local cell_total = cfg.cell_size + cfg.padding
@@ -115,12 +115,6 @@ function Minimap.draw(current_room)
 
    -- Get grid bounds
    local min_gx, max_gx, min_gy, max_gy = Minimap.get_grid_bounds()
-   local grid_w = max_gx - min_gx + 1
-   local grid_h = max_gy - min_gy + 1
-
-   -- Calculate viewport dimensions (clamped to actual dungeon size)
-   local visible_w = min(cfg.viewport_w, grid_w)
-   local visible_h = min(cfg.viewport_h, grid_h)
 
    -- Calculate viewport bounds centered on current room
    local view_min_gx, view_min_gy = Minimap.get_viewport_bounds(current_room, min_gx, max_gx, min_gy, max_gy)
@@ -128,6 +122,16 @@ function Minimap.draw(current_room)
    -- Calculate viewport size in pixels
    local cell_total = cfg.cell_size + cfg.padding
    local viewport_width = cfg.viewport_w * cell_total - cfg.padding
+   local viewport_height = cfg.viewport_h * cell_total - cfg.padding
+
+   -- Calculate top-left position of minimap
+   local map_x = SCREEN_WIDTH - cfg.margin_x - viewport_width
+   local map_y = cfg.margin_y
+
+   -- Draw checkerboard background (1px pattern: 0x5A5A)
+   fillp(0x5A5A)
+   rrectfill(map_x, map_y, viewport_width, viewport_height, 1, cfg.background_color)
+   fillp(0) -- Reset fill pattern
 
    -- First pass: draw unexplored but adjacent rooms (fog of war)
    for _, room in pairs(DungeonManager.rooms) do
