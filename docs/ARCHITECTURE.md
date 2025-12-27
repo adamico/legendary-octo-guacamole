@@ -115,6 +115,9 @@ drive/src/
 │   ├── sprite_rotator.lua
 │   ├── emotions.lua
 │   └── effects.lua       # Shake, flash, particles, knockback
+├── ui/                   # UI module
+│   ├── init.lua          # UI aggregator
+│   └── minimap.lua       # Isaac-style minimap (rooms, fog of war, icons)
 └── scenes/               # Game scene module
     ├── init.lua          # Scenes aggregator
     ├── title.lua

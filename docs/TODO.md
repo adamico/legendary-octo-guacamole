@@ -1,5 +1,7 @@
 # TODO
 
+- add minimap system [BRAINSTORM]
+
 - implement player stats system [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 
@@ -7,7 +9,6 @@
 - add powerups (see PICKUP_SYSTEM.md)
 - add treasure room for powerups[BRAINSTORM]
 
-- add minimap system [BRAINSTORM]
 - add shop room with items[BRAINSTORM]
 
 - add boss room with special enemy[BRAINSTORM]

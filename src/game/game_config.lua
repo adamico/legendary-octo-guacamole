@@ -49,9 +49,10 @@ local GameConstants = {
       max_health = 100,
       shot_cost = 20,
       recovery_percent = 0.8,
-      regen_rate = 0,     -- Disabled for now; room-clear regen is used instead
+      regen_rate = 0,      -- Disabled for now; room-clear regen is used instead
       regen_delay = 1.5,
-      base_knockback = 4, -- Base knockback applied to all player attacks
+      base_knockback = 4,  -- Base knockback applied to all player attacks
+      vampiric_heal = 0.3, -- Heal player for 30% of damage dealt
       animations = {
          down = {
             idle      = {indices = {1, 2}, durations = {30, 30}},

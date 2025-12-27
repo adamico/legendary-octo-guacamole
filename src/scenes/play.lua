@@ -5,10 +5,12 @@ local Entities = require("src/entities")
 local Systems = require("src/systems")
 local Emotions = require("src/systems/emotions")
 local Events = require("src/game/events")
+local UI = require("src/ui")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
 local RoomRenderer = World.RoomRenderer
+local Minimap = UI.Minimap
 
 local SceneManager = require("src/scenes/manager")
 
@@ -37,11 +39,16 @@ function Play:enteredState()
    current_room = room
    camera_manager:set_room(current_room)
 
+   -- Initialize minimap and mark starting room as visited
+   Minimap.init()
+   Minimap.visit(current_room)
+
    -- Subscribe to room transition events
    Events.on(Events.ROOM_TRANSITION, function(new_room)
       current_room = new_room
       camera_manager:set_room(current_room)
       DungeonManager.setup_room(current_room, player, world)
+      Minimap.visit(current_room) -- Mark new room as visited
       world.sys("projectile", function(e) world.del(e) end)()
       world.sys("pickup", function(e) world.del(e) end)()
       world.sys("skull", function(e) world.del(e) end)()
@@ -206,6 +213,9 @@ function Play:draw()
 
    -- Reset camera for global UI
    camera()
+
+   -- Draw minimap
+   Minimap.draw(current_room)
 
    -- draw combat timer
    if current_room.combat_timer and current_room.combat_timer >= 0 then

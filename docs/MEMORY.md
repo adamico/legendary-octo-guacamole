@@ -20,6 +20,14 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Isaac-Style Minimap UI**:
+  - **New `src/ui/minimap.lua`**: Displays dungeon layout in top-right corner with:
+    - Visited rooms as filled cells (light gray)
+    - Current room highlighted (white with border)
+    - Adjacent unexplored rooms shown as outlines (fog of war)
+    - Special room icons (10x10 sprites): start=192, shop=193, treasure=194, boss=195
+  - **New `src/ui/` module**: Created UI namespace aggregator pattern with `init.lua` and root redirect.
+  - **Integration**: Minimap initialized and updated in `play.lua` via `Events.ROOM_TRANSITION`.
 - **Implemented Game Over Screen & Scene Transition**:
   - Added `Events.GAME_OVER` to handle scene changes from anywhere.
   - Updated `DeathHandlers.Player` to emit `Events.GAME_OVER` when the player dies.

@@ -41,12 +41,12 @@ Handlers.entity["MeleeHitbox,Enemy"] = function(hitbox, enemy)
     local knockback = GameConstants.Player.base_knockback + GameConstants.Player.melee_knockback
     Effects.apply_knockback(hitbox, enemy, knockback)
 
-    -- Vampiric healing: Heal player for damage dealt
+    -- Vampiric healing: Heal player for % of damage dealt
     local owner = hitbox.owner_entity
     if owner and owner.type == "Player" then
-        local heal_amount = damage
-        owner.hp = math.min(owner.hp + heal_amount, owner.max_hp)
-        FloatingText.spawn_at_entity(owner, heal_amount, "heal")
+        local vampiric_heal = damage * GameConstants.Player.vampiric_heal
+        owner.hp = math.min(owner.hp + vampiric_heal, owner.max_hp)
+        FloatingText.spawn_at_entity(owner, vampiric_heal, "heal")
     end
 end
 
