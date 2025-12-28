@@ -4,6 +4,7 @@ local PhysicsSys = require("src/systems/physics") -- Acceleration, Velocity
 local Shooter = require("src/systems/shooter")
 local Timers = require("src/systems/timers")
 local Melee = require("src/systems/melee")
+local Bomber = require("src/systems/bomber")
 local HealthRegen = require("src/systems/health_regen")
 local AISys = require("src/systems/ai")
 local Rendering = require("src/systems/rendering")
@@ -41,6 +42,7 @@ Systems.shooter = Shooter.update
 Systems.health_regen = HealthRegen.update
 Systems.timers = Timers.update
 Systems.melee = Melee.update
+Systems.bomber = Bomber.update
 
 -- AI systems (self-iterating)
 Systems.ai = AISys.update

@@ -2,7 +2,6 @@
 
 ## Architecture
 
-- [x] decouple animation fsm from lifecycle
 - implement movement mechanics [BRAINSTORM]
   - [ ] Dodge Roll / Dash (invulnerability frames or vaulting)
   - [ ] Room-Clear Rush (temp speed boost after clearing room)
@@ -15,6 +14,8 @@
 
 ## Combat & Mechanics
 
+- implement health overflow mechanics [BRAINSTORM]
+
 ## AI & Enemies
 
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
@@ -25,15 +26,12 @@
 - add locked treasure room for powerups [BRAINSTORM]
 - add shop room with items [BRAINSTORM]
 - add boss room with special enemy [BRAINSTORM]
-- solid map tiles should have configurable y sorted collision boxes [BRAINSTORM]
+- solid map tiles should have configurable y collision level [BRAINSTORM]
 
 ## Items & Powerups
 
-- add more pickup items (bombs, keys, coins) [BRAINSTORM]
-  - [ ] Implement Keys (Bronze Key, Key Ring) for locked treasure rooms
-  - [ ] Implement Coins (Gold Coin, Gem, Trophy) for shops and interactions
-  - [ ] Implement Bombs (Standard Bomb) for destructible walls and combat
-  - [ ] Implement Speed/Damage Boost pickups (Star, Lightning)
+- add bomb using mechanics [BRAINSTORM]
+- add key using mechanics [BRAINSTORM]
 - add powerups [BRAINSTORM]
 - expand health recovery mechanics [BRAINSTORM]
   - [ ] Skill-based: Perfect Dodge (restore HP on last-second dodge), Multi-Kill bonus

@@ -147,6 +147,9 @@ function Play:update()
    -- Melee (health-gated attack)
    Systems.melee(world)
 
+   -- Bomber (bomb placement and fuse countdown)
+   Systems.bomber(world)
+
    -- Physics (self-iterating)
    Systems.acceleration(world)
    Systems.z_axis(world)

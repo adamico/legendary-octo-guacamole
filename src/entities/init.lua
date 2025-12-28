@@ -4,12 +4,19 @@ local Projectile = require("src/entities/projectile")
 local Enemy = require("src/entities/enemy")
 local Pickup = require("src/entities/pickup")
 local Obstacle = require("src/entities/obstacle")
+local Bomb = require("src/entities/bomb")
+local Explosion = require("src/entities/explosion")
 
 local Entities = {}
 
 Entities.spawn_player = Player.spawn
 Entities.spawn_enemy = Enemy.spawn
 Entities.spawn_obstacle = Obstacle.spawn
+
+-- Bomb spawners
+Entities.spawn_bomb = Bomb.spawn
+Entities.spawn_explosion = Explosion.spawn
+Entities.spawn_explosion_grid = Explosion.spawn_grid
 
 -- Projectile spawners (convenience wrappers for Type Object pattern)
 Entities.spawn_player_projectile = function(world, x, y, dx, dy, instance_data)

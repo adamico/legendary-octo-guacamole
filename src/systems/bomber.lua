@@ -1,0 +1,82 @@
+-- Bomber system
+-- Handles bomb placement on X button press and fuse countdown/explosion
+
+local GameConstants = require("src/game/game_config")
+local Entities = require("src/entities")
+local EntityUtils = require("src/utils/entity_utils")
+
+local Bomber = {}
+
+-- Bomb placement cooldown (prevent spam)
+local BOMB_COOLDOWN = 30 -- Half second
+
+function Bomber.update(world)
+   -- Handle player bomb placement
+   world.sys("player,controllable", function(player)
+      -- Check cooldown
+      if player.bomb_cooldown and player.bomb_cooldown > 0 then
+         player.bomb_cooldown = player.bomb_cooldown - 1
+         return
+      end
+
+      -- Check if X button pressed and player has bombs
+      local input_pressed = btnp(GameConstants.controls.place_bomb)
+
+      if input_pressed and player.bombs and player.bombs > 0 then
+         -- Consume bomb from inventory
+         player.bombs = player.bombs - 1
+
+         -- Spawn bomb at player's center position (tile-aligned)
+         local cx, cy = EntityUtils.get_center(player)
+         Entities.spawn_bomb(world, cx, cy)
+
+         -- Set cooldown
+         player.bomb_cooldown = BOMB_COOLDOWN
+      end
+   end)()
+
+   -- Handle bomb fuse countdown and explosion
+   world.sys("bomb", function(bomb)
+      -- Decrement fuse timer
+      if bomb.fuse_timer then
+         bomb.fuse_timer = bomb.fuse_timer - 1
+
+         if bomb.fuse_timer <= 0 then
+            -- Explode! Spawn 3x3 grid of explosions
+            local radius = bomb.explosion_radius or 1
+            Entities.spawn_explosion_grid(world, bomb.x, bomb.y, radius)
+
+            -- Destroy obstacles in explosion area
+            Bomber.destroy_obstacles_in_radius(world, bomb.x, bomb.y, radius)
+
+            -- Delete the bomb entity
+            world.del(bomb)
+         end
+      end
+   end)()
+end
+
+-- Helper: Destroy all obstacles within the explosion radius
+function Bomber.destroy_obstacles_in_radius(world, center_x, center_y, radius)
+   world.sys("obstacle", function(obstacle)
+      -- Check if obstacle is within explosion radius
+      local ox = obstacle.x + (obstacle.width or 16) / 2
+      local oy = obstacle.y + (obstacle.height or 16) / 2
+
+      local dx = abs(ox - center_x)
+      local dy = abs(oy - center_y)
+
+      -- Within grid radius (in pixels)
+      local max_dist = (radius + 0.5) * GRID_SIZE
+
+      if dx <= max_dist and dy <= max_dist then
+         -- Destroy the obstacle
+         if not obstacle.dead then
+            obstacle.dead = true
+            world.del(obstacle)
+         end
+      end
+   end)()
+end
+
+return Bomber

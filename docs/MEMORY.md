@@ -20,6 +20,14 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Bomb Entity System**: Added bomb placement and explosion mechanics:
+  - **Input**: X button places a bomb at the player's center tile-aligned position (consumes 1 bomb from inventory).
+  - **PlacedBomb Entity**: Sprite 22, 3-second fuse (180 frames), 1-tile explosion radius.
+  - **Explosion Entity**: Sprite 27, 30-frame lifespan, spawns in 3x3 grid around bomb on detonation.
+  - **Destruction**: Explosions destroy both destructibles (with loot drops) and rocks (normally indestructible).
+  - **Combat**: Explosions damage players (20 HP) and enemies (20 HP) with radial knockback from bomb center.
+  - **Collision Layer**: New `EXPLOSION` layer (128) that hits Player, Enemy, and Obstacle.
+  - **Files**: `entities/bomb.lua`, `entities/explosion.lua`, `systems/bomber.lua`, updated `combat_handlers.lua`, `obstacle_handlers.lua`.
 - **Fixed Shooting Not Killing Player**: Changed `shooter.lua` to clamp HP to minimum 1 after shot cost deduction, so firing the last health segment leaves player at 1 HP instead of killing them.
 - **Fixed Enemy Spawn Validation**: Enhanced `spawner.lua` spawn validation to:
   - **Room Bounds Check**: Added explicit room bounds validation in both tile and pixel space to prevent enemies spawning outside the room interior.
@@ -263,6 +271,13 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 - **Implemented Destructible Loot Spawning**:
   - **Weighted Loot Table**: Destructibles now have a 30% chance to drop loot: Coin (50%), Bomb (30%), Key (15%), Health (5%).
   - **`pick_loot` Helper**: Added a reusable weighted random selection function in `handlers.lua`.
+- **Refactored Collision Handlers**:
+  - **Split into Sub-Modules**: Extracted the monolithic `handlers.lua` (288 lines) into 4 focused modules in `src/physics/handlers/`:
+    - `pickup_handlers.lua`: Pickup effects registry and collection logic.
+    - `combat_handlers.lua`: Melee, Projectile, and contact damage handlers.
+    - `obstacle_handlers.lua`: Push-out physics, destructible loot.
+    - `map_handlers.lua`: Wall collision responses.
+  - **Aggregator Pattern**: Main `handlers.lua` is now a thin 22-line file that imports and merges sub-modules.
 - **Refactored Projectile System to Type Object Pattern**:
   - Consolidated `Projectile.spawn` and `Projectile.spawn_enemy` into a single unified `Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)` function.
   - Moved all projectile type definitions (`Laser`, `EnemyBullet`) into `GameConstants.Projectile` as pure data objects, mirroring the Enemy system design.

@@ -23,8 +23,9 @@ graph TD
     - Entities are bucketed into cells based on their hitbox.
     - Queries only check entities in the same or adjacent cells, reducing checks from $O(N^2)$ to nearly $O(N)$.
 3. **CollisionFilter (`src/physics/collision_filter.lua`)**: Bitmask-based filtering.
-    - Defines layers: `PLAYER`, `ENEMY`, `PLAYER_PROJECTILE`, `ENEMY_PROJECTILE`, `PICKUP`, `WORLD`.
+    - Defines layers: `PLAYER`, `ENEMY`, `PLAYER_PROJECTILE`, `ENEMY_PROJECTILE`, `PICKUP`, `WORLD`, `OBSTACLE`, `EXPLOSION`.
     - Quickly rejects invalid pairs (e.g., `EnemyProjectile` vs `Enemy`) using bitwise AND operations before any geometric checks.
+    - **Note**: Handlers must be registered for both orderings (`"A,B"` and `"B,A"`) since collision check order depends on entity iteration.
 4. **Handlers (`src/physics/handlers.lua`)**: Registry of collision responses.
 
 ## Resolution Pipeline

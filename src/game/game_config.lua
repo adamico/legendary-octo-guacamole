@@ -70,7 +70,7 @@ local GameConstants = {
       -- Inventory
       coins = 0,
       keys = 0,
-      bombs = 0,
+      bombs = 2,
       animations = {
          down = {
             idle      = {indices = {1, 2}, durations = {30, 30}},
@@ -261,7 +261,7 @@ local GameConstants = {
          pickup_effect = "coin",
          width = 16,
          height = 16,
-         sprite_index = 22,
+         sprite_index = 24,
          hitbox_width = 12,
          hitbox_height = 12,
          hitbox_offset_x = 2,
@@ -291,7 +291,7 @@ local GameConstants = {
          pickup_effect = "bomb",
          width = 16,
          height = 16,
-         sprite_index = 24,
+         sprite_index = 22,
          hitbox_width = 12,
          hitbox_height = 12,
          hitbox_offset_x = 2,
@@ -376,6 +376,8 @@ local GameConstants = {
          max_speed = 0.6,
          contact_damage = 100,
          drop_chance = 0.5,
+         loot_rolls = 2,
+         use_diverse_loot = true,
          sprite_index_offsets = {
             down = 40,
             right = 40,
@@ -463,6 +465,43 @@ local GameConstants = {
          shadow_width = 17,
          outline_color = 1,
       },
+   },
+   -- Placed bomb entity (not the pickup)
+   PlacedBomb = {
+      entity_type = "PlacedBomb",
+      tags = "bomb,drawable,sprite,timers,shadow,middleground",
+      width = 16,
+      height = 16,
+      sprite_index = 22, -- Bomb placed sprite
+      sprite_index_offsets = {
+         down = 22,
+         up = 22,
+         left = 22,
+         right = 22,
+      },
+      fuse_time = 180,      -- 3 seconds at 60fps
+      explosion_radius = 1, -- 1 tile = 3x3 grid centered on bomb
+      shadow_offset = 3,
+      shadow_width = 12,
+   },
+   -- Explosion effect entity (reusable for bombs, enemy attacks, etc.)
+   Explosion = {
+      entity_type = "Explosion",
+      tags = "explosion,collidable,drawable,sprite,timers,middleground",
+      width = 16,
+      height = 16,
+      sprite_index = 27,
+      sprite_index_offsets = {
+         down = 27,
+         up = 27,
+         left = 27,
+         right = 27,
+      },
+      hitbox_width = 14,
+      hitbox_height = 14,
+      hitbox_offset_x = 1,
+      hitbox_offset_y = 1,
+      lifespan = 30,
    },
    Obstacle = {
       Rock = {
@@ -579,6 +618,7 @@ local GameConstants = {
 
 GameConstants.controls = {
    attack = GameConstants.buttons.o,
+   place_bomb = GameConstants.buttons.x,
    aim_up = GameConstants.buttons.up,
    aim_down = GameConstants.buttons.down,
    aim_left = GameConstants.buttons.left,
@@ -598,17 +638,19 @@ GameConstants.CollisionLayers = {
    PICKUP = 16,           -- 0b010000
    WORLD = 32,            -- 0b100000
    OBSTACLE = 64,         -- 0b1000000
+   EXPLOSION = 128,       -- 0b10000000 (hits Player + Enemy + Obstacle)
 }
 
 -- What each layer can collide with (bitmask)
 GameConstants.CollisionMasks = {
-   [1] = 2 + 8 + 16 + 32 + 64, -- PLAYER: Enemy + EnemyProjectile + Pickup + World + Obstacle
-   [2] = 1 + 4 + 32 + 64,      -- ENEMY: Player + PlayerProjectile + World + Obstacle
-   [4] = 2 + 32 + 64,          -- PLAYER_PROJECTILE: Enemy + World + Obstacle
-   [8] = 1 + 32 + 64,          -- ENEMY_PROJECTILE: Player + World + Obstacle
-   [16] = 1,                   -- PICKUP: Player only
-   [32] = 1 + 2 + 4 + 8,       -- WORLD: Everything except Pickup
-   [64] = 1 + 2 + 4 + 8,       -- OBSTACLE: Player + Enemy + Projectiles
+   [1] = 2 + 8 + 16 + 32 + 64 + 128, -- PLAYER: Enemy + EnemyProjectile + Pickup + World + Obstacle + Explosion
+   [2] = 1 + 4 + 32 + 64 + 128,      -- ENEMY: Player + PlayerProjectile + World + Obstacle + Explosion
+   [4] = 2 + 32 + 64,                -- PLAYER_PROJECTILE: Enemy + World + Obstacle
+   [8] = 1 + 32 + 64,                -- ENEMY_PROJECTILE: Player + World + Obstacle
+   [16] = 1 + 16,                    -- PICKUP: Player + other Pickups
+   [32] = 1 + 2 + 4 + 8,             -- WORLD: Everything except Pickup
+   [64] = 1 + 2 + 4 + 8 + 128,       -- OBSTACLE: Player + Enemy + Projectiles + Explosion
+   [128] = 1 + 2 + 64,               -- EXPLOSION: Player + Enemy + Obstacle
 }
 
 -- Entity type to collision layer mapping
@@ -625,6 +667,7 @@ GameConstants.EntityCollisionLayer = {
    Bomb = GameConstants.CollisionLayers.PICKUP,
    Rock = GameConstants.CollisionLayers.OBSTACLE,
    Destructible = GameConstants.CollisionLayers.OBSTACLE,
+   Explosion = GameConstants.CollisionLayers.EXPLOSION, -- Explosions hit Player + Enemy + Obstacle
 }
 
 return GameConstants
