@@ -260,6 +260,9 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **New Module**: `src/ui/hud.lua` renders the inventory state (Coins, Keys, Bombs) on screen.
   - **Configuration**: Added `Hud` section to `game_config.lua` defining sprite IDs (196-198), positions, and spacing.
   - **Integration**: Updated `src/scenes/play.lua` to draw the HUD after the camera reset (UI layer).
+- **Implemented Destructible Loot Spawning**:
+  - **Weighted Loot Table**: Destructibles now have a 30% chance to drop loot: Coin (50%), Bomb (30%), Key (15%), Health (5%).
+  - **`pick_loot` Helper**: Added a reusable weighted random selection function in `handlers.lua`.
 - **Refactored Projectile System to Type Object Pattern**:
   - Consolidated `Projectile.spawn` and `Projectile.spawn_enemy` into a single unified `Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)` function.
   - Moved all projectile type definitions (`Laser`, `EnemyBullet`) into `GameConstants.Projectile` as pure data objects, mirroring the Enemy system design.

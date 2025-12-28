@@ -87,6 +87,27 @@ Handlers.entity["Player,Coin"] = handle_pickup_collection
 Handlers.entity["Player,Key"] = handle_pickup_collection
 Handlers.entity["Player,Bomb"] = handle_pickup_collection
 
+-- Loot table for destructibles (weights must sum to 1.0)
+local DESTRUCTIBLE_LOOT = {
+    {type = "Coin",         weight = 0.50},
+    {type = "Bomb",         weight = 0.30},
+    {type = "Key",          weight = 0.15},
+    {type = "HealthPickup", weight = 0.05},
+}
+
+-- Helper: Pick a random loot type from weighted table
+local function pick_loot(loot_table)
+    local roll = rnd()
+    local cumulative = 0
+    for _, entry in ipairs(loot_table) do
+        cumulative = cumulative + entry.weight
+        if roll < cumulative then
+            return entry.type
+        end
+    end
+    return loot_table[#loot_table].type -- Fallback to last entry
+end
+
 -- Helper: Destroy a destructible entity
 local function destroy_destructible(destructible, attacker)
     if destructible.dead then return end
@@ -97,11 +118,12 @@ local function destroy_destructible(destructible, attacker)
     -- Visual effect (simple particles or shake could be added here)
     -- Effects.shatter(destructible)
 
-    -- 10% chance to spawn health pickup
-    if rnd() < 0.1 then
+    -- 30% chance to spawn loot
+    if rnd() < 0.3 then
         local cx = destructible.x + destructible.width / 2
         local cy = destructible.y + destructible.height / 2
-        Entities.spawn_pickup(world, cx, cy, "HealthPickup")
+        local loot_type = pick_loot(DESTRUCTIBLE_LOOT)
+        Entities.spawn_pickup(world, cx, cy, loot_type)
     end
 end
 

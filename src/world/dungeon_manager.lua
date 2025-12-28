@@ -16,8 +16,8 @@ local EXT_MAP_W = 256                  -- Large static world map
 local EXT_MAP_H = 256                  -- Large static world map
 local GRID_STRIDE_X = ROOM_TILES_W - 1 -- Rooms overlap by 1 tile (shared wall)
 local GRID_STRIDE_Y = ROOM_TILES_H - 1 -- Rooms overlap by 1 tile (shared wall)
-local BASE_OFFSET_X = 64               -- Center offset for grid 0,0
-local BASE_OFFSET_Y = 64               -- Center offset for grid 0,0
+local BASE_OFFSET_X = 128              -- Center offset for grid 0,0 (enough for ~4 rooms in each direction)
+local BASE_OFFSET_Y = 128              -- Center offset for grid 0,0 (enough for ~4 rooms in each direction)
 local TARGET_ROOM_COUNT = 12
 local DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}}
 
