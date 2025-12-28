@@ -9,8 +9,6 @@
 
 ## Combat & Mechanics
 
-- maybe add a mechanic to react to the player being hurt (blood lost, etc.) [BRAINSTORM]
-
 ## AI & Enemies
 
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
@@ -22,7 +20,6 @@
 - add shop room with items [BRAINSTORM]
 - add boss room with special enemy [BRAINSTORM]
 - solid map tiles should have configurable y sorted collision boxes [BRAINSTORM]
-- remove door rotation [BRAINSTORM]
 
 ## Items & Powerups
 
