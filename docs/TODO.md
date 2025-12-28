@@ -34,7 +34,7 @@
   - [ ] Implement Coins (Gold Coin, Gem, Trophy) for shops and interactions
   - [ ] Implement Bombs (Standard Bomb) for destructible walls and combat
   - [ ] Implement Speed/Damage Boost pickups (Star, Lightning)
-- add powerups (see PICKUP_SYSTEM.md) [BRAINSTORM]
+- add powerups [BRAINSTORM]
 - expand health recovery mechanics [BRAINSTORM]
   - [ ] Skill-based: Perfect Dodge (restore HP on last-second dodge), Multi-Kill bonus
   - [ ] Room-based: Speed Clear bonus, No-Hit bonus

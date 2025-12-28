@@ -58,6 +58,9 @@ end
 | :--- | :--- | :--- | :--- |
 | **ProjectilePickup** | Player projectile hits wall/range limit. | Restores Ammo (Health) | Inherits bullet sprite & direction. Falls to ground. |
 | **HealthPickup** | Random drop from enemies/rocks. | Heals Player | Static heart sprite (21). |
+| **Coin** | Loot source. | Adds 1 Coin | Static coin sprite (22). |
+| **Key** | Loot source. | Adds 1 Key | Static key sprite (23). |
+| **Bomb** | Loot source. | Adds 1 Bomb | Static bomb sprite (24). |
 
 ## Adding New Pickups
 

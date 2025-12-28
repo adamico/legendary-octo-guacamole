@@ -255,6 +255,51 @@ local GameConstants = {
          shadow_width = 11,
          recovery_amount = 20,
       },
+      Coin = {
+         entity_type = "Coin",
+         tags = "pickup,collidable,drawable,sprite,background,shadow",
+         pickup_effect = "coin",
+         width = 16,
+         height = 16,
+         sprite_index = 22,
+         hitbox_width = 12,
+         hitbox_height = 12,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 2,
+         shadow_offset = 3,
+         shadow_width = 11,
+         amount = 1,
+      },
+      Key = {
+         entity_type = "Key",
+         tags = "pickup,collidable,drawable,sprite,background,shadow",
+         pickup_effect = "key",
+         width = 16,
+         height = 16,
+         sprite_index = 23,
+         hitbox_width = 12,
+         hitbox_height = 12,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 2,
+         shadow_offset = 3,
+         shadow_width = 11,
+         amount = 1,
+      },
+      Bomb = {
+         entity_type = "Bomb",
+         tags = "pickup,collidable,drawable,sprite,background,shadow",
+         pickup_effect = "bomb",
+         width = 16,
+         height = 16,
+         sprite_index = 24,
+         hitbox_width = 12,
+         hitbox_height = 12,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 2,
+         shadow_offset = 3,
+         shadow_width = 11,
+         amount = 1,
+      },
    },
    Enemy = {
       Skulker = {
@@ -463,9 +508,27 @@ local GameConstants = {
       fade_duration = 15, -- Frames for fade out (part of total duration)
       damage_color = 8,   -- Red for damage
       heal_color = 11,    -- Green for healing
+      pickup_color = 10,  -- Yellow for pickups
       outline_color = 0,  -- Black outline for visibility
       offset_y = -8,      -- Initial vertical offset from entity top
       spread = 8,         -- Horizontal spread for multiple texts
+   },
+   Hud = {
+      inventory = {
+         x = 10,             -- Base X position from left
+         y = 16,             -- Base Y position from top (below health bar)
+         spacing_y = 16,     -- Vertical spacing between items
+         icon_size = 11,     -- Size of icons
+         text_offset_x = 16, -- Text distance from icon left
+         text_offset_y = 2,  -- Text vertical alignment
+         text_color = 7,     -- White text
+         shadow_color = 1,   -- Black shadow/outline
+         sprites = {
+            coins = 197,
+            bombs = 196,
+            keys = 198,
+         }
+      },
    },
    Minimap = {
       cell_size = 11,        -- Size of each room cell in pixels (10x10 sprite + padding)
@@ -557,6 +620,9 @@ GameConstants.EntityCollisionLayer = {
    EnemyProjectile = GameConstants.CollisionLayers.ENEMY_PROJECTILE,
    ProjectilePickup = GameConstants.CollisionLayers.PICKUP,
    HealthPickup = GameConstants.CollisionLayers.PICKUP,
+   Coin = GameConstants.CollisionLayers.PICKUP,
+   Key = GameConstants.CollisionLayers.PICKUP,
+   Bomb = GameConstants.CollisionLayers.PICKUP,
    Rock = GameConstants.CollisionLayers.OBSTACLE,
    Destructible = GameConstants.CollisionLayers.OBSTACLE,
 }

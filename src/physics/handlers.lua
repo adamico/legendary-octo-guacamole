@@ -12,6 +12,24 @@ local Handlers = {
 
 local PickupEffects = {}
 
+PickupEffects.coin = function(player, pickup)
+    local amount = pickup.amount or 1
+    player.coins = (player.coins or 0) + amount
+    FloatingText.spawn_at_entity(player, amount, "pickup")
+end
+
+PickupEffects.key = function(player, pickup)
+    local amount = pickup.amount or 1
+    player.keys = (player.keys or 0) + amount
+    FloatingText.spawn_at_entity(player, amount, "pickup")
+end
+
+PickupEffects.bomb = function(player, pickup)
+    local amount = pickup.amount or 1
+    player.bombs = (player.bombs or 0) + amount
+    FloatingText.spawn_at_entity(player, amount, "pickup")
+end
+
 PickupEffects.health = function(player, pickup)
     local heal_amount = pickup.recovery_amount or 16
     player.hp = player.hp + heal_amount
@@ -65,6 +83,9 @@ end
 
 Handlers.entity["Player,ProjectilePickup"] = handle_pickup_collection
 Handlers.entity["Player,HealthPickup"] = handle_pickup_collection
+Handlers.entity["Player,Coin"] = handle_pickup_collection
+Handlers.entity["Player,Key"] = handle_pickup_collection
+Handlers.entity["Player,Bomb"] = handle_pickup_collection
 
 -- Helper: Destroy a destructible entity
 local function destroy_destructible(destructible, attacker)

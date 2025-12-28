@@ -33,7 +33,7 @@ function FloatingText.spawn(x, y, amount, text_type)
    end
 
    -- Determine color based on type
-   local color = text_type == "damage" and config.damage_color or config.heal_color
+   local color = config[text_type.."_color"] or (text_type == "damage" and config.damage_color) or config.heal_color
 
    -- Format amount (always show absolute value as integer, type determines color)
    local display_amount = flr(abs(amount))

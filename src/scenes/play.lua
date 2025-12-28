@@ -258,6 +258,9 @@ function Play:draw()
    -- Reset camera for global UI
    camera()
 
+   -- Draw HUD (Inventory)
+   UI.Hud.draw(player)
+
    -- Draw minimap
    Minimap.draw(current_room)
 

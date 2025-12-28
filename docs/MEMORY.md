@@ -250,6 +250,16 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Spawn Logic**: Spawns truly offscreen (32px beyond viewport) at the farthest corner from the player.
   - **Refactoring**: Implemented `map_collidable` ECS tag to distinguish between entity-map and entity-entity collisions. The skull is `collidable` but not `map_collidable`, allowing it to pass through walls.
   - **Cleanup**: `RoomManager` handles skull deletion on room transition and timer reset on re-entry.
+- **Implemented Inventory Pickup System**:
+  - **New Pickups**: Added `Coin`, `Key`, and `Bomb` configurations to `GameConstants.Pickup`.
+  - **Collision Logic**: Registered handlers for `Player` collecting these new items.
+  - **Effect Registry**: Implemented separate effect handlers in `PickupEffects` that increment `player.coins`, `player.keys`, `player.bombs`.
+  - **Visuals**: Added `pickup_color` (yellow) to `FloatingText` for inventory items.
+  - **Architecture**: Extended the data-driven Type Object pattern to support generic inventory items.
+- **Implemented Inventory HUD**:
+  - **New Module**: `src/ui/hud.lua` renders the inventory state (Coins, Keys, Bombs) on screen.
+  - **Configuration**: Added `Hud` section to `game_config.lua` defining sprite IDs (196-198), positions, and spacing.
+  - **Integration**: Updated `src/scenes/play.lua` to draw the HUD after the camera reset (UI layer).
 - **Refactored Projectile System to Type Object Pattern**:
   - Consolidated `Projectile.spawn` and `Projectile.spawn_enemy` into a single unified `Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)` function.
   - Moved all projectile type definitions (`Laser`, `EnemyBullet`) into `GameConstants.Projectile` as pure data objects, mirroring the Enemy system design.
