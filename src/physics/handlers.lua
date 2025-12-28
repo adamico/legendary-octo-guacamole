@@ -103,7 +103,11 @@ Handlers.map["Enemy"] = function(enemy, map_x, map_y)
 end
 
 Handlers.entity["Projectile,Enemy"] = function(projectile, enemy)
-    -- Skip if enemy is invulnerable
+    -- Always destroy the projectile upon impact
+    world.del(projectile)
+    Effects.hit_impact(projectile, enemy)
+
+    -- Skip damage if enemy is invulnerable
     if enemy.invuln_timer and enemy.invuln_timer > 0 then
         return
     end
@@ -112,12 +116,11 @@ Handlers.entity["Projectile,Enemy"] = function(projectile, enemy)
     enemy.hp = enemy.hp - damage
     enemy.invuln_timer = 10 -- Brief invulnerability after hit
     FloatingText.spawn_at_entity(enemy, -damage, "damage")
-    Effects.hit_impact(projectile, enemy)
+
     -- Composite knockback: base player knockback + projectile knockback
     local proj_knockback = GameConstants.Projectile.Laser.knockback or 2
     local knockback = GameConstants.Player.base_knockback + proj_knockback
     Effects.apply_knockback(projectile, enemy, knockback)
-    world.del(projectile)
 end
 
 Handlers.entity["Player,Enemy"] = function(player, enemy)

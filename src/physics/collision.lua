@@ -4,6 +4,7 @@ local SpatialGrid = require("src/physics/spatial_grid")
 local CollisionFilter = require("src/physics/collision_filter")
 local HitboxUtils = require("src/utils/hitbox_utils")
 Collision.CollisionHandlers = require("src/physics/handlers")
+local MathUtils = require("src/utils/math_utils")
 
 local collision_filter = CollisionFilter:new()
 
@@ -145,11 +146,38 @@ function Collision.resolve_entities(entity1)
     -- Query nearby entities (spatial partitioning optimization)
     local nearby = current_grid:get_nearby(entity1, get_hitbox)
 
+    -- Pre-calculate projectile segment if applicable (Continuous Collision Detection)
+    local is_projectile = entity1.type == "Projectile" or entity1.type == "EnemyProjectile" or
+       entity1.type == "ProjectilePickup"
+    local p_start_x, p_start_y, p_end_x, p_end_y
+    if is_projectile and (abs(entity1.vel_x or 0) > 4 or abs(entity1.vel_y or 0) > 4) then
+        -- Only strictly needed for fast moving objects, but let's be safe
+        -- "Previous" position is roughly current - velocity
+        -- (Assuming this runs AFTER velocity application, which it does in play.lua)
+        local hb = get_hitbox(entity1)
+        p_end_x = hb.x + hb.w / 2
+        p_end_y = hb.y + hb.h / 2
+        p_start_x = p_end_x - (entity1.vel_x or 0)
+        p_start_y = p_end_y - (entity1.vel_y or 0)
+    end
+
     for _, entity2 in ipairs(nearby) do
         -- Check collision layers (bitmasking - very fast)
         if collision_filter:can_collide(entity1, entity2) then
-            -- Check overlap (narrow-phase AABB)
+            local hit = false
+
+            -- 1. Standard AABB Overlap
             if Collision.check_overlap(entity1, entity2) then
+                hit = true
+                -- 2. Continuous Collision Detection (Raycast) for fast projectiles
+            elseif is_projectile and p_start_x then
+                local hb2 = get_hitbox(entity2)
+                if MathUtils.segment_intersects_aabb(p_start_x, p_start_y, p_end_x, p_end_y, hb2.x, hb2.y, hb2.w, hb2.h) then
+                    hit = true
+                end
+            end
+
+            if hit then
                 local type1 = entity1.type or ""
                 local type2 = entity2.type or ""
                 local key = type1..","..type2
