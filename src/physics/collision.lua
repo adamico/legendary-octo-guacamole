@@ -13,11 +13,6 @@ local get_hitbox = HitboxUtils.get_hitbox
 local current_grid = nil
 Collision.CollisionHandlers = require("src/physics/handlers")
 
--- Helper: Check if a tile is a pit (blocks walking but not projectiles)
-local function is_pit_tile(tile)
-    return tile == PIT_TILE
-end
-
 -- Helper: Iterate over tiles overlapping a hitbox
 local function for_each_tile(hb, callback)
     local x1 = flr(hb.x / GRID_SIZE)
@@ -35,17 +30,12 @@ local function for_each_tile(hb, callback)
 end
 
 -- Find solid tile with entity-aware logic
--- Projectiles can fly over pits
-local function find_solid_tile(x, y, w, h, entity, room)
+local function find_solid_tile(x, y, w, h, entity)
     -- First check map tiles
     local stx, sty, stile = for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
         if tile and fget(tile, SOLID_FLAG) then
-            -- Pits don't block projectiles (they fly over)
-            if is_pit_tile(tile) then
-                local entity_type = entity and entity.type or ""
-                if entity_type == "Projectile" or entity_type == "EnemyProjectile" then
-                    return nil -- Projectiles ignore pits
-                end
+            if fget(tile, FEATURE_FLAG_PIT) and entity and entity.type == "Projectile" then
+                return nil -- Projectiles ignore pits
             end
             return tx, ty, tile
         end
@@ -72,10 +62,9 @@ local function find_solid_tile(x, y, w, h, entity, room)
 end
 
 Collision.find_solid_tile = find_solid_tile
-Collision.is_pit_tile = is_pit_tile
 
-local function is_solid(x, y, w, h, entity, room)
-    return find_solid_tile(x, y, w, h, entity, room) ~= nil
+local function is_solid(x, y, w, h, entity)
+    return find_solid_tile(x, y, w, h, entity) ~= nil
 end
 
 Collision.is_solid = is_solid

@@ -1,7 +1,6 @@
 SCREEN_WIDTH = 480
 SCREEN_HEIGHT = 270
 GRID_SIZE = 16
-SOLID_FLAG = 0
 EMPTY_TILE = 0
 DOOR_OPEN_TILE = 86
 DOOR_BLOCKED_TILE = 71
@@ -35,9 +34,8 @@ PIT_TILE = 85                             -- P: pit (blocks walking, not project
 DESTRUCTIBLE_TILES = {150, 151, 158, 159} -- D: breakable obstacles
 
 -- Feature type flags (for collision logic)
-FEATURE_FLAG_SOLID = 1        -- Blocks walking entities
-FEATURE_FLAG_PIT = 2          -- Blocks walking, not projectiles
-FEATURE_FLAG_DESTRUCTIBLE = 3 -- Can be destroyed, blocks all until destroyed
+SOLID_FLAG = 0
+FEATURE_FLAG_PIT = 1 -- allows projectiles to pass
 
 -- Collision system constants
 TILE_EDGE_TOLERANCE = 0.001    -- Small buffer to prevent floating-point edge cases when checking tile boundaries
