@@ -18,14 +18,6 @@ local function is_pit_tile(tile)
     return tile == PIT_TILE
 end
 
--- Helper: Check if a tile is destructible
-local function is_destructible_tile(tile)
-    for _, t in ipairs(DESTRUCTIBLE_TILES) do
-        if tile == t then return true end
-    end
-    return false
-end
-
 -- Helper: Iterate over tiles overlapping a hitbox
 local function for_each_tile(hb, callback)
     local x1 = flr(hb.x / GRID_SIZE)
@@ -81,7 +73,6 @@ end
 
 Collision.find_solid_tile = find_solid_tile
 Collision.is_pit_tile = is_pit_tile
-Collision.is_destructible_tile = is_destructible_tile
 
 local function is_solid(x, y, w, h, entity, room)
     return find_solid_tile(x, y, w, h, entity, room) ~= nil

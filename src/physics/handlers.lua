@@ -62,28 +62,6 @@ end
 Handlers.entity["Player,ProjectilePickup"] = handle_pickup_collection
 Handlers.entity["Player,HealthPickup"] = handle_pickup_collection
 
--- Helper: Check if a tile is destructible
-local function is_destructible_tile(tile)
-    for _, t in ipairs(DESTRUCTIBLE_TILES) do
-        if tile == t then return true end
-    end
-    return false
-end
-
--- Helper: Destroy a tile and maybe spawn a pickup
-local function destroy_tile(tx, ty, projectile)
-    -- Replace destructible with a random floor tile
-    local floor_tile = FLOOR_TILES[flr(rnd(#FLOOR_TILES)) + 1]
-    mset(tx, ty, floor_tile)
-
-    -- Small chance to spawn health pickup (10%)
-    if rnd(100) < 10 then
-        local px = tx * GRID_SIZE + GRID_SIZE / 2
-        local py = ty * GRID_SIZE + GRID_SIZE / 2
-        Entities.spawn_pickup(world, px, py, "HealthPickup")
-    end
-end
-
 -- Helper: Destroy a destructible entity
 local function destroy_destructible(destructible, attacker)
     if destructible.dead then return end
@@ -95,7 +73,7 @@ local function destroy_destructible(destructible, attacker)
     -- Effects.shatter(destructible)
 
     -- 10% chance to spawn health pickup
-    if rnd(100) < 10 then
+    if rnd() < 0.1 then
         local cx = destructible.x + destructible.width / 2
         local cy = destructible.y + destructible.height / 2
         Entities.spawn_pickup(world, cx, cy, "HealthPickup")
@@ -103,18 +81,6 @@ local function destroy_destructible(destructible, attacker)
 end
 
 Handlers.map["Projectile"] = function(projectile, map_x, map_y, tx, ty, tile, room)
-    -- Check if we hit a destructible (tile or entity)
-    if tile and (is_destructible_tile(tile) or (type(tile) == "table" and tile.destructible)) then
-        if type(tile) == "table" then
-            destroy_destructible(tile, projectile)
-        else
-            destroy_tile(tx, ty, projectile)
-        end
-        world.del(projectile)
-        return
-    end
-
-    -- Normal wall collision: spawn pickup
     local recovery = (projectile.shot_cost or 0) * (projectile.recovery_percent or 0)
     Entities.spawn_pickup_projectile(world, projectile.x, projectile.y, projectile.dir_x, projectile.dir_y, recovery,
         projectile.sprite_index, projectile.z)
@@ -122,14 +88,6 @@ Handlers.map["Projectile"] = function(projectile, map_x, map_y, tx, ty, tile, ro
 end
 
 Handlers.map["EnemyProjectile"] = function(projectile, map_x, map_y, tx, ty, tile, room)
-    -- Check if we hit a destructible (tile or entity)
-    if tile and (is_destructible_tile(tile) or (type(tile) == "table" and tile.destructible)) then
-        if type(tile) == "table" then
-            destroy_destructible(tile, projectile)
-        else
-            destroy_tile(tx, ty, projectile)
-        end
-    end
     world.del(projectile)
 end
 
