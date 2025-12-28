@@ -61,10 +61,29 @@ function Spawner.populate(room, player)
     local WavePatterns = require("src/world/wave_patterns")
     local RoomLayouts = require("src/world/room_layouts")
 
+    -- Get room inner bounds once (in pixel space) for bounds checking
+    local room_bounds = room:get_inner_bounds()
+    local room_px = {
+        x1 = room_bounds.x1 * GRID_SIZE,
+        y1 = room_bounds.y1 * GRID_SIZE,
+        x2 = (room_bounds.x2 + 1) * GRID_SIZE,
+        y2 = (room_bounds.y2 + 1) * GRID_SIZE
+    }
+
     -- Helper: Check if a single tile is valid for spawning
     local function is_tile_valid(tx, ty)
+        -- Check tile is within room bounds
+        if tx < room_bounds.x1 or tx > room_bounds.x2 or
+           ty < room_bounds.y1 or ty > room_bounds.y2 then
+            return false
+        end
+
         -- Check if it's a floor tile (not pit or other solid)
         if not RoomLayouts.is_floor_tile(tx, ty) then return false end
+
+        -- Direct pit tile check (for layouts without grid pattern data)
+        local tile = mget(tx, ty)
+        if tile == PIT_TILE then return false end
 
         -- Fast layout-based feature check (Rocks/Pits/Destructibles)
         if room.layout and room.layout.grid then
@@ -85,6 +104,12 @@ function Spawner.populate(room, player)
 
     -- Helper: Check if a position is valid for spawning (check entity footprint)
     local function is_valid_spawn(px, py, etype)
+        -- First check if position is within room pixel bounds
+        if px < room_px.x1 or px + 16 > room_px.x2 or
+           py < room_px.y1 or py + 16 > room_px.y2 then
+            return false
+        end
+
         local config = GameConstants.Enemy[etype or "Skulker"]
         if not config then return true end
 
@@ -106,7 +131,7 @@ function Spawner.populate(room, player)
         return true
     end
 
-    -- Helper: Find nearest valid tile
+    -- Helper: Find nearest valid tile (within room bounds)
     local function nudge_to_valid(px, py, etype)
         if is_valid_spawn(px, py, etype) then return px, py end
 

@@ -51,6 +51,10 @@ Handlers.entity["MeleeHitbox,Enemy"] = function(hitbox, enemy)
 end
 
 local function handle_pickup_collection(player, pickup)
+    -- Guard: Prevent double collection (pickup may be touched multiple frames)
+    if pickup.collected then return end
+    pickup.collected = true
+
     local effect_type = pickup.pickup_effect or "health"
     local effect_handler = PickupEffects[effect_type]
     assert(effect_handler, "Unknown pickup_effect '"..effect_type.."'")(player, pickup)
@@ -99,8 +103,14 @@ Handlers.map["Enemy"] = function(enemy, map_x, map_y)
 end
 
 Handlers.entity["Projectile,Enemy"] = function(projectile, enemy)
+    -- Skip if enemy is invulnerable
+    if enemy.invuln_timer and enemy.invuln_timer > 0 then
+        return
+    end
+
     local damage = projectile.damage or GameConstants.Projectile.damage or 10
     enemy.hp = enemy.hp - damage
+    enemy.invuln_timer = 10 -- Brief invulnerability after hit
     FloatingText.spawn_at_entity(enemy, -damage, "damage")
     Effects.hit_impact(projectile, enemy)
     -- Composite knockback: base player knockback + projectile knockback
@@ -124,22 +134,6 @@ Handlers.entity["Player,Enemy"] = function(player, enemy)
     end
     Effects.hit_impact(enemy, player, "heavy_shake")
     Effects.apply_knockback(enemy, player, 16)
-    player.invuln_timer = 30
-    player.time_since_shot = 0
-end
-
-Handlers.entity["Player,Skull"] = function(player, skull)
-    if player.invuln_timer and player.invuln_timer > 0 then
-        return
-    end
-    local damage = skull.contact_damage or 20
-    if not GameState.cheats.godmode then
-        player.hp = player.hp - damage
-        FloatingText.spawn_at_entity(player, -damage, "damage")
-    end
-    skull.hp = skull.hp - 1
-    Effects.hit_impact(skull, player, "heavy_shake")
-    Effects.apply_knockback(skull, player, 16)
     player.invuln_timer = 30
     player.time_since_shot = 0
 end
@@ -203,8 +197,14 @@ end
 -- Player/Enemy hitting Rock or Destructible -> push out
 Handlers.entity["Player,Rock"] = function(player, rock) push_out(player, rock) end
 Handlers.entity["Player,Destructible"] = function(player, dest) push_out(player, dest) end
-Handlers.entity["Enemy,Rock"] = function(enemy, rock) push_out(enemy, rock) end
-Handlers.entity["Enemy,Destructible"] = function(enemy, dest) push_out(enemy, dest) end
+Handlers.entity["Enemy,Rock"] = function(enemy, rock)
+    if world.msk(enemy).flying then return end -- Flying entities pass through obstacles
+    push_out(enemy, rock)
+end
+Handlers.entity["Enemy,Destructible"] = function(enemy, dest)
+    if world.msk(enemy).flying then return end -- Flying entities pass through obstacles
+    push_out(enemy, dest)
+end
 
 -- Helper: spawn projectile pickup and delete projectile
 local function projectile_hit_obstacle(projectile)

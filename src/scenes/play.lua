@@ -169,7 +169,8 @@ function Play:update()
    -- Resolve Entity Collisions (Optimized with single grid build)
    Systems.update_spatial_grid(world)
    world.sys("collidable,velocity", Systems.resolve_entities)()
-   world.sys("collidable,player", Systems.resolve_entities)() -- Ensure player checks even if idle
+   world.sys("collidable,player", Systems.resolve_entities)()       -- Ensure player checks even if idle
+   world.sys("collidable,melee_hitbox", Systems.resolve_entities)() -- Melee hitbox vs Enemy collision
 
    -- Timers & Health (self-iterating)
    Systems.health_regen(world)

@@ -325,16 +325,35 @@ local GameConstants = {
          outline_color = 1,
       },
       Skull = {
-         entity_type = "Skull",
-         tags = "skull,enemy,velocity,collidable,health,drawable,sprite,shadow,middleground",
-         hp = 1,
+         entity_type = "Enemy",
+         tags = "skull,enemy,timers,velocity,collidable,health,drawable,animatable,shadow,middleground,flying",
+         hp = 100,
          max_speed = 0.6,
-         contact_damage = 20,
+         contact_damage = 100,
+         drop_chance = 0.5,
          sprite_index_offsets = {
             down = 40,
             right = 40,
             left = 40,
             up = 40,
+         },
+         animations = {
+            down = {
+               idle = {indices = {40}, durations = {30}},
+               death = {indices = {40}, durations = {30}}
+            },
+            up = {
+               idle = {indices = {40}, durations = {30}},
+               death = {indices = {40}, durations = {30}}
+            },
+            left = {
+               idle = {indices = {40}, durations = {30}},
+               death = {indices = {40}, durations = {30}}
+            },
+            right = {
+               idle = {indices = {40}, durations = {30}, flip = true},
+               death = {indices = {40}, durations = {30}, flip = true}
+            }
          },
          width = 16,
          height = 16,
@@ -533,8 +552,8 @@ GameConstants.CollisionMasks = {
 GameConstants.EntityCollisionLayer = {
    Player = GameConstants.CollisionLayers.PLAYER,
    Enemy = GameConstants.CollisionLayers.ENEMY,
-   Skull = GameConstants.CollisionLayers.ENEMY,
    Projectile = GameConstants.CollisionLayers.PLAYER_PROJECTILE,
+   MeleeHitbox = GameConstants.CollisionLayers.PLAYER_PROJECTILE,
    EnemyProjectile = GameConstants.CollisionLayers.ENEMY_PROJECTILE,
    ProjectilePickup = GameConstants.CollisionLayers.PICKUP,
    HealthPickup = GameConstants.CollisionLayers.PICKUP,

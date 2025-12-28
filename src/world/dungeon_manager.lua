@@ -477,7 +477,10 @@ function DungeonManager.check_room_clear(room, world)
    local enemy_count = 0
    room.combat_timer += 1
    world.sys("enemy", function(e)
-      if not e.dead then enemy_count += 1 end
+      -- Exclude skulls from enemy count (pressure mechanic, not room enemies)
+      if not e.dead and not world.msk(e).skull then
+         enemy_count += 1
+      end
    end)()
 
    if enemy_count == 0 then

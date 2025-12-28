@@ -42,7 +42,8 @@ function Shooter.update(world)
 
          -- Consume ammo if using health (skip if free_attacks cheat active)
          if entity.health_as_ammo and not GameState.cheats.free_attacks then
-            entity.hp -= shot_cost
+            -- Clamp HP to minimum 1 so player doesn't die from shooting
+            entity.hp = max(1, entity.hp - shot_cost)
             entity.time_since_shot = 0
          end
 

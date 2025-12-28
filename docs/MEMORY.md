@@ -20,6 +20,19 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Fixed Shooting Not Killing Player**: Changed `shooter.lua` to clamp HP to minimum 1 after shot cost deduction, so firing the last health segment leaves player at 1 HP instead of killing them.
+- **Fixed Enemy Spawn Validation**: Enhanced `spawner.lua` spawn validation to:
+  - **Room Bounds Check**: Added explicit room bounds validation in both tile and pixel space to prevent enemies spawning outside the room interior.
+  - **Direct Pit Check**: Added `mget()` check for `PIT_TILE` (85) to catch pits in layouts without grid pattern data.
+  - **Improved Nudging**: The `nudge_to_valid()` now respects room bounds so enemies can't be nudged outside the room.
+- **Reworked Skull Enemy Mechanics**:
+  - **Simplified Entity Type**: Changed Skull's `entity_type` from `"Skull"` to `"Enemy"` so it uses standard `Projectile,Enemy` and `MeleeHitbox,Enemy` handlers without needing separate skull-specific handlers.
+  - **Increased HP**: Changed skull HP from 1 to 100 (requires ~5 shots to kill).
+  - **Drop Chance**: Added `drop_chance` property (50%) to Entity config. The `DeathHandlers.Enemy` now checks this property (defaults to 100% for regular enemies).
+- **Fixed Collision System Bugs**:
+  - **Double Pickup Collection**: Added a `collected` guard flag to `handle_pickup_collection()` to prevent pickups from triggering their effect multiple times when touched across multiple frames.
+  - **Melee Attacks Not Working**: Melee hitboxes were missing from collision checks because they lacked the `velocity` tag. Added `world.sys("collidable,melee_hitbox", Systems.resolve_entities)()` to the collision resolution phase in `play.lua`.
+  - **MeleeHitbox Collision Layer**: Added `MeleeHitbox` to `EntityCollisionLayer` (using `PLAYER_PROJECTILE` layer).
 - **Implemented Room Layout System**: Added Isaac-style carving patterns for room interiors with features (rocks, pits, destructibles):
   - **9×7 Grid System**: Compact ASCII grid maps to 27×14 room interior (each cell = 3×2 tiles). Example: `"R.......R"`.
   - **cell_pattern Positioning**: Optional array that cycles through features, specifying placement within each 3×2 cell:

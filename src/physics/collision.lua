@@ -42,7 +42,9 @@ end
 local function find_solid_tile(x, y, w, h, entity)
     local stx, sty, stile = for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
         if tile and fget(tile, SOLID_FLAG) then
-            if fget(tile, FEATURE_FLAG_PIT) and entity and entity.type == "Projectile" then
+            -- All projectiles (player and enemy) can fly over pits
+            if fget(tile, FEATURE_FLAG_PIT) and entity and
+               (entity.type == "Projectile" or entity.type == "EnemyProjectile") then
                 return nil -- Projectiles ignore pits
             end
             return tx, ty, tile
