@@ -3,11 +3,13 @@ local Player = require("src/entities/player")
 local Projectile = require("src/entities/projectile")
 local Enemy = require("src/entities/enemy")
 local Pickup = require("src/entities/pickup")
+local Obstacle = require("src/entities/obstacle")
 
 local Entities = {}
 
 Entities.spawn_player = Player.spawn
 Entities.spawn_enemy = Enemy.spawn
+Entities.spawn_obstacle = Obstacle.spawn
 
 -- Projectile spawners (convenience wrappers for Type Object pattern)
 Entities.spawn_player_projectile = function(world, x, y, dx, dy, instance_data)
@@ -21,5 +23,16 @@ Entities.spawn_centered_projectile = Projectile.spawn_centered
 -- Pickup spawners (convenience wrappers for Type Object pattern)
 Entities.spawn_pickup_projectile = Pickup.spawn_projectile
 Entities.spawn_health_pickup = Pickup.spawn_health
+
+-- Random pickup spawn (for destructibles, etc.)
+-- Currently only spawns HealthPickup since ProjectilePickup requires special data
+Entities.spawn_pickup = function(world, x, y, pickup_type)
+    if pickup_type then
+        return Pickup.spawn(world, x, y, pickup_type)
+    else
+        -- Random from available types (only HealthPickup for now)
+        return Pickup.spawn_health(world, x, y)
+    end
+end
 
 return Entities

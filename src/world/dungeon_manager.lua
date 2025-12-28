@@ -1,5 +1,8 @@
 local Room = require("src/world/room")
 local Events = require("src/game/events")
+local RoomLayouts = require("src/world/room_layouts")
+local FloorPatterns = require("src/world/floor_patterns")
+local WavePatterns = require("src/world/wave_patterns")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles
@@ -105,7 +108,7 @@ function DungeonManager.generate()
 
    -- Phase 5: Carve entire dungeon into map
    DungeonManager.fill_map_with_walls() -- Fill entire map with walls first
-   -- Carve floors for all rooms (clears inner bounds)
+   -- Carve floors for all rooms (pure floor tiles for autotiling)
    for _, room in pairs(DungeonManager.rooms) do
       DungeonManager.carve_room_floor(room)
    end
@@ -113,7 +116,12 @@ function DungeonManager.generate()
    -- Phase 6: Apply autotiling to walls (corners, H/V variants)
    DungeonManager.autotile_walls()
 
-   -- Phase 7: Carve corridors (opens door passages with frame tiles)
+   -- Phase 7: Place obstacles (rocks, pits) AFTER autotiling
+   for _, room in pairs(DungeonManager.rooms) do
+      DungeonManager.place_room_obstacles(room)
+   end
+
+   -- Phase 8: Carve corridors (opens door passages with frame tiles)
    for _, room in pairs(DungeonManager.rooms) do
       DungeonManager.carve_corridors(room)
    end
@@ -181,14 +189,40 @@ function DungeonManager.carve_corridors(room)
    end
 end
 
+-- Phase 1: Carve pure floor tiles (called before autotiling)
 function DungeonManager.carve_room_floor(room)
+   -- Select and assign layout for this room
+   local layout = RoomLayouts.get_random_layout(room.room_type or "combat", room)
+   room.layout = layout
+   room.destructibles = {} -- Store positions for destructible entity spawning
+
    local floor = room:get_inner_bounds()
+
+   local pattern = FloorPatterns.get_pattern(layout.floor_pattern or "random")
+
+   -- First pass: carve all as floor tiles (for proper autotiling)
    for ty = floor.y1, floor.y2 do
       for tx = floor.x1, floor.x2 do
-         -- Use random floor tile variant
-         local floor_tile = FLOOR_TILES[flr(rnd(#FLOOR_TILES)) + 1]
+         local floor_tile = pattern(tx, ty, FLOOR_TILES)
          mset(tx, ty, floor_tile)
       end
+   end
+end
+
+-- Phase 2: Place map-based obstacles (e.g. pits)
+function DungeonManager.place_room_obstacles(room)
+   if not room.layout or not room.layout.grid then return end
+
+   local floor_rect = room:get_inner_bounds()
+
+   -- Use get_all_features for precise cell_pattern placement
+   local features = RoomLayouts.get_all_features(room.layout, floor_rect.x1, floor_rect.y1)
+
+   for _, f in ipairs(features) do
+      if f.feature == "pit" then
+         mset(f.tx, f.ty, PIT_TILE)
+      end
+      -- Rocks and destructibles are now entities spawned in setup_room
    end
 
    DungeonManager.apply_door_sprites(room)
@@ -245,7 +279,6 @@ function DungeonManager.assign_room_types()
    end
 
    -- Remaining rooms are combat rooms with wave patterns
-   local WavePatterns = require("src/world/wave_patterns")
    for _, room in pairs(DungeonManager.rooms) do
       if not room.room_type then
          room.room_type = "combat"
@@ -253,7 +286,6 @@ function DungeonManager.assign_room_types()
          local difficulty = min(3, flr(room.distance / 2) + 1)
          local pattern = WavePatterns.get_random_pattern(difficulty)
          room.contents_config = {wave_pattern = pattern}
-         Log.info("Room ("..room.grid_x..","..room.grid_y..") assigned wave pattern, difficulty="..difficulty)
       end
    end
 end
@@ -381,12 +413,47 @@ function DungeonManager.setup_room(room, player, world)
    -- Log room entry with wave pattern info
    if room.contents_config and room.contents_config.wave_pattern then
       local pattern = room.contents_config.wave_pattern
-      Log.info("Entering room ("..
-         room.grid_x..
-         ","..room.grid_y..") pattern='"..tostring(pattern.name).."' difficulty="..tostring(pattern.difficulty))
+      Log.info("Entering room ("..room.grid_x..","..room.grid_y..")")
+      Log.info("wave pattern="..pattern.name)
+      Log.info("Room layout="..room.layout.name)
    end
 
    Systems.Spawner.populate(room, player)
+
+   -- Spawn obstacles (Rocks, Destructibles) if not already spawned
+   if not room.obstacles_spawned and room.layout and room.layout.grid then
+      local Entities = require("src/entities")
+      local floor_rect = room:get_inner_bounds()
+      local rocks_count = 0
+      local dest_count = 0
+
+      -- Initialize obstacle entity tracking for this room
+      room.obstacle_entities = room.obstacle_entities or {}
+
+      -- Use get_all_features for precise cell_pattern placement
+      local features = RoomLayouts.get_all_features(room.layout, floor_rect.x1, floor_rect.y1)
+
+      for _, f in ipairs(features) do
+         local wx, wy = f.tx * GRID_SIZE, f.ty * GRID_SIZE
+         local entity = nil
+         if f.feature == "rock" then
+            local sprite = ROCK_TILES[flr(rnd(#ROCK_TILES)) + 1]
+            entity = Entities.spawn_obstacle(world, wx, wy, "Rock", sprite)
+            rocks_count += 1
+         elseif f.feature == "destructible" then
+            local sprite = DESTRUCTIBLE_TILES[flr(rnd(#DESTRUCTIBLE_TILES)) + 1]
+            entity = Entities.spawn_obstacle(world, wx, wy, "Destructible", sprite)
+            dest_count += 1
+         end
+         if entity then
+            entity.room_key = room.grid_x..","..room.grid_y
+            add(room.obstacle_entities, entity)
+         end
+      end
+      Log.info("Spawned obstacles in room ("..
+         room.grid_x..","..room.grid_y.."): "..rocks_count.." rocks, "..dest_count.." destructibles")
+      room.obstacles_spawned = true
+   end
 
    -- If enemies assigned and room is populated, trigger enter to lock doors
    if #room.enemy_positions > 0 and room.lifecycle:can("enter") then

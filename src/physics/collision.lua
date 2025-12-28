@@ -10,7 +10,21 @@ local collision_filter = CollisionFilter:new()
 -- Local reference for convenience within this module
 local get_hitbox = HitboxUtils.get_hitbox
 
+local current_grid = nil
 Collision.CollisionHandlers = require("src/physics/handlers")
+
+-- Helper: Check if a tile is a pit (blocks walking but not projectiles)
+local function is_pit_tile(tile)
+    return tile == PIT_TILE
+end
+
+-- Helper: Check if a tile is destructible
+local function is_destructible_tile(tile)
+    for _, t in ipairs(DESTRUCTIBLE_TILES) do
+        if tile == t then return true end
+    end
+    return false
+end
 
 -- Helper: Iterate over tiles overlapping a hitbox
 local function for_each_tile(hb, callback)
@@ -28,16 +42,49 @@ local function for_each_tile(hb, callback)
     end
 end
 
-local function find_solid_tile(x, y, w, h)
-    return for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
-        if tile and fget(tile, SOLID_FLAG) then return tx, ty end
+-- Find solid tile with entity-aware logic
+-- Projectiles can fly over pits
+local function find_solid_tile(x, y, w, h, entity, room)
+    -- First check map tiles
+    local stx, sty, stile = for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
+        if tile and fget(tile, SOLID_FLAG) then
+            -- Pits don't block projectiles (they fly over)
+            if is_pit_tile(tile) then
+                local entity_type = entity and entity.type or ""
+                if entity_type == "Projectile" or entity_type == "EnemyProjectile" then
+                    return nil -- Projectiles ignore pits
+                end
+            end
+            return tx, ty, tile
+        end
     end)
+
+    if stx then return stx, sty, stile end
+
+    -- Check obstacle entities via spatial grid
+    if current_grid then
+        local hb = {x = x, y = y, w = w, h = h}
+        local nearby = current_grid:get_nearby_hb(hb)
+        for i = 1, #nearby do
+            local other = nearby[i]
+            if other.obstacle and other ~= entity then
+                local ohb = get_hitbox(other)
+                if x < ohb.x + ohb.w and x + w > ohb.x and y < ohb.y + ohb.h and y + h > ohb.y then
+                    return ohb.x, ohb.y, other
+                end
+            end
+        end
+    end
+
+    return nil
 end
 
 Collision.find_solid_tile = find_solid_tile
+Collision.is_pit_tile = is_pit_tile
+Collision.is_destructible_tile = is_destructible_tile
 
-local function is_solid(x, y, w, h)
-    return find_solid_tile(x, y, w, h) ~= nil
+local function is_solid(x, y, w, h, entity, room)
+    return find_solid_tile(x, y, w, h, entity, room) ~= nil
 end
 
 Collision.is_solid = is_solid
@@ -90,17 +137,27 @@ function Collision.check_trigger(entity, camera_manager)
     return nil
 end
 
-function Collision.resolve_entities(entity1)
-    -- Create spatial grid for this frame
-    local grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
-
-    -- Populate grid with all collidable entities
+--- Update the spatial grid once per frame
+-- This is a optimization to avoid rebuilding the grid for every entity pair
+-- @param world The ECS world instance
+function Collision.update_spatial_grid(world)
+    current_grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
     world.sys("collidable", function(e)
-        grid:add(e, get_hitbox)
+        current_grid:add(e, get_hitbox)
     end)()
+end
+
+function Collision.resolve_entities(entity1)
+    if not current_grid then
+        -- Fallback if update_spatial_grid wasn't called, but better to call it explicitly
+        current_grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
+        world.sys("collidable", function(e)
+            current_grid:add(e, get_hitbox)
+        end)()
+    end
 
     -- Query nearby entities (spatial partitioning optimization)
-    local nearby = grid:get_nearby(entity1, get_hitbox)
+    local nearby = current_grid:get_nearby(entity1, get_hitbox)
 
     for _, entity2 in ipairs(nearby) do
         -- Check collision layers (bitmasking - very fast)
@@ -144,9 +201,9 @@ function Collision.resolve_map(entity, room, camera_manager)
         local cx = x + vox + (axis == "x" and move or 0)
         local cy = y + voy + (axis == "y" and move or 0)
 
-        local stx, sty = find_solid_tile(cx, cy, w, h)
+        local stx, sty, stile = find_solid_tile(cx, cy, w, h, entity, room)
         if stx then
-            if handler then handler(entity, cx, cy) end
+            if handler then handler(entity, cx, cy, stx, sty, stile, room) end
 
             -- Apply door guidance for player only
             if entity.type == "Player" then

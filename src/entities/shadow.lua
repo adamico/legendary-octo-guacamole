@@ -18,7 +18,8 @@ function Shadow.spawn(world, parent)
         shadow_heights = parent.shadow_heights,
     }
 
-    local ent = world.ent("shadow_entity,drawable_shadow,background", shadow)
+    local tags = "shadow_sync,drawable_shadow,background"
+    local ent = world.ent(tags, shadow)
     parent.shadow_entity = ent
     return ent
 end

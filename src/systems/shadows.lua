@@ -1,6 +1,7 @@
 -- Shadows system: shadow entity sync and drawing
 
 local HitboxUtils = require("src/utils/hitbox_utils")
+local Rendering = require("src/systems/rendering")
 
 local Shadows = {}
 
@@ -13,6 +14,9 @@ local function sync_shadow(world, shadow)
       return
    end
 
+   -- Optimization: skip syncing properties for static parent objects
+   if parent.static then return end
+
    shadow.x = parent.x
    shadow.y = parent.y
    shadow.w = parent.width or 16
@@ -24,6 +28,9 @@ local function sync_shadow(world, shadow)
    shadow.shadow_widths = parent.shadow_widths
    shadow.shadow_heights = parent.shadow_heights
    shadow.direction = parent.direction or parent.current_direction
+
+   -- Propagate room_key for visibility filtering
+   shadow.room_key = parent.room_key
 end
 
 -- Draw a shadow entity
@@ -78,7 +85,7 @@ end
 -- Sync all shadow entities to their parents
 -- @param world - ECS world
 function Shadows.sync(world)
-   world.sys("shadow_entity", function(e) sync_shadow(world, e) end)()
+   world.sys("shadow_sync", function(e) sync_shadow(world, e) end)()
 end
 
 -- Draw all shadow entities
@@ -86,6 +93,10 @@ end
 -- @param clip_square - Clipping rectangle
 function Shadows.draw(world, clip_square)
    world.sys("background,drawable_shadow", function(shadow)
+      -- Filter by room_key (same logic as Rendering)
+      if shadow.room_key and not Rendering.active_room_keys[shadow.room_key] then
+         return
+      end
       draw_shadow(world, shadow, clip_square)
    end)()
 end

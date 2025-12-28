@@ -4,6 +4,7 @@
 local GameState = {
    debug = {
       show_hitboxes = false,
+      show_grid = false, -- Debug: show tile grid overlay
    },
    cheats = {
       noclip = false,

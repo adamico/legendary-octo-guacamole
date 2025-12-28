@@ -1,5 +1,6 @@
 -- Enemy spawning system
 local Entities = require("src/entities")
+local GameConstants = require("src/game/game_config")
 SPAWNER_INDICATOR_SPRITE = 32
 local Spawner = {}
 
@@ -58,21 +59,104 @@ function Spawner.populate(room, player)
     if not room or not room.lifecycle:is("populated") or not room.contents_config then return end
 
     local WavePatterns = require("src/world/wave_patterns")
+    local RoomLayouts = require("src/world/room_layouts")
 
-    -- NEW: Pattern-based spawning (preferred)
-    if room.contents_config.wave_pattern then
-        local pattern = room.contents_config.wave_pattern
-        room.enemy_positions = WavePatterns.calculate_positions(
-            pattern, room:get_inner_bounds()
-        )
-        if #room.enemy_positions > 0 then
-            room.spawn_timer = 60
+    -- Helper: Check if a single tile is valid for spawning
+    local function is_tile_valid(tx, ty)
+        -- Check if it's a floor tile (not pit or other solid)
+        if not RoomLayouts.is_floor_tile(tx, ty) then return false end
+
+        -- Fast layout-based feature check (Rocks/Pits/Destructibles)
+        if room.layout and room.layout.grid then
+            local floor_rect = room:get_inner_bounds()
+            local room_w = floor_rect.x2 - floor_rect.x1 + 1
+            local room_h = floor_rect.y2 - floor_rect.y1 + 1
+            local gx = tx - floor_rect.x1
+            local gy = ty - floor_rect.y1
+
+            local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
+            if feature == "rock" or feature == "destructible" or feature == "pit" then
+                return false
+            end
         end
-        return
+
+        return true
     end
 
-    -- LEGACY: Random spawning fallback
+    -- Helper: Check if a position is valid for spawning (check entity footprint)
+    local function is_valid_spawn(px, py, etype)
+        local config = GameConstants.Enemy[etype or "Skulker"]
+        if not config then return true end
+
+        local w = config.hitbox_width or config.width or 16
+        local h = config.hitbox_height or config.height or 16
+        local ox = config.hitbox_offset_x or 0
+        local oy = config.hitbox_offset_y or 0
+
+        local x1 = flr((px + ox) / GRID_SIZE)
+        local y1 = flr((py + oy) / GRID_SIZE)
+        local x2 = flr((px + ox + w - 0.1) / GRID_SIZE)
+        local y2 = flr((py + oy + h - 0.1) / GRID_SIZE)
+
+        for ty = y1, y2 do
+            for tx = x1, x2 do
+                if not is_tile_valid(tx, ty) then return false end
+            end
+        end
+        return true
+    end
+
+    -- Helper: Find nearest valid tile
+    local function nudge_to_valid(px, py, etype)
+        if is_valid_spawn(px, py, etype) then return px, py end
+
+        -- Search in expanding rings
+        for r = 8, 48, 8 do
+            for angle = 0, 0.875, 0.125 do -- 0 to 7/8 cycles (0 to 315 degrees)
+                local nx = px + cos(angle) * r
+                local ny = py + sin(angle) * r
+                if is_valid_spawn(nx, ny, etype) then
+                    return nx, ny
+                end
+            end
+        end
+        return nil
+    end
+
+    -- Pattern-based spawning
+    if room.contents_config.wave_pattern then
+        local pattern = room.contents_config.wave_pattern
+        local calc_pos = WavePatterns.calculate_positions(pattern, room:get_inner_bounds())
+
+        room.enemy_positions = {}
+        for _, pos in ipairs(calc_pos) do
+            local nx, ny = nudge_to_valid(pos.x, pos.y, pos.type)
+            if nx then
+                add(room.enemy_positions, {x = nx, y = ny, type = pos.type})
+            end
+        end
+
+        -- Fallback to random if pattern completely failed
+        if #room.enemy_positions > 0 then
+            room.spawn_timer = 60
+            return
+        end
+        Log.info("Pattern "..tostring(pattern.name).." failed to find valid positions, falling back to random")
+    end
+
+    -- Random spawning (Fallback or primary if no pattern)
     local enemy_config = room.contents_config.enemies
+    -- If we came from a failed pattern, we need to create a config
+    if not enemy_config then
+        local pattern = room.contents_config.wave_pattern
+        local difficulty = pattern and pattern.difficulty or 1
+        enemy_config = {
+            count = mid(2, difficulty * 2, 6),
+            min_dist = 80,
+            types = (difficulty == 1) and {"Skulker"} or {"Skulker", "Shooter"}
+        }
+    end
+
     if not enemy_config or not enemy_config.count or enemy_config.count <= 0 then return end
 
     local num_enemies = enemy_config.count
@@ -81,9 +165,15 @@ function Spawner.populate(room, player)
     room.enemy_positions = {}
     local floor = room:get_inner_bounds()
     local attempts = 0
+    local max_attempts = 500
 
-    while #room.enemy_positions < num_enemies and attempts < 200 do
+    while #room.enemy_positions < num_enemies and attempts < max_attempts do
         attempts = attempts + 1
+
+        -- Scale down min_dist if struggling to find spots
+        local active_min_dist = min_dist
+        if attempts > 200 then active_min_dist = min_dist * 0.7 end
+        if attempts > 400 then active_min_dist = 32 end
 
         -- Pick random tile within floor bounds
         local tx = floor.x1 + flr(rnd(floor.x2 - floor.x1 + 1))
@@ -91,23 +181,28 @@ function Spawner.populate(room, player)
         local rx = tx * GRID_SIZE
         local ry = ty * GRID_SIZE
 
-        -- Check distance from player
-        local dx = rx - player.x
-        local dy = ry - player.y
-        if dx * dx + dy * dy > min_dist * min_dist then
-            if Spawner.is_free_space(room, rx, ry) then
-                local etype = "Skulker"
-                -- Use configured types if available
-                if enemy_config.types and #enemy_config.types > 0 then
-                    etype = enemy_config.types[flr(rnd(#enemy_config.types)) + 1]
-                else
-                    -- Default fallback logic
-                    if rnd(1) < 0.4 then etype = "Shooter" end
-                end
+        local etype = "Skulker"
+        if enemy_config.types and #enemy_config.types > 0 then
+            etype = enemy_config.types[flr(rnd(#enemy_config.types)) + 1]
+        elseif rnd(1) < 0.4 then
+            etype = "Shooter"
+        end
 
-                table.insert(room.enemy_positions, {x = rx, y = ry, type = etype})
+        -- Check if valid floor position
+        local nx, ny = nudge_to_valid(rx, ry, etype)
+        if not nx then
+            goto continue
+        end
+
+        -- Check distance from player
+        local dx = nx - player.x
+        local dy = ny - player.y
+        if dx * dx + dy * dy > active_min_dist * active_min_dist then
+            if Spawner.is_free_space(room, nx, ny) then
+                table.insert(room.enemy_positions, {x = nx, y = ny, type = etype})
             end
         end
+        ::continue::
     end
 
     if #room.enemy_positions > 0 then

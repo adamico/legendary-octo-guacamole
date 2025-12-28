@@ -20,6 +20,18 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Room Layout System**: Added Isaac-style carving patterns for room interiors with features (rocks, pits, destructibles):
+  - **9×7 Grid System**: Compact ASCII grid maps to 27×14 room interior (each cell = 3×2 tiles). Example: `"R.......R"`.
+  - **cell_pattern Positioning**: Optional array that cycles through features, specifying placement within each 3×2 cell:
+    - `"tl"`, `"tm"`, `"tr"` = single tile in top row
+    - `"bl"`, `"bm"`, `"br"` = single tile in bottom row
+    - `"f"` = full 3×2 block (default)
+  - **Data/Code Separation**: Layout definitions in `src/data/room_layout_data.lua`. Logic in `room_layouts.lua` via `get_all_features()`.
+  - **Room Visibility Filtering**: Obstacle entities have `room_key` property; `Rendering.set_active_rooms()` filters rendering to only show obstacles from current room(s).
+  - **Collision Detection**: `find_solid_tile()` checks `room.rocks` and `room.destructibles` for entity collision.
+  - **Spawn Filtering**: Spawner validates tile area around spawn points to prevent enemies near obstacles.
+  - **Generation Order**: Floor tiles carved first → autotiling → obstacles placed (fixes wall autotiling around rocks).
+- **Categorized TODO List**: Reorganized `docs/TODO.md` into themed categories (Combat, AI, World, Items, Visuals) for better project management.
 - **Implemented Player Stats System**: Decoupled combat stats from static projectile configuration, moving them to the `Player` entity to enable dynamic builds and powerups.
   - **Stats**: `shot_speed`, `range` (lifetime), `fire_rate`, and `knockback` are now player properties.
   - **Dynamic Damage**: Introduced `max_hp_to_damage_ratio` (default 0.2). Damage is derived as `max_hp * ratio`, creating a synergy where Health Up items also increase Damage.

@@ -252,4 +252,35 @@ function RoomRenderer.draw_doors(room)
     end
 end
 
+--- Draw all room features (doors) in correct order
+-- @param room The room to draw features for
+function RoomRenderer.draw_room_features(room)
+    RoomRenderer.draw_doors(room)
+end
+
+--- Draw debug grid overlay for tile positions
+-- @param room The room to draw grid for
+function RoomRenderer.draw_debug_grid(room)
+    if not room then return end
+
+    local floor = room:get_inner_bounds()
+    Log.trace("Grid bounds: x1="..floor.x1.." y1="..floor.y1.." x2="..floor.x2.." y2="..floor.y2)
+    Log.trace("Grid px1="..(floor.x1 * GRID_SIZE).." py1="..(floor.y1 * GRID_SIZE))
+
+    -- Draw grid lines
+    for ty = floor.y1, floor.y2 + 1 do
+        local py = ty * GRID_SIZE
+        local px1 = floor.x1 * GRID_SIZE
+        local px2 = (floor.x2 + 1) * GRID_SIZE
+        line(px1, py, px2, py, 8) -- Red horizontal lines
+    end
+
+    for tx = floor.x1, floor.x2 + 1 do
+        local px = tx * GRID_SIZE
+        local py1 = floor.y1 * GRID_SIZE
+        local py2 = (floor.y2 + 1) * GRID_SIZE
+        line(px, py1, px, py2, 8) -- Red vertical lines
+    end
+end
+
 return RoomRenderer

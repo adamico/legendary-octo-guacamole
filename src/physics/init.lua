@@ -13,7 +13,7 @@ Physics.Handlers = Handlers
 
 -- Re-export common functions for convenience
 Physics.resolve_entities = Collision.resolve_entities
+Physics.update_spatial_grid = Collision.update_spatial_grid
 Physics.resolve_map = Collision.resolve_map
-Physics.acceleration = Collision.acceleration -- Wait, acceleration is in physics/init.lua? No, let me check.
 
 return Physics

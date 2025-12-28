@@ -23,6 +23,7 @@ local Systems = {}
 -- Collision systems (from PhysicsCore aggregator)
 Systems.CollisionHandlers = PhysicsCore.Handlers
 Systems.resolve_entities = PhysicsCore.resolve_entities
+Systems.update_spatial_grid = PhysicsCore.update_spatial_grid
 Systems.resolve_map = PhysicsCore.resolve_map
 
 -- Input (from top-level module)
@@ -56,6 +57,7 @@ Systems.draw_shadows = Shadows.draw
 -- Rendering systems
 Systems.draw_layer = Rendering.draw_layer
 Systems.apply_palette_swaps = Rendering.apply_palette_swaps
+Systems.set_active_rooms = Rendering.set_active_rooms
 
 -- UI systems (self-iterating)
 Systems.draw_health_bars = UI.draw_health_bars

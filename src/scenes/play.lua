@@ -165,7 +165,11 @@ function Play:update()
    Systems.shooter(world)
    Systems.ai(world, player)
    Emotions.update(world)
-   world.sys("collidable", Systems.resolve_entities)()
+
+   -- Resolve Entity Collisions (Optimized with single grid build)
+   Systems.update_spatial_grid(world)
+   world.sys("collidable,velocity", Systems.resolve_entities)()
+   world.sys("collidable,player", Systems.resolve_entities)() -- Ensure player checks even if idle
 
    -- Timers & Health (self-iterating)
    Systems.health_regen(world)
@@ -180,6 +184,7 @@ function Play:update()
 
    if keyp("f2") then
       GameState.debug.show_hitboxes = not GameState.debug.show_hitboxes
+      GameState.debug.show_grid = not GameState.debug.show_grid
    end
    if keyp("f3") then
       GameState.cheats.godmode = not GameState.cheats.godmode
@@ -203,12 +208,21 @@ function Play:draw()
       local old_room = camera_manager.old_room
       local new_room = camera_manager.new_room
 
+      -- Set both rooms as visible during transition
+      Systems.set_active_rooms({
+         old_room.grid_x..","..old_room.grid_y,
+         new_room.grid_x..","..new_room.grid_y
+      })
+
       clip_square = RoomRenderer.draw_scrolling(camera_manager, cam_x, cam_y)
-      RoomRenderer.draw_doors(old_room)
-      RoomRenderer.draw_doors(new_room)
+      RoomRenderer.draw_room_features(old_room)
+      RoomRenderer.draw_room_features(new_room)
    else
+      -- Set only current room as visible
+      Systems.set_active_rooms({current_room.grid_x..","..current_room.grid_y})
+
       clip_square = RoomRenderer.draw_exploring(current_room, cam_x, cam_y)
-      RoomRenderer.draw_doors(current_room)
+      RoomRenderer.draw_room_features(current_room)
    end
 
    -- Lighting (self-iterating)
@@ -233,6 +247,9 @@ function Play:draw()
    Systems.draw_health_bars(world)
    if GameState.debug.show_hitboxes then
       Systems.draw_hitboxes(world)
+   end
+   if GameState.debug.show_grid then
+      RoomRenderer.draw_debug_grid(current_room)
    end
 
    -- Reset camera for global UI

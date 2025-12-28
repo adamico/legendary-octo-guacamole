@@ -29,6 +29,16 @@ DOOR_FRAME_H_BOTTOM = {107, 108, 129, 132}           -- Horizontal door bottom f
 DOOR_FRAME_V_LEFT = {117, 122, 138, 141, 146}        -- Vertical door left frame
 DOOR_FRAME_V_RIGHT = {114, 120, 136, 139, 144}       -- Vertical door right frame
 
+-- Room feature tiles (for layout carving)
+ROCK_TILES = {134, 135, 142, 143}         -- R: solid rock obstacles
+PIT_TILE = 85                             -- P: pit (blocks walking, not projectiles)
+DESTRUCTIBLE_TILES = {150, 151, 158, 159} -- D: breakable obstacles
+
+-- Feature type flags (for collision logic)
+FEATURE_FLAG_SOLID = 1        -- Blocks walking entities
+FEATURE_FLAG_PIT = 2          -- Blocks walking, not projectiles
+FEATURE_FLAG_DESTRUCTIBLE = 3 -- Can be destroyed, blocks all until destroyed
+
 -- Collision system constants
 TILE_EDGE_TOLERANCE = 0.001    -- Small buffer to prevent floating-point edge cases when checking tile boundaries
 DOOR_GUIDANCE_MULTIPLIER = 1.5 -- Speed multiplier for nudging player toward nearby unlocked doors
@@ -123,8 +133,8 @@ local GameConstants = {
          entity_type = "Projectile",
          tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,shadow,middleground",
          owner = "player",
-         speed = 0,     -- Speed and damage are now provided by the shooter
-         knockback = 0, -- Added to base_knockback for total knockback
+         speed = 0,
+         knockback = 0,
          width = 16,
          height = 16,
          hitbox = {
@@ -215,14 +225,12 @@ local GameConstants = {
       },
    },
    Pickup = {
-      -- Pickup spawned when player projectile hits wall (recoverable health)
       ProjectilePickup = {
          entity_type = "ProjectilePickup",
          tags = "pickup,velocity,collidable,drawable,sprite,background,shadow",
          pickup_effect = "health",
          width = 16,
          height = 16,
-         -- Uses direction-based hitbox from Projectile.Laser
          hitbox_from_projectile = true,
          sprite_index_offsets = {
             down = 20,
@@ -234,7 +242,6 @@ local GameConstants = {
          shadow_offset = 4,
          shadow_width = 6,
       },
-      -- Health pickup spawned when enemies die
       HealthPickup = {
          entity_type = "HealthPickup",
          tags = "pickup,collidable,drawable,sprite,background,shadow",
@@ -248,7 +255,7 @@ local GameConstants = {
          hitbox_offset_y = 2,
          shadow_offset = 3,
          shadow_width = 11,
-         recovery_amount = 20, -- Base recovery amount (flat value)
+         recovery_amount = 20,
       },
    },
    Enemy = {
@@ -259,7 +266,6 @@ local GameConstants = {
          max_speed = 0.5,
          contact_damage = 10,
          vision_range = 120,
-         -- Wandering configuration
          wander_radius = 40,
          wander_speed_mult = 0.6,
          wander_pause_min = 20,
@@ -296,7 +302,6 @@ local GameConstants = {
          shoot_delay = 120,
          vision_range = 200,
          is_shooter = true,
-         -- Wandering configuration
          wander_radius = 48,
          wander_speed_mult = 0.5,
          wander_pause_min = 30,
@@ -346,20 +351,20 @@ local GameConstants = {
       Dasher = {
          entity_type = "Enemy",
          tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
-         hp = 60,                    -- Higher HP (tank)
-         max_speed = 0.2,            -- Very slow base speed
+         hp = 60,
+         max_speed = 0.2,
          contact_damage = 15,
-         vision_range = 150,         -- Increased by 50% (was 100)
-         windup_duration = 60,       -- Frames before dash
-         stun_duration = 120,        -- Frames of stun after collision
-         dash_speed_multiplier = 10, -- 10x base speed during dash
+         vision_range = 150,
+         windup_duration = 60,
+         stun_duration = 120,
+         dash_speed_multiplier = 10,
          sprite_index_offsets = {
             down = 38,
             right = 38,
             left = 38,
             up = 38,
          },
-         sprite_shell = 37, -- Shell sprite during dash
+         sprite_shell = 37,
          width = 16,
          height = 16,
          hitbox_width = 12,
@@ -395,6 +400,34 @@ local GameConstants = {
          shadow_offset = 3,
          shadow_width = 17,
          outline_color = 1,
+      },
+   },
+   Obstacle = {
+      Rock = {
+         entity_type = "Rock",
+         obstacle = true,
+         tags = "obstacle,collidable,drawable,sprite,world_obj,middleground,static",
+         width = 16,
+         height = 16,
+         hitbox_width = 16,
+         hitbox_height = 16,
+         hitbox_offset_x = 0,
+         hitbox_offset_y = 0,
+         outline_color = nil,
+      },
+      Destructible = {
+         entity_type = "Destructible",
+         obstacle = true,
+         destructible = true,
+         tags = "obstacle,collidable,drawable,sprite,world_obj,destructible,middleground,static",
+         hp = 1,
+         width = 16,
+         height = 16,
+         hitbox_width = 16,
+         hitbox_height = 16,
+         hitbox_offset_x = 0,
+         hitbox_offset_y = 0,
+         outline_color = nil,
       },
    },
    Emotions = {
@@ -484,16 +517,18 @@ GameConstants.CollisionLayers = {
    ENEMY_PROJECTILE = 8,  -- 0b001000
    PICKUP = 16,           -- 0b010000
    WORLD = 32,            -- 0b100000
+   OBSTACLE = 64,         -- 0b1000000
 }
 
 -- What each layer can collide with (bitmask)
 GameConstants.CollisionMasks = {
-   [1] = 2 + 8 + 16 + 32, -- PLAYER: Enemy + EnemyProjectile + Pickup + World
-   [2] = 1 + 4 + 32,      -- ENEMY: Player + PlayerProjectile + World
-   [4] = 2 + 32,          -- PLAYER_PROJECTILE: Enemy + World
-   [8] = 1 + 32,          -- ENEMY_PROJECTILE: Player + World
-   [16] = 1,              -- PICKUP: Player only
-   [32] = 1 + 2 + 4 + 8,  -- WORLD: Everything except Pickup
+   [1] = 2 + 8 + 16 + 32 + 64, -- PLAYER: Enemy + EnemyProjectile + Pickup + World + Obstacle
+   [2] = 1 + 4 + 32 + 64,      -- ENEMY: Player + PlayerProjectile + World + Obstacle
+   [4] = 2 + 32 + 64,          -- PLAYER_PROJECTILE: Enemy + World + Obstacle
+   [8] = 1 + 32 + 64,          -- ENEMY_PROJECTILE: Player + World + Obstacle
+   [16] = 1,                   -- PICKUP: Player only
+   [32] = 1 + 2 + 4 + 8,       -- WORLD: Everything except Pickup
+   [64] = 1 + 2 + 4 + 8,       -- OBSTACLE: Player + Enemy + Projectiles
 }
 
 -- Entity type to collision layer mapping
@@ -505,6 +540,8 @@ GameConstants.EntityCollisionLayer = {
    EnemyProjectile = GameConstants.CollisionLayers.ENEMY_PROJECTILE,
    ProjectilePickup = GameConstants.CollisionLayers.PICKUP,
    HealthPickup = GameConstants.CollisionLayers.PICKUP,
+   Rock = GameConstants.CollisionLayers.OBSTACLE,
+   Destructible = GameConstants.CollisionLayers.OBSTACLE,
 }
 
 return GameConstants
