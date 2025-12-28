@@ -434,7 +434,7 @@ function DungeonManager.setup_room(room, player, world)
       local features = RoomLayouts.get_all_features(room.layout, floor_rect.x1, floor_rect.y1)
 
       for _, f in ipairs(features) do
-         local wx, wy = f.tx * GRID_SIZE, f.ty * GRID_SIZE
+         local wx, wy = f.tx * GRID_SIZE - 4, f.ty * GRID_SIZE - 4
          local entity = nil
          if f.feature == "rock" then
             local sprite = ROCK_TILES[flr(rnd(#ROCK_TILES)) + 1]
