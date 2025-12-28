@@ -34,12 +34,15 @@ function Shooter.update(world)
 
       if wants_to_shoot then
          entity.current_direction = EntityUtils.get_direction_name(sx, sy, entity.current_direction)
-         world.tag(entity, "aiming")
+         if entity.type == "Player" then
+            world.tag(entity, "aiming")
+         end
       else
          world.unt(entity, "aiming")
+         return
       end
 
-      if (btnp(GameConstants.controls.attack) and entity.type == "Player") or (entity.type == "Enemy" and entity.shoot_cooldown == 0) then
+      if (btnp(GameConstants.controls.attack) and entity.type == "Player") or (entity.type == "Enemy" and cooldown_ready) then
          world.tag(entity, "shooting")
       else
          world.unt(entity, "shooting")

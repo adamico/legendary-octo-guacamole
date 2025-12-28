@@ -51,9 +51,9 @@ function Minimap.get_quadrant_pos(q)
 end
 
 --- Helper: Get rotation direction based on approach velocity
---- @param q Current quadrant (0-3)
---- @param vx Player velocity X
---- @param vy Player velocity Y
+--- @param q number Current quadrant (0-3)
+--- @param vx number velocity X
+--- @param vy number velocity Y
 --- @return integer 1 (CW) or -1 (ACW)
 function Minimap.get_rotation_direction(q, vx, vy)
    -- Default to Clockwise (1)
@@ -369,7 +369,7 @@ function Minimap.update_trigger(player, camera_manager)
    if is_overlapping and not Minimap.player_in_zone then
       Minimap.player_in_zone = true
       local dir = Minimap.get_rotation_direction(Minimap.quadrant, player.vel_x, player.vel_y)
-       Events.emit(Events.MINIMAP_ZONE_ENTER, dir)
+      Events.emit(Events.MINIMAP_ZONE_ENTER, dir)
    elseif not is_overlapping and Minimap.player_in_zone then
       Minimap.player_in_zone = false
       Events.emit(Events.MINIMAP_ZONE_EXIT)

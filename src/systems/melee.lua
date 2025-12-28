@@ -10,9 +10,10 @@ function Melee.update(world)
    -- Only players can melee for now
    world.sys("player,controllable", function(player)
       -- Check cooldown (free_attacks cheat bypasses cooldown)
+      if not world.msk(player).aiming then return end
       if not GameState.cheats.free_attacks and player.melee_cooldown and player.melee_cooldown > 0 then return end
 
-      local input_pressed = btn(GameConstants.controls.melee)
+      local input_pressed = btn(GameConstants.controls.attack)
 
       -- Health gating: Only allowed if HP <= max_hp / 5 (one segment)
       -- free_attacks cheat bypasses this check

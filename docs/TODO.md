@@ -9,7 +9,6 @@
 
 ## Combat & Mechanics
 
-- when player projectiles land in pit tiles they must not spawn projectile pickups [PENDING]
 - maybe add a mechanic to react to the player being hurt (blood lost, etc.) [BRAINSTORM]
 
 ## AI & Enemies

@@ -73,7 +73,9 @@ local function draw_aim_line(entity)
       x2 = cx + entity.range * entity.shoot_dir_x,
       y2 = cy + entity.range * entity.shoot_dir_y,
    }
+   fillp(0x5A5A)
    line(aim_line.x1, aim_line.y1, aim_line.x2, aim_line.y2, 8)
+   fillp()
 end
 
 -- Draw health bars for all entities with health

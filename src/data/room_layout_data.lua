@@ -264,10 +264,10 @@ LayoutData.Layouts = {
       layout_type = "corridor",
       floor_pattern = "random",
       cell_pattern = {
-         "f", "f", "f", "f", "f", "f", "f", "f", "f", "f",
-         "tm", "tm", "tm", "tm", "tm", "tm", "tm", "tm", "tm", "tm",
-         "bm", "bm", "bm", "bm", "bm", "bm", "bm", "bm", "bm", "bm",
-         "f", "f", "f", "f", "f", "f", "f", "f", "f", "f",
+         "f", "f", "f", "f", "f", "f", "f", "f", "f",
+         "tm", "tm", "tm", "tm", "tm", "tm", "tm", "tm", "tm",
+         "bm", "bm", "bm", "bm", "bm", "bm", "bm", "bm", "bm",
+         "f", "f", "f", "f", "f", "f", "f", "f", "f",
       },
       grid = {
          "PPPPPPPPP",

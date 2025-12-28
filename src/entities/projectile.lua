@@ -3,6 +3,7 @@
 -- This factory simply instantiates entities from their type config
 local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 local Projectile = {}
 
@@ -92,7 +93,6 @@ end
 
 -- Spawn projectile centered on shooter's hitbox
 function Projectile.spawn_centered(world, shooter, dx, dy, projectile_type, instance_data)
-    local HitboxUtils = require("src/utils/hitbox_utils")
     local shooter_hitbox = HitboxUtils.get_hitbox(shooter)
     local projectile_config = GameConstants.Projectile[projectile_type or "Laser"]
 
