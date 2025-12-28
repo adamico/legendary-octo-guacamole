@@ -12,7 +12,9 @@
 - allow punching the skull to death [BRAINSTORM]
 - maybe add a mechanic to react to the player being hurt (blood lost, etc.) [BRAINSTORM]
 - the player must not die when firing the last segment of health, it should be put at 1 hp [PENDING]
-- when player projectiles hit destructible objects they must spawn projectile pickups [PENDING]
+- some enemies spawn over pits and outside the room bounds [PENDING]
+- fix double player <=> health pickup collision [PENDING]
+- melee attacks doesn't work, no collision between the melee entity and the enemy is detected [PENDING]
 
 ## AI & Enemies
 

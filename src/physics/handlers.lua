@@ -161,43 +161,80 @@ Handlers.entity["EnemyProjectile,Player"] = function(projectile, player)
 end
 
 -- Obstacle collision handlers (Rocks, Destructibles)
+local HitboxUtils = require("src/utils/hitbox_utils")
 
--- Simple push-back logic for entities hitting obstacles
--- This pushes entity1 OUT of entity2
-local function handle_obstacle_collision(entity, obstacle)
-    Effects.resolve_collision(entity, obstacle)
+-- Push entity1 out of entity2 (AABB minimum penetration resolution)
+local function push_out(entity, obstacle)
+    local e_hb = HitboxUtils.get_hitbox(entity)
+    local o_hb = HitboxUtils.get_hitbox(obstacle)
+
+    -- Calculate overlap on each axis
+    local overlap_left = (e_hb.x + e_hb.w) - o_hb.x   -- entity right vs obstacle left
+    local overlap_right = (o_hb.x + o_hb.w) - e_hb.x  -- obstacle right vs entity left
+    local overlap_top = (e_hb.y + e_hb.h) - o_hb.y    -- entity bottom vs obstacle top
+    local overlap_bottom = (o_hb.y + o_hb.h) - e_hb.y -- obstacle bottom vs entity top
+
+    -- Find minimum penetration axis
+    local min_overlap = overlap_left
+    local push_x, push_y = -overlap_left, 0
+
+    if overlap_right < min_overlap then
+        min_overlap = overlap_right
+        push_x, push_y = overlap_right, 0
+    end
+    if overlap_top < min_overlap then
+        min_overlap = overlap_top
+        push_x, push_y = 0, -overlap_top
+    end
+    if overlap_bottom < min_overlap then
+        min_overlap = overlap_bottom
+        push_x, push_y = 0, overlap_bottom
+    end
+
+    -- Apply push to entity position
+    entity.x = entity.x + push_x
+    entity.y = entity.y + push_y
+
+    -- Zero velocity in push direction to prevent jittering
+    if push_x ~= 0 then entity.vel_x = 0 end
+    if push_y ~= 0 then entity.vel_y = 0 end
 end
 
-Handlers.entity["Player,Rock"] = handle_obstacle_collision
-Handlers.entity["Player,Destructible"] = handle_obstacle_collision
-Handlers.entity["Enemy,Rock"] = handle_obstacle_collision
-Handlers.entity["Enemy,Destructible"] = handle_obstacle_collision
+-- Player/Enemy hitting Rock or Destructible -> push out
+Handlers.entity["Player,Rock"] = function(player, rock) push_out(player, rock) end
+Handlers.entity["Player,Destructible"] = function(player, dest) push_out(player, dest) end
+Handlers.entity["Enemy,Rock"] = function(enemy, rock) push_out(enemy, rock) end
+Handlers.entity["Enemy,Destructible"] = function(enemy, dest) push_out(enemy, dest) end
 
--- Projectile hitting Destructible
-Handlers.entity["Projectile,Destructible"] = function(projectile, destructible)
-    destroy_destructible(destructible, projectile)
-    world.del(projectile)
-end
-
--- Projectile hitting Rock
-Handlers.entity["Projectile,Rock"] = function(projectile, rock)
-    -- Same behavior as hitting a wall: chance to spawn pickup, destroy projectile
+-- Helper: spawn projectile pickup and delete projectile
+local function projectile_hit_obstacle(projectile)
     local recovery = (projectile.shot_cost or 0) * (projectile.recovery_percent or 0)
     if recovery > 0 then
-        Entities.spawn_pickup_projectile(world, projectile.x, projectile.y, projectile.dir_x, projectile.dir_y, recovery,
-            projectile.sprite_index, projectile.z)
+        Entities.spawn_pickup_projectile(world, projectile.x, projectile.y,
+            projectile.dir_x, projectile.dir_y, recovery, projectile.sprite_index, projectile.z)
     end
     world.del(projectile)
 end
 
--- EnemyProjectile hitting Destructible
-Handlers.entity["EnemyProjectile,Destructible"] = function(projectile, destructible)
-    destroy_destructible(destructible)
+-- Projectile hitting Rock -> spawn pickup, delete projectile
+Handlers.entity["Projectile,Rock"] = function(projectile, rock)
+    projectile_hit_obstacle(projectile)
+end
+
+-- Projectile hitting Destructible -> destroy it, spawn pickup, delete projectile
+Handlers.entity["Projectile,Destructible"] = function(projectile, destructible)
+    destroy_destructible(destructible, projectile)
+    projectile_hit_obstacle(projectile)
+end
+
+-- EnemyProjectile hitting Rock -> delete projectile (no pickup for enemies)
+Handlers.entity["EnemyProjectile,Rock"] = function(projectile, rock)
     world.del(projectile)
 end
 
--- EnemyProjectile hitting Rock
-Handlers.entity["EnemyProjectile,Rock"] = function(projectile, rock)
+-- EnemyProjectile hitting Destructible -> destroy it, delete projectile
+Handlers.entity["EnemyProjectile,Destructible"] = function(projectile, destructible)
+    destroy_destructible(destructible, projectile)
     world.del(projectile)
 end
 

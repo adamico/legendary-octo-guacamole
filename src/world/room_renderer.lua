@@ -264,8 +264,6 @@ function RoomRenderer.draw_debug_grid(room)
     if not room then return end
 
     local floor = room:get_inner_bounds()
-    Log.trace("Grid bounds: x1="..floor.x1.." y1="..floor.y1.." x2="..floor.x2.." y2="..floor.y2)
-    Log.trace("Grid px1="..(floor.x1 * GRID_SIZE).." py1="..(floor.y1 * GRID_SIZE))
 
     -- Draw grid lines
     for ty = floor.y1, floor.y2 + 1 do

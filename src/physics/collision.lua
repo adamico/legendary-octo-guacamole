@@ -3,17 +3,18 @@ local Collision = {}
 local SpatialGrid = require("src/physics/spatial_grid")
 local CollisionFilter = require("src/physics/collision_filter")
 local HitboxUtils = require("src/utils/hitbox_utils")
+Collision.CollisionHandlers = require("src/physics/handlers")
 
--- Create persistent filter instance (doesn't change per frame)
 local collision_filter = CollisionFilter:new()
 
--- Local reference for convenience within this module
 local get_hitbox = HitboxUtils.get_hitbox
 
 local current_grid = nil
-Collision.CollisionHandlers = require("src/physics/handlers")
 
--- Helper: Iterate over tiles overlapping a hitbox
+--- Helper: Iterate over tiles overlapping a hitbox
+--- @param hb Hitbox
+--- @param callback function(tx, ty, tile)
+--- @return nil|number, nil|number, nil|number
 local function for_each_tile(hb, callback)
     local x1 = flr(hb.x / GRID_SIZE)
     local y1 = flr(hb.y / GRID_SIZE)
@@ -27,11 +28,18 @@ local function for_each_tile(hb, callback)
             if r1 ~= nil then return r1, r2, r3 end
         end
     end
+    return nil, nil, nil
 end
 
--- Find solid tile with entity-aware logic
+--- Find solid tile with entity-aware logic
+---
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param entity Entity
+--- @returns nil|number, nil|number, nil|number
 local function find_solid_tile(x, y, w, h, entity)
-    -- First check map tiles
     local stx, sty, stile = for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
         if tile and fget(tile, SOLID_FLAG) then
             if fget(tile, FEATURE_FLAG_PIT) and entity and entity.type == "Projectile" then
@@ -41,24 +49,7 @@ local function find_solid_tile(x, y, w, h, entity)
         end
     end)
 
-    if stx then return stx, sty, stile end
-
-    -- Check obstacle entities via spatial grid
-    if current_grid then
-        local hb = {x = x, y = y, w = w, h = h}
-        local nearby = current_grid:get_nearby_hb(hb)
-        for i = 1, #nearby do
-            local other = nearby[i]
-            if other.obstacle and other ~= entity then
-                local ohb = get_hitbox(other)
-                if x < ohb.x + ohb.w and x + w > ohb.x and y < ohb.y + ohb.h and y + h > ohb.y then
-                    return ohb.x, ohb.y, other
-                end
-            end
-        end
-    end
-
-    return nil
+    return stx, sty, stile
 end
 
 Collision.find_solid_tile = find_solid_tile
@@ -69,8 +60,14 @@ end
 
 Collision.is_solid = is_solid
 
--- Apply door guidance to nudge player toward nearby unlocked doors
--- This helps players "slide" into doorways when moving along walls
+--- Apply door guidance to nudge player toward nearby unlocked doors
+---
+--- This helps players "slide" into doorways when moving along walls
+---
+--- @param entity Entity
+--- @param tx number
+--- @param ty number
+--- @param room Room
 local function apply_door_guidance(entity, tx, ty, room)
     if not room or not room.doors then return end
 
@@ -100,7 +97,11 @@ local function apply_door_guidance(entity, tx, ty, room)
     end
 end
 
--- Check if player has exited room bounds and trigger transition
+--- Check if player has exited room bounds and trigger transition
+---
+--- @param entity Entity
+--- @param camera_manager CameraManager
+--- @return nil|[number, number]
 function Collision.check_trigger(entity, camera_manager)
     local room = camera_manager.current_room
     if not room then return nil end
@@ -118,8 +119,8 @@ function Collision.check_trigger(entity, camera_manager)
 end
 
 --- Update the spatial grid once per frame
--- This is a optimization to avoid rebuilding the grid for every entity pair
--- @param world The ECS world instance
+---
+--- @param world The ECS world instance
 function Collision.update_spatial_grid(world)
     current_grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
     world.sys("collidable", function(e)
@@ -127,6 +128,9 @@ function Collision.update_spatial_grid(world)
     end)()
 end
 
+--- Resolve collisions between entities
+---
+--- @param entity1 Entity
 function Collision.resolve_entities(entity1)
     if not current_grid then
         -- Fallback if update_spatial_grid wasn't called, but better to call it explicitly
@@ -157,6 +161,11 @@ function Collision.resolve_entities(entity1)
     end
 end
 
+--- Resolve collisions between entity and map
+---
+--- @param entity Entity
+--- @param room Room
+--- @param camera_manager CameraManager
 function Collision.resolve_map(entity, room, camera_manager)
     if entity.ignore_map_collision then
         return
@@ -206,6 +215,11 @@ function Collision.resolve_map(entity, room, camera_manager)
     end
 end
 
+--- Check if two entities overlap
+---
+--- @param entity1 Entity
+--- @param entity2 Entity
+--- @return boolean
 function Collision.check_overlap(entity1, entity2)
     local hb1 = get_hitbox(entity1)
     local hb2 = get_hitbox(entity2)

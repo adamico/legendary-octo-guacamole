@@ -23,6 +23,8 @@ function Obstacle.spawn(world, x, y, obstacle_type, sprite_override)
    -- Use standard spawn_entity utility to handle tagging and shadows
    local entity = Utils.spawn_entity(world, config.tags, entity_data)
 
+   entity.type = config.entity_type
+
    -- Set position directly
    entity.x = x
    entity.y = y
