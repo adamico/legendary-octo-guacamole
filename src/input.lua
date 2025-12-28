@@ -24,15 +24,15 @@ function Input.read_input(entity)
    entity.dir_y = dy
 
    -- Action/Link Input (Shooting)
-   local sx = 0
-   local sy = 0
-   if btn(GameConstants.controls.shoot_left) then sx = -1 end
-   if btn(GameConstants.controls.shoot_right) then sx = 1 end
-   if btn(GameConstants.controls.shoot_up) then sy = -1 end
-   if btn(GameConstants.controls.shoot_down) then sy = 1 end
+   local shoot_dir_x = 0
+   local shoot_dir_y = 0
+   if btn(GameConstants.controls.aim_left) then shoot_dir_x = -1 end
+   if btn(GameConstants.controls.aim_right) then shoot_dir_x = 1 end
+   if btn(GameConstants.controls.aim_up) then shoot_dir_y = -1 end
+   if btn(GameConstants.controls.aim_down) then shoot_dir_y = 1 end
 
-   entity.shoot_dir_x = sx
-   entity.shoot_dir_y = sy
+   entity.shoot_dir_x = shoot_dir_x
+   entity.shoot_dir_y = shoot_dir_y
 end
 
 return Input

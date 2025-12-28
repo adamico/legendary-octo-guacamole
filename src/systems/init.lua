@@ -62,6 +62,7 @@ Systems.set_active_rooms = Rendering.set_active_rooms
 -- UI systems (self-iterating)
 Systems.draw_health_bars = UI.draw_health_bars
 Systems.draw_hitboxes = UI.draw_hitboxes
+Systems.draw_aim_lines = UI.draw_aim_lines
 
 -- Animation systems (self-iterating)
 Systems.animation = Animation.update

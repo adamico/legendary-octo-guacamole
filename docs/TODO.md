@@ -9,7 +9,7 @@
 
 ## Combat & Mechanics
 
-- change the way the player controls the shooting action: pressing the button shows a trajectory line, releasing it shoots the laser in the direction of the line [PENDING]
+- when player projectiles land in pit tiles they must not spawn projectile pickups [PENDING]
 - maybe add a mechanic to react to the player being hurt (blood lost, etc.) [BRAINSTORM]
 
 ## AI & Enemies
@@ -34,3 +34,4 @@
 
 - add a bouncing effect for the pickup items [BRAINSTORM]
 - separate upper and lower body animations [BRAINSTORM]
+- improve the visuals of the aiming line [BRAINSTORM]

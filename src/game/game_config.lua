@@ -515,11 +515,11 @@ local GameConstants = {
 }
 
 GameConstants.controls = {
-   melee = GameConstants.buttons.o,
-   shoot_up = GameConstants.buttons.up,
-   shoot_down = GameConstants.buttons.down,
-   shoot_left = GameConstants.buttons.left,
-   shoot_right = GameConstants.buttons.right,
+   attack = GameConstants.buttons.o,
+   aim_up = GameConstants.buttons.up,
+   aim_down = GameConstants.buttons.down,
+   aim_left = GameConstants.buttons.left,
+   aim_right = GameConstants.buttons.right,
    move_up = GameConstants.buttons.up2,
    move_down = GameConstants.buttons.down2,
    move_left = GameConstants.buttons.left2,

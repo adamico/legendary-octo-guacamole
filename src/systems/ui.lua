@@ -1,6 +1,7 @@
 -- UI system: health bars, debug visualization
 
 local HitboxUtils = require("src/utils/hitbox_utils")
+local EntityUtils = require("src/utils/entity_utils")
 
 local UI = {}
 
@@ -63,6 +64,18 @@ local function draw_hitbox(entity)
    rect(hb.x, hb.y, hb.x + hb.w, hb.y + hb.h, 8)
 end
 
+-- Draw aim line for an entity
+local function draw_aim_line(entity)
+   local cx, cy = EntityUtils.get_center(entity)
+   local aim_line = {
+      x1 = cx,
+      y1 = cy,
+      x2 = cx + entity.range * entity.shoot_dir_x,
+      y2 = cy + entity.range * entity.shoot_dir_y,
+   }
+   line(aim_line.x1, aim_line.y1, aim_line.x2, aim_line.y2, 8)
+end
+
 -- Draw health bars for all entities with health
 -- @param world - ECS world
 function UI.draw_health_bars(world)
@@ -73,6 +86,10 @@ end
 -- @param world - ECS world
 function UI.draw_hitboxes(world)
    world.sys("collidable", draw_hitbox)()
+end
+
+function UI.draw_aim_lines(world)
+   world.sys("aiming", draw_aim_line)()
 end
 
 return UI

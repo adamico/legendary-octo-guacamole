@@ -1,4 +1,3 @@
--- Generic shooting system for ANY entity with "shooter" tag
 local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
 local GameState = require("src/game/game_state")
@@ -33,10 +32,22 @@ function Shooter.update(world)
          has_ammo = entity.hp >= shot_cost
       end
 
-      if wants_to_shoot and has_ammo and cooldown_ready then
-         -- Update facing direction to shoot direction (attack direction takes priority)
+      if wants_to_shoot then
          entity.current_direction = EntityUtils.get_direction_name(sx, sy, entity.current_direction)
+         world.tag(entity, "aiming")
+      else
+         world.unt(entity, "aiming")
+      end
 
+      if (btnp(GameConstants.controls.attack) and entity.type == "Player") or (entity.type == "Enemy" and entity.shoot_cooldown == 0) then
+         world.tag(entity, "shooting")
+      else
+         world.unt(entity, "shooting")
+      end
+
+      local is_shooting = world.msk(entity).shooting
+
+      if has_ammo and is_shooting then
          -- Trigger attack animation for entities with FSM
          if entity.fsm then entity.fsm:attack() end
 

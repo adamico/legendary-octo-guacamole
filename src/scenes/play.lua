@@ -246,6 +246,8 @@ function Play:draw()
 
    -- 4. Foreground Layer: Entity UI (Health Bars, Hitboxes)
    Systems.draw_health_bars(world)
+   Systems.draw_aim_lines(world)
+
    if GameState.debug.show_hitboxes then
       Systems.draw_hitboxes(world)
    end

@@ -160,7 +160,7 @@ Systems are functions called per-entity based on tag matching:
 
 | System | Tags | Purpose |
 | :--- | :--- | :--- |
-| `read_input` | controllable | Read movement & shoot input, set `dir` & `shoot_dir` |
+| `read_input` | controllable | Read movement & aim input, set `dir`, `aim_dir` & tags |
 | `acceleration` | acceleration | Apply acceleration/friction to `vel_x/vel_y` |
 | `velocity` | velocity | Apply velocity to position with sub-pixel precision (`sub_x/sub_y`) |
 | `z_axis` | velocity | Simulate Z-height and gravity (`z`, `vel_z`, `gravity_z`), handles ground impact |
@@ -170,7 +170,7 @@ Systems are functions called per-entity based on tag matching:
 | `ai` | enemy | AI dispatcher (delegates to behaviors in `src/ai/`) |
 | `update_fsm` | animatable | Manage animation state transitions |
 | `animate` | animatable | Calculate sprite from animation config (indices, durations, composite, flips) |
-| `shooter` | shooter | Handle projectile firing and ammo cost |
+| `shooter` | shooter | Handle projectile firing cost & logic. Checks `shooting` tag. |
 | `health_regen` | health | Passive HP recovery over time |
 | `invulnerability_tick` | player | Decrement `invuln_timer` after taking damage |
 | `health_manager` | health | Check for `hp <= 0`, handle death effects |
@@ -194,7 +194,7 @@ Animation configs are defined in `constants.lua` per entity type, with direction
 - Per-frame `durations` array for variable timing
 - Composite sprites (`top_indices`/`bottom_indices`) with configurable `split_row`
 - Direction preserved when idle (velocity-based facing)
-- Shooting sets facing direction
+- Shooting/Aiming sets facing direction
 
 ## Visual Systems & Palette
 
@@ -268,7 +268,7 @@ All game constants in [constants.lua](drive/src/constants.lua):
 - Player stats (health, speed, acceleration, friction)
 - Projectile damage and pickup values
 - Enemy configurations (Skulker, etc.)
-- Controls mapping
+- Controls mapping (Twin-stick: Arrow Keys=Aim, O=Fire)
 - Debug/cheat flags
 
 ## Dungeon & Room Management

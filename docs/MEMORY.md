@@ -334,3 +334,14 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Shooting**: Changed health check from `hp > cost` to `hp >= cost` so player can shoot when HP exactly equals shot cost.
   - **Melee**: Changed health threshold from `hp < threshold` to `hp <= threshold` to allow melee at exactly one segment.
   - **Hitbox Offsets**: Fixed melee hitbox offsets being applied twice (once to position, once to hitbox properties). Now offsets are applied only to position with hitbox offsets set to 0.
+- **Implemented Twin-Stick Shooting & Trajectory**:
+  - **Control Scheme**: Changed from D-pad shooting to Twin-Stick controls:
+    - **Move**: Second D-pad (ESDF/IJKL depending on config).
+    - **Aim**: First D-pad (Arrow keys). Shows trajectory line.
+    - **Fire**: Button 'O' (Z/N). Fires in aimed direction.
+  - **Shooter System Refactor**:
+    - Decoupled aiming from firing.
+    - Using ECS tags `aiming` (visuals) and `shooting` (trigger) to manage state.
+    - Player requires manual fire button press.
+    - Enemies fire automatically when `shoot_cooldown == 0`.
+  - **Visual Feedback**: Added dashed trajectory lines drawn for entities with the `aiming` tag.
