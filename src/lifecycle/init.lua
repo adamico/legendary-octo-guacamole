@@ -6,11 +6,10 @@ local Lifecycle = {}
 
 -- Self-iterating update function
 function Lifecycle.update(world)
-   world.sys("animatable", lifecycle.update_fsm)()
+   world.sys("animatable", function(e) lifecycle.update_fsm(e, world) end)()
 end
 
 Lifecycle.init = lifecycle.init_fsm
-Lifecycle.check_state_completion = lifecycle.check_state_completion
 Lifecycle.DeathHandlers = death_handlers
 
 return Lifecycle

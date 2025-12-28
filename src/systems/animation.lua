@@ -155,9 +155,11 @@ function Animation.animate(world, entity)
 
    -- Notify lifecycle system if animation completed
    if total_duration > 0 and entity.anim_timer >= total_duration then
-      local Lifecycle = require("src/lifecycle")
-      local is_looping = state_anim and state_anim.loop
-      Lifecycle.check_state_completion(world, entity, state, entity.anim_timer, total_duration, is_looping)
+      -- Set completion flags for usage by Lifecycle system
+      entity.anim_complete_state = state
+      entity.anim_looping = state_anim and state_anim.loop
+   else
+      entity.anim_complete_state = nil
    end
 end
 

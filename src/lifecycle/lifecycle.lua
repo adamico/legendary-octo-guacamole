@@ -1,5 +1,6 @@
 -- Entity lifecycle management: FSM initialization and state transitions
 local machine = require("lib/lua-state-machine/statemachine")
+local DeathHandlers = require("src/lifecycle/death_handlers")
 
 local Lifecycle = {}
 
@@ -42,12 +43,28 @@ function Lifecycle.init_fsm(entity)
 end
 
 -- Update entity FSM based on game state
-function Lifecycle.update_fsm(entity)
+function Lifecycle.update_fsm(entity, world)
     if not entity.fsm then
         Lifecycle.init_fsm(entity)
     end
 
     local fsm = entity.fsm
+
+    -- Handle completed animations (Death / Attack finish)
+    if entity.anim_complete_state then
+        if entity.anim_complete_state == "death" then
+            local handler = DeathHandlers[entity.type] or DeathHandlers.default
+            if not entity.death_cleanup_called then
+                entity.death_cleanup_called = true
+                -- Pass world if available, checking for both local arg and global fallback
+                handler(world or _G.world, entity)
+            end
+        elseif entity.anim_complete_state == "attacking" then
+            if not entity.anim_looping and fsm:can("finish") then
+                fsm:finish()
+            end
+        end
+    end
 
     -- Can't transition out of death
     if fsm:is("death") then return end
@@ -72,22 +89,6 @@ function Lifecycle.update_fsm(entity)
     if entity.hp and entity.hp <= 0 then
         if not fsm:is("death") then
             fsm:die()
-        end
-    end
-end
-
--- Handle animation-triggered lifecycle events (death cleanup, attack finish)
-function Lifecycle.check_state_completion(world, entity, state, timer, total_duration, is_looping)
-    if state == "death" and timer >= total_duration then
-        local DeathHandlers = require("src/lifecycle/death_handlers")
-        local handler = DeathHandlers[entity.type] or DeathHandlers.default
-        if not entity.death_cleanup_called then
-            entity.death_cleanup_called = true
-            handler(world, entity)
-        end
-    elseif state == "attacking" and timer >= total_duration then
-        if not is_looping and entity.fsm and entity.fsm:can("finish") then
-            entity.fsm:finish()
         end
     end
 end

@@ -345,3 +345,7 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
     - Player requires manual fire button press.
     - Enemies fire automatically when `shoot_cooldown == 0`.
   - **Visual Feedback**: Added dashed trajectory lines drawn for entities with the `aiming` tag.
+- **Decoupled Animation FSM from Lifecycle**: Refactored `src/systems/animation.lua` and `src/lifecycle/lifecycle.lua` to remove direct dependency.
+  - **Animation System**: Now sets `anim_complete_state` and `anim_looping` flags on the entity instead of calling `Lifecycle` directly.
+  - **Lifecycle System**: Checks these flags during `update_fsm` to trigger state transitions (Attack Finish -> Idle) or death cleanup.
+  - **Result**: Cleaner system boundaries; Animation is now purely visual and data-driven.

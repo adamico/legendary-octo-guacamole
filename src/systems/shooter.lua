@@ -42,7 +42,7 @@ function Shooter.update(world)
          return
       end
 
-      if (btnp(GameConstants.controls.attack) and entity.type == "Player") or (entity.type == "Enemy" and cooldown_ready) then
+      if (btnp(GameConstants.controls.attack) and entity.type == "Player" and cooldown_ready) or (entity.type == "Enemy" and cooldown_ready) then
          world.tag(entity, "shooting")
       else
          world.unt(entity, "shooting")

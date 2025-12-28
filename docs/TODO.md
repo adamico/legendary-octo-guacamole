@@ -2,7 +2,7 @@
 
 ## Architecture
 
-- decouple animation fsm from lifecycle [BRAINSTORM]
+- [x] decouple animation fsm from lifecycle
 - implement movement mechanics [BRAINSTORM]
   - [ ] Dodge Roll / Dash (invulnerability frames or vaulting)
   - [ ] Room-Clear Rush (temp speed boost after clearing room)
