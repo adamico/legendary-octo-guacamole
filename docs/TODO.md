@@ -19,6 +19,8 @@
 ## AI & Enemies
 
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
+- add simple pathfinding for enemies [BRAINSTORM]
+- make skull harder to kill [BRAINSTORM]
 
 ## World & Level Design
 
@@ -27,10 +29,10 @@
 - add shop room with items [BRAINSTORM]
 - add boss room with special enemy [BRAINSTORM]
 - solid map tiles should have configurable y collision level [BRAINSTORM]
+- add secret rooms [BRAINSTORM]
 
 ## Items & Powerups
 
-- add bomb using mechanics [BRAINSTORM]
 - add key using mechanics [BRAINSTORM]
 - add powerups [BRAINSTORM]
 - expand health recovery mechanics [BRAINSTORM]
