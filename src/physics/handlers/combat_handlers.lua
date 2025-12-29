@@ -78,7 +78,7 @@ local function projectile_vs_enemy(projectile, enemy)
    FloatingText.spawn_at_entity(enemy, -damage, "damage")
 
    -- Composite knockback: base player knockback + projectile knockback
-   local proj_knockback = GameConstants.Projectile.Laser.knockback or 2
+   local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
    local knockback = GameConstants.Player.base_knockback + proj_knockback
    Effects.apply_knockback(projectile, enemy, knockback)
 end

@@ -108,8 +108,8 @@ local function draw_sprite(entity)
          end
       end
       local n = entity.sprite_index or 0
-      local w = entity.width or 16
-      local h = entity.height or 16
+      local w = entity.width
+      local h = entity.height
       local target_h = h * (1 - p)
       local target_w = w * (1 + p * 1.5)
       local draw_x = sx - (target_w - w) / 2
@@ -121,9 +121,9 @@ local function draw_sprite(entity)
 
    -- Check for composite sprite (top + bottom halves)
    if entity.sprite_top ~= nil and entity.sprite_bottom ~= nil then
-      local width = entity.width or 16
-      local height = entity.height or 16
-      local split_row = entity.split_row or flr(height / 2)
+      local width = entity.width
+      local height = entity.height
+      local split_row = entity.split_row
 
       if entity.outline_color ~= nil then
          Rendering.draw_outlined_composite(
@@ -198,10 +198,11 @@ function Rendering.draw_layer(world, tags, sorted)
          end
       end)()
 
-      -- Sort by Y position (bottom of sprite)
+      -- Sort by Y position (foot position for proper 2.5D sorting)
+      -- Use sort_offset_y to specify where the entity's "feet" are (default: bottom of sprite)
       qsort(entities, function(a, b)
-         local ay = a.y + (a.height or 16)
-         local by = b.y + (b.height or 16)
+         local ay = a.y + (a.sort_offset_y or a.height or 16)
+         local by = b.y + (b.sort_offset_y or b.height or 16)
          return ay < by
       end)
 

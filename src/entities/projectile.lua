@@ -11,10 +11,10 @@ local Projectile = {}
 -- @param world - ECS world
 -- @param x, y - spawn position
 -- @param dx, dy - direction vector (normalized)
--- @param projectile_type - type key in GameConstants.Projectile (default: "Laser")
+-- @param projectile_type - type key in GameConstants.Projectile (default: "Egg")
 -- @param instance_data - optional table with instance-specific overrides
 function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
-    projectile_type = projectile_type or "Laser"
+    projectile_type = projectile_type or "Egg"
     instance_data = instance_data or {}
 
     local config = GameConstants.Projectile[projectile_type]
@@ -95,7 +95,7 @@ end
 -- Spawn projectile centered on shooter's hitbox
 function Projectile.spawn_centered(world, shooter, dx, dy, projectile_type, instance_data)
     local shooter_hitbox = HitboxUtils.get_hitbox(shooter)
-    local projectile_config = GameConstants.Projectile[projectile_type or "Laser"]
+    local projectile_config = GameConstants.Projectile[projectile_type or "Egg"]
 
     local spawn_x = shooter_hitbox.x + (shooter_hitbox.w / 2) - (projectile_config.width / 2)
     local spawn_y = shooter_hitbox.y + (shooter_hitbox.h / 2) - (projectile_config.height / 2)

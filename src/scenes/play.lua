@@ -255,9 +255,9 @@ function Play:draw()
    if GameState.debug.show_hitboxes then
       Systems.draw_hitboxes(world)
    end
-   if GameState.debug.show_grid then
-      RoomRenderer.draw_debug_grid(current_room)
-   end
+   -- if GameState.debug.show_grid then
+   --    RoomRenderer.draw_debug_grid(current_room)
+   -- end
 
    -- Reset camera for global UI
    camera()

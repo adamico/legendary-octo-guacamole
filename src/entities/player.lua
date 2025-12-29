@@ -11,11 +11,8 @@ function Player.spawn(world, x, y)
         y = y,
         width = 16,
         height = 16,
-        -- Hitbox properties (smaller than sprite for forgiving collisions)
-        hitbox_width = GameConstants.Player.hitbox_width,
-        hitbox_height = GameConstants.Player.hitbox_height,
-        hitbox_offset_x = GameConstants.Player.hitbox_offset_x,
-        hitbox_offset_y = GameConstants.Player.hitbox_offset_y,
+        -- Per-direction hitbox (uses entity.hitbox[direction] lookup in HitboxUtils)
+        hitbox = GameConstants.Player.hitbox,
         shadow_offset_y = GameConstants.Player.shadow_offset_y or 0,
         shadow_offset_x = GameConstants.Player.shadow_offset_x or 0,
         shadow_offsets_y = GameConstants.Player.shadow_offsets_y,
@@ -65,13 +62,14 @@ function Player.spawn(world, x, y)
         bombs = GameConstants.Player.bombs,
         -- Shooter system properties
         health_as_ammo = true, -- Shooting costs HP
-        projectile_type = "Laser",
+        projectile_type = "Egg",
         shoot_cooldown_duration = GameConstants.Player.fire_rate,
         -- Health regen properties
         regen_trigger_field = "time_since_shot", -- Trigger for regen
         overflow_banking = true,                 -- Bank overflow HP
         -- Visual properties
         outline_color = GameConstants.Player.outline_color,
+        sort_offset_y = GameConstants.Player.sort_offset_y,
     }
 
     -- Create entity with shadow tag (shadow auto-spawned)

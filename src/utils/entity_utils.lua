@@ -10,6 +10,10 @@ function Utils.get_config(entity)
     if (entity.type == "Projectile" or entity.type == "EnemyProjectile") and entity.projectile_type then
         return GameConstants.Projectile[entity.projectile_type]
     end
+    -- Handle minion Type Object pattern
+    if entity.minion_type then
+        return GameConstants.Minion[entity.minion_type]
+    end
     return GameConstants[entity.type]
 end
 

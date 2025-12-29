@@ -6,6 +6,7 @@ local Pickup = require("src/entities/pickup")
 local Obstacle = require("src/entities/obstacle")
 local Bomb = require("src/entities/bomb")
 local Explosion = require("src/entities/explosion")
+local Minion = require("src/entities/minion")
 
 local Entities = {}
 
@@ -20,7 +21,7 @@ Entities.spawn_explosion_grid = Explosion.spawn_grid
 
 -- Projectile spawners (convenience wrappers for Type Object pattern)
 Entities.spawn_player_projectile = function(world, x, y, dx, dy, instance_data)
-    return Projectile.spawn(world, x, y, dx, dy, "Laser", instance_data)
+    return Projectile.spawn(world, x, y, dx, dy, "Egg", instance_data)
 end
 Entities.spawn_enemy_projectile = function(world, x, y, dx, dy)
     return Projectile.spawn(world, x, y, dx, dy, "EnemyBullet")
@@ -40,6 +41,11 @@ Entities.spawn_pickup = function(world, x, y, pickup_type)
         -- Random from available types (only HealthPickup for now)
         return Pickup.spawn_health(world, x, y)
     end
+end
+
+-- Minion spawners
+Entities.spawn_chick = function(world, x, y, instance_data)
+    return Minion.spawn(world, x, y, "Chick", instance_data)
 end
 
 return Entities

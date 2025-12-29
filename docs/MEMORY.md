@@ -20,6 +20,16 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Split game_config.lua into Modules**: Refactored the 730-line monolithic config into focused sub-modules:
+  - **Structure**: `src/game/config/` with `tiles.lua`, `player.lua`, `entities.lua`, `effects.lua`, `ui.lua`, `controls.lua`, `collision.lua`
+  - **Main Aggregator**: `game_config.lua` is now a 48-line file that imports and merges all sub-modules
+  - **Globals Preserved**: Tile constants remain as globals (loaded via `require` with no return)
+- **Implemented Egg Hatching System**: Player egg projectiles now hatch into chicks (passive wandering minions) when landing:
+  - **New Minion Section**: Added `GameConstants.Minion.Chick` to `game_config.lua` for player-summoned entities.
+  - **Minion Factory**: Created `entities/minion.lua` using the Type Object pattern.
+  - **Chick AI**: Created `ai/enemies/chick.lua` with wandering behavior via the `Wander` primitive.
+  - **AI Dispatch**: Added `AI.dispatch_minion()` to `ai/init.lua` and minion processing to `systems/ai.lua`.
+  - **Landing Logic**: Modified `physics.lua` to spawn chicks instead of pickups when eggs land.
 - **Implemented Overheal System**: Added stackable bonus health that acts as temporary max HP (like Isaac's Soul Hearts):
   - **Accumulation**: Excess healing past `max_hp` now accumulates in `overflow_hp` (already existed, now properly used).
   - **Damage Absorption**: Added `apply_damage_with_overheal()` helper in `combat_handlers.lua` - overheal is consumed before base HP.

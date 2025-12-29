@@ -27,6 +27,11 @@ function MapHandlers.register(handlers)
          enemy.dasher_collision = true
       end
    end
+
+   -- Minion (Chick) hitting wall -> set flag for Wander AI
+   handlers.map["Chick"] = function(minion, map_x, map_y)
+      minion.hit_wall = true
+   end
 end
 
 return MapHandlers

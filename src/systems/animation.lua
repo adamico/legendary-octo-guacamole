@@ -198,13 +198,6 @@ local function change_sprite(entity)
    entity.flip_y = false
 end
 
--- Simple time-based animation (for non-FSM entities)
-local function simple_animate(entity)
-   local base = entity.base_sprite_index or entity.sprite_index
-   local anim_offset = (flr(t() * 2) % 2)
-   entity.sprite_index = base + anim_offset
-end
-
 -- Update all animations
 -- @param world - ECS world
 function Animation.update(world)

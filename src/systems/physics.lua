@@ -137,12 +137,11 @@ function Physics.z_axis(world)
       if entity.z <= 0 then
          entity.z = 0
 
-         -- Player Projectile Logic: spawn pickup on landing
+         -- Player Egg: hatch into chick on landing
          if entity.tags and string.find(entity.tags, "projectile") and entity.owner == "player" then
-            -- Spawn pickup at landing spot unless it lands in a pit tile
+            -- Spawn chick at landing spot unless it lands in a pit tile
             if mget(flr(entity.x / GRID_SIZE), flr(entity.y / GRID_SIZE)) ~= PIT_TILE then
-               Entities.spawn_pickup_projectile(world, entity.x, entity.y, entity.dir_x, entity.dir_y, nil, nil, entity
-                  .z)
+               Entities.spawn_chick(world, entity.x, entity.y)
             end
          end
 

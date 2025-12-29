@@ -11,6 +11,9 @@ local skull_ai = require("src/ai/enemies/skull")
 local shooter_ai = require("src/ai/enemies/shooter")
 local dasher_ai = require("src/ai/enemies/dasher")
 
+-- Minion AI profiles
+local chick_ai = require("src/ai/enemies/chick")
+
 local AI = {}
 
 -- Expose primitives for external use (testing, custom compositions)
@@ -27,6 +30,11 @@ local enemy_profiles = {
    Dasher = dasher_ai,
 }
 
+-- Minion AI lookup table (maps minion_type to AI function)
+local minion_profiles = {
+   Chick = chick_ai,
+}
+
 --- Dispatch AI update to the appropriate enemy profile
 -- @param entity The entity to process
 -- @param player The player entity (target)
@@ -34,6 +42,15 @@ function AI.dispatch(entity, player)
    local profile = enemy_profiles[entity.enemy_type]
    if profile then
       profile(entity, player)
+   end
+end
+
+--- Dispatch AI update for minions
+-- @param entity The minion entity to process
+function AI.dispatch_minion(entity)
+   local profile = minion_profiles[entity.minion_type]
+   if profile then
+      profile(entity)
    end
 end
 

@@ -2,7 +2,7 @@
 
 ## Next
 
-- add powerups [BRAINSTORM]
+- add powerups  [BRAINSTORM]
 - add key using mechanics [BRAINSTORM]
 - add chests (locked and unlocked) as room features [BRAINSTORM]
 - add locked treasure room for powerups [BRAINSTORM]
@@ -12,6 +12,8 @@
 ## Bugs
 
 ## Architecture
+
+- add rendering.md in docs/architecture/ [PENDING]
 
 - implement movement mechanics [BRAINSTORM]
   - [ ] Dodge Roll / Dash (invulnerability frames or vaulting)

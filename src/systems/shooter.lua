@@ -62,7 +62,7 @@ function Shooter.update(world)
          end
 
          -- Spawn projectile
-         local projectile_type = entity.projectile_type or "Laser"
+         local projectile_type = entity.projectile_type or "Egg"
          -- Calculate damage dynamically
          local damage = entity.damage
          if not damage and entity.max_hp_to_damage_ratio then

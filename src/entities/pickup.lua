@@ -50,9 +50,9 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
         pickup.sprite_index = config.sprite_index or 0
     end
 
-    -- 4. Hitbox: special handling for projectile-based pickups (uses Laser hitbox)
+    -- 4. Hitbox: special handling for projectile-based pickups (uses Egg hitbox)
     if config.hitbox_from_projectile then
-        pickup.hitbox = GameConstants.Projectile.Laser.hitbox
+        pickup.hitbox = GameConstants.Projectile.Egg.hitbox
     end
 
     -- 5. Apply instance-specific overrides
