@@ -2,8 +2,6 @@
 
 ## Bugs
 
-- fix: hitting enemies with a melee shot spawns projectile pickups
-
 ## Architecture
 
 - implement movement mechanics [BRAINSTORM]
@@ -25,7 +23,7 @@
 
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 - add simple pathfinding for enemies [BRAINSTORM]
-- make skull harder to kill [BRAINSTORM]
+- make skull harder to kill (faster) [BRAINSTORM]
 
 ## World & Level Design
 

@@ -15,10 +15,10 @@ function Melee.update(world)
 
       local input_pressed = btn(GameConstants.controls.attack)
 
-      -- Health gating: Only allowed if HP <= max_hp / 5 (one segment)
+      -- Health gating: Only allowed if HP < max_hp / 5 (strictly below one segment)
       -- free_attacks cheat bypasses this check
       local health_threshold = player.max_hp / 5
-      local low_health = player.hp <= health_threshold or GameState.cheats.free_attacks
+      local low_health = player.hp < health_threshold or GameState.cheats.free_attacks
 
       if input_pressed and low_health then
          -- Trigger attack animation
