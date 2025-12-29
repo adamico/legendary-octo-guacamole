@@ -105,11 +105,12 @@ function Play:enteredState()
          if not player then return end
          self.vars = {
             "[== player stats ==]",
+            "hp: "..tostring(player.hp).."/"..tostring(player.max_hp),
+            "overheal: "..tostring(player.overflow_hp or 0),
             "damage: "..tostring(player.damage),
             "shot_speed: "..tostring(player.shot_speed),
             "range: "..tostring(player.range),
             "fire_rate: "..tostring(player.fire_rate),
-            "hp ratio: "..tostring(player.max_hp_to_damage_ratio),
             "[== inventory ==]",
             "coins: "..tostring(player.coins),
             "keys: "..tostring(player.keys),

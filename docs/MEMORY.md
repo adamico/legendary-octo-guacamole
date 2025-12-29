@@ -20,6 +20,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Overheal System**: Added stackable bonus health that acts as temporary max HP (like Isaac's Soul Hearts):
+  - **Accumulation**: Excess healing past `max_hp` now accumulates in `overflow_hp` (already existed, now properly used).
+  - **Damage Absorption**: Added `apply_damage_with_overheal()` helper in `combat_handlers.lua` - overheal is consumed before base HP.
+  - **Visual Feedback**: Health bar in `ui.lua` now renders overheal segments in light blue (color 12) after green HP segments.
+  - **Debug Panel**: Added `overheal` and `hp/max_hp` display to F1 debug panel.
+  - **Foundation for Powerups**: Overheal is tracked separately to enable future powerup effects (regen-overheal, shield-overheal, damage-overheal).
 - **Implemented Bomb Entity System**: Added bomb placement and explosion mechanics:
   - **Input**: X button places a bomb at the player's center tile-aligned position (consumes 1 bomb from inventory).
   - **PlacedBomb Entity**: Sprite 22, 3-second fuse (180 frames), 1-tile explosion radius.

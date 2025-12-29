@@ -20,24 +20,42 @@ local function draw_health_bar(entity)
       end
       shot_cost = shot_cost or 20 -- Fallback
 
-      local segments = ceil(entity.max_hp / shot_cost)
+      local base_segments = ceil(entity.max_hp / shot_cost)
+      local overheal = entity.overflow_hp or 0
+      local overheal_segments = ceil(overheal / shot_cost)
+      local total_segments = base_segments + overheal_segments
       local seg_w = 6
       local gap = 1
-      local total_w = (seg_w + gap) * segments - gap
+      local total_w = (seg_w + gap) * total_segments - gap
       local px = flr(entity.x + (entity.width or 16) / 2 - total_w / 2)
 
-      for i = 0, segments - 1 do
+      -- Draw base HP segments (green)
+      for i = 0, base_segments - 1 do
          local start_x = px + i * (seg_w + gap)
          local segment_hp = min(shot_cost, max(0, entity.hp - (i * shot_cost)))
 
          if segment_hp >= shot_cost then
-            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 11)
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 11) -- Full (green)
          elseif segment_hp > 0 then
-            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)  -- Empty (dark)
             local fill_w = ceil((segment_hp / shot_cost) * seg_w)
-            rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 9)
+            rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 9) -- Partial (orange)
          else
-            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)  -- Empty (dark)
+         end
+      end
+
+      -- Draw overheal segments (light blue)
+      for i = 0, overheal_segments - 1 do
+         local start_x = px + (base_segments + i) * (seg_w + gap)
+         local segment_overheal = min(shot_cost, max(0, overheal - (i * shot_cost)))
+
+         if segment_overheal >= shot_cost then
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 12)  -- Full (light blue)
+         elseif segment_overheal > 0 then
+            rectfill(start_x, py, start_x + seg_w - 1, py + bar_h, 8)   -- Empty (dark)
+            local fill_w = ceil((segment_overheal / shot_cost) * seg_w)
+            rectfill(start_x, py, start_x + fill_w - 1, py + bar_h, 12) -- Partial (light blue)
          end
       end
    else

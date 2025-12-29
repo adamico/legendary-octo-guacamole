@@ -8,6 +8,32 @@ local FloatingText = require("src/systems/floating_text")
 
 local CombatHandlers = {}
 
+-- Helper: Apply damage, consuming overheal first before base HP
+-- @param entity - Entity to damage (must have hp, overflow_hp properties)
+-- @param damage - Amount of damage to apply
+-- @return actual_damage - Damage applied to base HP (after overheal absorption)
+local function apply_damage_with_overheal(entity, damage)
+   local overheal = entity.overflow_hp or 0
+
+   if overheal > 0 then
+      if overheal >= damage then
+         -- Overheal absorbs all damage
+         entity.overflow_hp = overheal - damage
+         return 0
+      else
+         -- Overheal absorbs partial damage
+         local remaining = damage - overheal
+         entity.overflow_hp = 0
+         entity.hp = entity.hp - remaining
+         return remaining
+      end
+   else
+      -- No overheal, damage goes directly to HP
+      entity.hp = entity.hp - damage
+      return damage
+   end
+end
+
 -- Handler for MeleeHitbox hitting Enemy
 local function melee_vs_enemy(hitbox, enemy)
    -- Skip if enemy is invulnerable
@@ -67,7 +93,7 @@ local function player_vs_enemy(player, enemy)
    end
    local damage = enemy.contact_damage or 10
    if not GameState.cheats.godmode then
-      player.hp = player.hp - damage
+      apply_damage_with_overheal(player, damage)
       FloatingText.spawn_at_entity(player, -damage, "damage")
    end
    Effects.hit_impact(enemy, player, "heavy_shake")
@@ -83,7 +109,7 @@ local function enemy_projectile_vs_player(projectile, player)
    end
    local damage = projectile.damage or 10
    if not GameState.cheats.godmode then
-      player.hp = player.hp - damage
+      apply_damage_with_overheal(player, damage)
       FloatingText.spawn_at_entity(player, -damage, "damage")
    end
    Effects.hit_impact(projectile, player, "heavy_shake")
@@ -125,7 +151,7 @@ local function explosion_vs_player(explosion, player)
 
    local damage = explosion.explosion_damage or 20
    if not GameState.cheats.godmode then
-      player.hp = player.hp - damage
+      apply_damage_with_overheal(player, damage)
       FloatingText.spawn_at_entity(player, -damage, "damage")
    end
    Effects.hit_impact(explosion, player, "heavy_shake")
