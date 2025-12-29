@@ -7,6 +7,7 @@
 - add chests (locked and unlocked) as room features [BRAINSTORM]
 - add locked treasure room for powerups [BRAINSTORM]
 - add shop room with items [BRAINSTORM]
+- don't show enemies spawning spots when transitioning from room to room [BRAINSTORM]
 
 ## Bugs
 

@@ -25,7 +25,8 @@ function Bomb.spawn(world, x, y)
       sprite_index = config.sprite_index,
       fuse_timer = config.fuse_time,
       explosion_radius = config.explosion_radius,
-      shadow_offset = config.shadow_offset,
+      shadow_offset_y = config.shadow_offset_y,
+      shadow_offset_x = config.shadow_offset_x or 0,
       shadow_width = config.shadow_width,
    }
 

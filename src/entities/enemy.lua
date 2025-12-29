@@ -47,7 +47,8 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
 
     -- 3. Static table references (offsets, directional maps)
     enemy.sprite_index_offsets = config.sprite_index_offsets
-    enemy.shadow_offsets = config.shadow_offsets
+    enemy.shadow_offsets_y = config.shadow_offsets_y
+    enemy.shadow_offsets_x = config.shadow_offsets_x
     enemy.shadow_widths = config.shadow_widths
     enemy.shadow_heights = config.shadow_heights
 

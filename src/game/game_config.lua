@@ -107,8 +107,10 @@ local GameConstants = {
          left = 9,
          up = 16,
       },
-      shadow_offset = 1,
-      shadow_width = 13,
+      shadow_offset_x = 0,
+      shadow_offset_y = -1,
+      shadow_width = 15,
+      shadow_height = 6,
       outline_color = 1,
       melee_cost = 10,
       melee_cooldown = 60,
@@ -126,7 +128,6 @@ local GameConstants = {
       melee_knockback = 6,
    },
    Projectile = {
-      -- Player's laser projectile
       Laser = {
          entity_type = "Projectile",
          tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,palette_swappable,shadow,middleground",
@@ -181,20 +182,25 @@ local GameConstants = {
          palette_swaps = {
             {from = 5, to = 12},
          },
-         shadow_offsets = {
+         shadow_offsets_y = {
             down = 8,
             up = 8,
             right = 2,
             left = 2,
          },
+         shadow_heights = {
+            down = 12,
+            up = 12,
+            right = 2,
+            left = 2,
+         },
          shadow_widths = {
-            down = 6,
-            up = 6,
-            right = 10,
-            left = 10,
+            down = 2,
+            up = 2,
+            right = 12,
+            left = 12,
          },
       },
-      -- Enemy bullet projectile
       EnemyBullet = {
          entity_type = "EnemyProjectile",
          tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,shadow,middleground",
@@ -217,7 +223,7 @@ local GameConstants = {
             idle = {indices = {25, 26}, durations = {8, 8}}
          },
          sprite_offset_y = 5,
-         shadow_offset = 3,
+         shadow_offset_y = 3,
          shadow_width = 4,
          z = 6,
       },
@@ -237,7 +243,7 @@ local GameConstants = {
             up = 20,
          },
          sprite_offset_y = 6,
-         shadow_offset = 4,
+         shadow_offset_y = 4,
          shadow_width = 6,
       },
       HealthPickup = {
@@ -251,7 +257,7 @@ local GameConstants = {
          hitbox_height = 12,
          hitbox_offset_x = 2,
          hitbox_offset_y = 2,
-         shadow_offset = 3,
+         shadow_offset_y = 3,
          shadow_width = 11,
          recovery_amount = 20,
       },
@@ -266,7 +272,7 @@ local GameConstants = {
          hitbox_height = 12,
          hitbox_offset_x = 2,
          hitbox_offset_y = 2,
-         shadow_offset = 3,
+         shadow_offset_y = 3,
          shadow_width = 11,
          amount = 1,
       },
@@ -281,7 +287,7 @@ local GameConstants = {
          hitbox_height = 12,
          hitbox_offset_x = 2,
          hitbox_offset_y = 2,
-         shadow_offset = 3,
+         shadow_offset_y = 3,
          shadow_width = 11,
          amount = 1,
       },
@@ -296,7 +302,7 @@ local GameConstants = {
          hitbox_height = 12,
          hitbox_offset_x = 2,
          hitbox_offset_y = 2,
-         shadow_offset = 3,
+         shadow_offset_y = 3,
          shadow_width = 11,
          amount = 1,
       },
@@ -328,8 +334,9 @@ local GameConstants = {
          hitbox_height = 10,
          hitbox_offset_x = 2,
          hitbox_offset_y = 3,
-         shadow_offset = 3,
+         shadow_offset_y = 2,
          shadow_width = 15,
+         shadow_height = 6,
          outline_color = 1,
       },
       Shooter = {
@@ -365,8 +372,9 @@ local GameConstants = {
             idle = {indices = {33, 34}, durations = {30, 30}},
             death = {indices = {33}, durations = {30}}
          },
-         shadow_offset = 4,
+         shadow_offset_y = 2,
          shadow_width = 17,
+         shadow_height = 6,
          outline_color = 1,
       },
       Skull = {
@@ -408,7 +416,7 @@ local GameConstants = {
          hitbox_height = 16,
          hitbox_offset_x = 0,
          hitbox_offset_y = 0,
-         shadow_offset = 5,
+         shadow_offset_y = 5,
          shadow_width = 13,
          outline_color = 1,
       },
@@ -461,7 +469,7 @@ local GameConstants = {
                death     = {indices = {37}, durations = {30}, flip = true}
             }
          },
-         shadow_offset = 3,
+         shadow_offset_y = 3,
          shadow_width = 17,
          outline_color = 1,
       },
@@ -481,7 +489,7 @@ local GameConstants = {
       },
       fuse_time = 180,      -- 3 seconds at 60fps
       explosion_radius = 1, -- 1 tile = 3x3 grid centered on bomb
-      shadow_offset = 3,
+      shadow_offset_y = 3,
       shadow_width = 12,
    },
    -- Explosion effect entity (reusable for bombs, enemy attacks, etc.)

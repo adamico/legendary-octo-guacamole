@@ -73,7 +73,8 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     projectile.animations = config.animations
     projectile.palette_swaps = config.palette_swaps
     projectile.sprite_index_offsets = config.sprite_index_offsets
-    projectile.shadow_offsets = config.shadow_offsets
+    projectile.shadow_offsets_y = config.shadow_offsets_y
+    projectile.shadow_offsets_x = config.shadow_offsets_x
     projectile.shadow_widths = config.shadow_widths
     projectile.shadow_heights = config.shadow_heights
 

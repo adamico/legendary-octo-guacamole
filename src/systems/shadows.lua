@@ -21,8 +21,10 @@ local function sync_shadow(world, shadow)
    shadow.y = parent.y
    shadow.w = parent.width or 16
    shadow.h = parent.height or 16
-   shadow.shadow_offset = parent.shadow_offset or 0
-   shadow.shadow_offsets = parent.shadow_offsets
+   shadow.shadow_offset_y = parent.shadow_offset_y or 0
+   shadow.shadow_offsets_y = parent.shadow_offsets_y
+   shadow.shadow_offset_x = parent.shadow_offset_x or 0
+   shadow.shadow_offsets_x = parent.shadow_offsets_x
    shadow.shadow_width = parent.shadow_width
    shadow.shadow_height = parent.shadow_height
    shadow.shadow_widths = parent.shadow_widths
@@ -53,7 +55,6 @@ local function draw_shadow(world, shadow, clip_square)
       if hb.w < 8 then w_scale = 1.0 end
       sw = hb.w * w_scale
    end
-   sw = max(8, sw)
 
    local sh = shadow.shadow_height
    if shadow.shadow_heights and dir and shadow.shadow_heights[dir] then
@@ -61,12 +62,17 @@ local function draw_shadow(world, shadow, clip_square)
    end
    sh = sh or 3
 
-   local offset_y = shadow.shadow_offset or 0
-   if shadow.shadow_offsets and dir and shadow.shadow_offsets[dir] then
-      offset_y = shadow.shadow_offsets[dir]
+   local offset_y = shadow.shadow_offset_y or 0
+   if shadow.shadow_offsets_y and dir and shadow.shadow_offsets_y[dir] then
+      offset_y = shadow.shadow_offsets_y[dir]
    end
 
-   local cx = flr(hb.x + hb.w / 2)
+   local offset_x = shadow.shadow_offset_x or 0
+   if shadow.shadow_offsets_x and dir and shadow.shadow_offsets_x[dir] then
+      offset_x = shadow.shadow_offsets_x[dir]
+   end
+
+   local cx = flr(hb.x + hb.w / 2) + offset_x
    local ground_y = flr((hb.y + hb.h) + (parent.z or 0) - (parent.sprite_offset_y or 0))
    local cy = ground_y + offset_y
 
