@@ -37,6 +37,22 @@ LayoutData.CELL_POSITIONS = {
    f  = {0, 0, 3, 2}, -- full 3×2 block
 }
 
+-- Bitmask bit positions for 3×2 cell (6 tiles):
+-- +---+---+---+
+-- | 1 | 2 | 4 |   (top row: bits 0, 1, 2)
+-- +---+---+---+
+-- | 8 |16 |32 |   (bottom row: bits 3, 4, 5)
+-- +---+---+---+
+-- Use in cell_pattern: 63 = full block, 7 = top row, 56 = bottom row
+LayoutData.BITMASK_POSITIONS = {
+   {x = 0, y = 0}, -- bit 0 (value 1): top-left
+   {x = 1, y = 0}, -- bit 1 (value 2): top-middle
+   {x = 2, y = 0}, -- bit 2 (value 4): top-right
+   {x = 0, y = 1}, -- bit 3 (value 8): bottom-left
+   {x = 1, y = 1}, -- bit 4 (value 16): bottom-middle
+   {x = 2, y = 1}, -- bit 5 (value 32): bottom-right
+}
+
 -- Grid dimensions
 LayoutData.GRID_COLS = 9
 LayoutData.GRID_ROWS = 7
@@ -107,6 +123,23 @@ LayoutData.Layouts = {
          "...RRR...",
          ".........",
          ".........",
+      }
+   },
+
+   diagonal_rocks = {
+      room_types = {"combat"},
+      layout_type = "diagonal",
+      floor_pattern = "random",
+      -- Bitmask 33 = 0b100001 = top-left + bottom-right tiles
+      cell_pattern = {33, 33, 33, 33},
+      grid = {
+         "R.......R",
+         ".........",
+         ".........",
+         ".........",
+         ".........",
+         ".........",
+         "R.......R",
       }
    },
 

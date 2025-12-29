@@ -142,29 +142,42 @@ function RoomLayouts.get_all_features(layout, room_inner_x, room_inner_y)
 
          if feature_type and feature_type ~= "floor" then
             -- Get position mode for this feature
-            local pos_mode = "f" -- default to full
+            local pos_mode = 63 -- default to full (all 6 bits set)
             if cell_pattern then
-               pos_mode = cell_pattern[pattern_index] or "f"
+               pos_mode = cell_pattern[pattern_index] or 63
                pattern_index = pattern_index + 1
                if pattern_index > #cell_pattern then
                   pattern_index = 1 -- cycle
                end
             end
 
-            -- Get position offset and size from mode
-            local pos_data = CELL_POSITIONS[pos_mode] or CELL_POSITIONS.f
-            local offset_x, offset_y, width, height = pos_data[1], pos_data[2], pos_data[3], pos_data[4]
-
             -- Calculate base tile position (0-indexed from room inner)
             local base_tx = (gx - 1) * CELL_WIDTH
             local base_ty = (gy - 1) * CELL_HEIGHT
 
-            -- Add tiles based on width/height
-            for dy = 0, height - 1 do
-               for dx = 0, width - 1 do
-                  local tx = room_inner_x + base_tx + offset_x + dx
-                  local ty = room_inner_y + base_ty + offset_y + dy
-                  add(features, {feature = feature_type, tx = tx, ty = ty})
+            if type(pos_mode) == "number" then
+               -- Bitmask mode: iterate bits and add tiles for each set bit
+               local BITMASK_POSITIONS = LayoutData.BITMASK_POSITIONS
+               for bit_idx = 0, 5 do
+                  if (pos_mode & (1 << bit_idx)) ~= 0 then
+                     local pos = BITMASK_POSITIONS[bit_idx + 1]
+                     local tx = room_inner_x + base_tx + pos.x
+                     local ty = room_inner_y + base_ty + pos.y
+                     add(features, {feature = feature_type, tx = tx, ty = ty})
+                  end
+               end
+            else
+               -- String mode: existing single-position logic
+               local pos_data = CELL_POSITIONS[pos_mode] or CELL_POSITIONS.f
+               local offset_x, offset_y, width, height = pos_data[1], pos_data[2], pos_data[3], pos_data[4]
+
+               -- Add tiles based on width/height
+               for dy = 0, height - 1 do
+                  for dx = 0, width - 1 do
+                     local tx = room_inner_x + base_tx + offset_x + dx
+                     local ty = room_inner_y + base_ty + offset_y + dy
+                     add(features, {feature = feature_type, tx = tx, ty = ty})
+                  end
                end
             end
          end

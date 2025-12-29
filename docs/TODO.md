@@ -1,5 +1,13 @@
 # TODO
 
+## Next
+
+- add powerups [BRAINSTORM]
+- add key using mechanics [BRAINSTORM]
+- add chests (locked and unlocked) as room features [BRAINSTORM]
+- add locked treasure room for powerups [BRAINSTORM]
+- add shop room with items [BRAINSTORM]
+
 ## Bugs
 
 ## Architecture
@@ -13,7 +21,6 @@
   - [ ] Conveyor Belts (push entities)
   - [ ] Spike Traps (retracting spikes)
   - [ ] Secret Walls (bombable shortcuts)
-- allow using a bitmask ot specify which tiles contain obstacles in the 3x2 room feature grid
 
 ## Combat & Mechanics
 
@@ -27,18 +34,13 @@
 
 ## World & Level Design
 
-- add chests (locked and unlocked) as room features [BRAINSTORM]
 - add room floor patterns to avoid having floors that are too random [BRAINSTORM]
-- add locked treasure room for powerups [BRAINSTORM]
-- add shop room with items [BRAINSTORM]
 - add boss room with special enemy [BRAINSTORM]
 - solid map tiles should have configurable y collision level [BRAINSTORM]
 - add secret rooms [BRAINSTORM]
 
 ## Items & Powerups
 
-- add key using mechanics [BRAINSTORM]
-- add powerups [BRAINSTORM]
 - expand health recovery mechanics [BRAINSTORM]
   - [ ] Skill-based: Perfect Dodge (restore HP on last-second dodge), Multi-Kill bonus
   - [ ] Room-based: Speed Clear bonus, No-Hit bonus
@@ -74,7 +76,6 @@
 - improve the title screen [BRAINSTORM]
 - improve the game over screen [BRAINSTORM]
 - add a credits screen [BRAINSTORM]
-- add UI elements (bombs, keys, coins, powerups) [BRAINSTORM]
 
 ## Audio
 
