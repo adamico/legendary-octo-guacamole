@@ -20,6 +20,14 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Created Rendering Architecture Documentation**:
+  - Created `docs/architecture/rendering.md` covering:
+    - **Y-Sorted Depth**: Foot-based sorting for 2.5D visual layering.
+    - **Z-Axis Simulation**: Visual vertical displacement (`draw_y = y - z`) with ground-anchored hitboxes and shadows.
+    - **Shadow System**: Entity-based shadows with dynamic sizing and parent syncing.
+    - **Lighting/Palette**: Extended palette usage for spotlights (colors 32-47) and darkness (colors 48-63).
+    - **Sprite Effects**: 8-neighbor outlines, flash timers, composite sprites, and procedural death animations.
+  - Linked the new document in `ARCHITECTURE.md` and marked as done in `TODO.md`.
 - **Implemented Vertical vs Horizontal Projectile Trajectory Behavior**:
   - **Problem**: For horizontal shots, the egg flies elevated (z > 0) and the sprite visually drops to the shadow during landing. For vertical shots (up/down), this looked wrong because the collision point is at the visual position, not the shadow position.
   - **Solution**: Added `vertical_shot` flag to projectiles. During the drop phase, vertical shots keep the visual Y constant while the shadow (entity.y) moves toward the sprite. Horizontal shots behave normally (sprite drops to shadow).

@@ -58,6 +58,7 @@ This architecture guide is split into focused sub-documents:
 - [**Entity Spawning**](architecture/entity_spawning.md): Factory patterns, lifecycle integration, and spawn logic.
 - [**Entity Stats**](architecture/entity_stats.md): Configuration of player, enemies, and projectiles.
 - [**Pickup System**](architecture/pickup_system.md): Type Object pattern and effect registry for collectibles.
+- [**Rendering System**](architecture/rendering.md): Y-sorting, Z-axis simulation, lighting, and shadows.
 
 ## Directory Structure
 

@@ -15,7 +15,7 @@ No known bugs at this time.
 
 ## Architecture
 
-- add rendering.md in docs/architecture/ [PENDING]
+- add rendering.md in docs/architecture/ [DONE]
 
 - implement movement mechanics [BRAINSTORM]
   - [ ] Dodge Roll / Dash (invulnerability frames or vaulting)
