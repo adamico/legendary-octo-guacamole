@@ -11,6 +11,8 @@
 
 ## Bugs
 
+No known bugs at this time.
+
 ## Architecture
 
 - add rendering.md in docs/architecture/ [PENDING]

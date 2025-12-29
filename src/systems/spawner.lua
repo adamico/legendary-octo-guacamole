@@ -1,7 +1,6 @@
 -- Enemy spawning system
 local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
-SPAWNER_INDICATOR_SPRITE = 32
 local Spawner = {}
 
 Spawner.indicator_sprite = SPAWNER_INDICATOR_SPRITE

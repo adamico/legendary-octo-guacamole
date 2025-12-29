@@ -69,7 +69,7 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     projectile.gravity_z = (-2 * projectile.z) / (drop_duration * drop_duration)
 
     -- 3. Static table references
-    projectile.hitbox = config.hitbox
+    projectile.hitboxes = config.hitboxes
     projectile.animations = config.animations
     projectile.palette_swaps = config.palette_swaps
     projectile.sprite_index_offsets = config.sprite_index_offsets
@@ -92,13 +92,31 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     return EntityUtils.spawn_entity(world, config.tags, projectile)
 end
 
--- Spawn projectile centered on shooter's hitbox
-function Projectile.spawn_centered(world, shooter, dx, dy, projectile_type, instance_data)
-    local shooter_hitbox = HitboxUtils.get_hitbox(shooter)
+-- Spawn projectile from shooter's configured origin point
+-- shooter.projectile_origin_x/y are offsets from entity position
+-- shooter.projectile_origin_z is the elevation for visual height
+function Projectile.spawn_from_origin(world, shooter, dx, dy, projectile_type, instance_data)
     local projectile_config = GameConstants.Projectile[projectile_type or "Egg"]
 
-    local spawn_x = shooter_hitbox.x + (shooter_hitbox.w / 2) - (projectile_config.width / 2)
-    local spawn_y = shooter_hitbox.y + (shooter_hitbox.h / 2) - (projectile_config.height / 2)
+    -- Projectile origin is a direct offset from shooter position
+    local origin_x = shooter.x + (shooter.projectile_origin_x or 0)
+    local origin_y = shooter.y + (shooter.projectile_origin_y or 0)
+
+    -- Offset by half projectile size to center it on origin
+    local spawn_x = origin_x - (projectile_config.width / 2)
+    local spawn_y = origin_y - (projectile_config.height / 2)
+
+    -- Z elevation for all shots (visual height)
+    local projectile_z = shooter.projectile_origin_z or 0
+
+    instance_data = instance_data or {}
+    instance_data.z = projectile_z
+
+    -- Flag vertical shots (up/down) for different landing behavior
+    -- Vertical: shadow moves toward sprite; Horizontal: sprite moves toward shadow
+    -- Use threshold check in case dx/dy are floats
+    local is_vertical = (abs(dy) > 0.1) and (abs(dx) < 0.1)
+    instance_data.vertical_shot = is_vertical
 
     return Projectile.spawn(world, spawn_x, spawn_y, dx, dy, projectile_type, instance_data)
 end

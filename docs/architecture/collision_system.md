@@ -61,3 +61,8 @@ Hitboxes are decoupled from sprite size.
 - Defined in `GameConstants` per entity type.
 - `get_hitbox(entity)` returns world-space coordinates `{x, y, w, h}`.
 - Supports directional hitboxes (e.g., vertical vs horizontal laser) via `entity.hitbox[direction]`.
+- **Important**: Hitbox Y position accounts for z-axis elevation: `y = entity.y + offset - entity.z`. This means the hitbox is at the VISUAL position, not the shadow position.
+
+## Related Documentation
+
+- [Physics Simulation](physics_simulation.md) - Z-axis physics, gravity, horizontal vs vertical trajectory behavior

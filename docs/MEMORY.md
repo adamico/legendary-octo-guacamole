@@ -20,6 +20,23 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Vertical vs Horizontal Projectile Trajectory Behavior**:
+  - **Problem**: For horizontal shots, the egg flies elevated (z > 0) and the sprite visually drops to the shadow during landing. For vertical shots (up/down), this looked wrong because the collision point is at the visual position, not the shadow position.
+  - **Solution**: Added `vertical_shot` flag to projectiles. During the drop phase, vertical shots keep the visual Y constant while the shadow (entity.y) moves toward the sprite. Horizontal shots behave normally (sprite drops to shadow).
+  - **Key Insight**: `get_hitbox()` returns the hitbox at the VISUAL position (already accounting for z), so spawning pickups at hitbox center works correctly for both trajectory types.
+  - **Ground Collision Fix**: When z <= 0, must set BOTH `z = 0` AND `vel_z = 0` to prevent runaway negative values.
+  - **Y Adjustment Guard**: Only apply the vertical shot Y adjustment when `z > 0` (still falling). Once grounded, stop adjusting Y.
+  - **Pickup Inheritance**: Pickups can inherit `vertical_shot` flag from projectiles to get correct drop animation behavior.
+- **Fixed Three Collision Bugs**:
+  - **Push-Out Respects Solid Tiles**: Modified `push_out()` in `obstacle_handlers.lua` to check if push direction leads into a wall tile. Uses `qsort` to try push options in order of minimum penetration, selecting the first one that doesn't collide with solid tiles.
+  - **Room Transition Uses Hitbox Center**: Modified `check_trigger()` in `collision.lua` to use hitbox center rather than entity top-left position for boundary detection. Fixes false room transitions when tall sprites walk into walls.
+  - **Fixed Double Pickup Spawn**: Added `hit_obstacle` guard flag to prevent projectiles from spawning multiple pickups when hitting multiple obstacles in the same frame.
+- **Implemented Z-Elevation Collision Filtering**: Added asymmetric Z-axis collision checks for projectiles:
+  - **Concept**: Enemy projectiles above the player's `height_z` pass overhead without hitting.
+  - **Player Config**: Added `height_z = 25` to Player config (covers human body, ignores chicken on head).
+  - **Collision Logic**: Modified `collision.lua` to check `projectile.z <= target.height_z` for `EnemyProjectile → Player` collisions only.
+  - **Asymmetric**: Player eggs still hit all enemies regardless of Z; only incoming enemy projectiles are filtered.
+  - **Future-Proof**: Other entities can define `height_z` to enable vertical collision filtering.
 - **Split game_config.lua into Modules**: Refactored the 730-line monolithic config into focused sub-modules:
   - **Structure**: `src/game/config/` with `tiles.lua`, `player.lua`, `entities.lua`, `effects.lua`, `ui.lua`, `controls.lua`, `collision.lua`
   - **Main Aggregator**: `game_config.lua` is now a 48-line file that imports and merges all sub-modules

@@ -69,7 +69,7 @@ function Shooter.update(world)
             damage = (entity.max_hp or 100) * entity.max_hp_to_damage_ratio
          end
 
-         Entities.spawn_centered_projectile(
+         Entities.spawn_projectile_from_origin(
             world, entity, sx, sy, projectile_type,
             {
                speed = entity.shot_speed,

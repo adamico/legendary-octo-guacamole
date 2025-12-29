@@ -10,7 +10,7 @@ return {
          knockback = 0,
          width = 16,
          height = 16,
-         hitbox = {
+         hitboxes = {
             down  = {w = 6, h = 12, ox = 4, oy = 4},
             up    = {w = 6, h = 12, ox = 4, oy = 2},
             right = {w = 10, h = 6, ox = 3, oy = 5},
@@ -22,55 +22,31 @@ return {
             left = 25,
             up = 26,
          },
-         sprite_offset_y = 4,
          animations = {
             down = {
                indices = {26, 26},
                durations = {8, 8},
-               flips = {
-                  {x = false, y = false}, {x = true, y = false}
-               }
+               flips = {{x = false, y = false}, {x = true, y = false}}
             },
             up = {
                indices = {26, 26},
                durations = {8, 8},
-               flips = {
-                  {x = false, y = false}, {x = true, y = false}
-               }
+               flips = {{x = false, y = false}, {x = true, y = false}}
             },
             right = {
                indices = {25, 25},
                durations = {8, 8},
-               flips = {
-                  {x = false, y = false}, {x = false, y = true}
-               }
+               flips = {{x = false, y = false}, {x = false, y = true}}
             },
             left = {
                indices = {25, 25},
                durations = {8, 8},
-               flips = {
-                  {x = false, y = false}, {x = false, y = true}
-               }
+               flips = {{x = false, y = false}, {x = false, y = true}}
             },
          },
-         shadow_offsets_y = {
-            down = 8,
-            up = 8,
-            right = 16,
-            left = 2,
-         },
-         shadow_heights = {
-            down = 12,
-            up = 12,
-            right = 2,
-            left = 2,
-         },
-         shadow_widths = {
-            down = 2,
-            up = 2,
-            right = 12,
-            left = 12,
-         },
+         shadow_offset_y = 4,
+         shadow_height = 4,
+         shadow_width = 4,
       },
       EnemyBullet = {
          entity_type = "EnemyProjectile",
@@ -85,13 +61,13 @@ return {
          hitbox_offset_x = 4,
          hitbox_offset_y = 4,
          sprite_index_offsets = {
-            down = 25,
-            right = 25,
-            left = 25,
-            up = 25,
+            down = 54,
+            right = 54,
+            left = 54,
+            up = 54,
          },
          animations = {
-            idle = {indices = {25, 26}, durations = {8, 8}}
+            idle = {indices = {54, 55}, durations = {8, 8}}
          },
          sprite_offset_y = 5,
          shadow_offset_y = 3,
@@ -108,10 +84,10 @@ return {
          height = 16,
          hitbox_from_projectile = true,
          sprite_index_offsets = {
-            down = 20,
-            right = 19,
-            left = 19,
-            up = 20,
+            down = 36,
+            right = 36,
+            left = 36,
+            up = 36,
          },
          sprite_offset_y = 6,
          shadow_offset_y = 4,
@@ -123,12 +99,9 @@ return {
          pickup_effect = "health",
          width = 16,
          height = 16,
-         sprite_index = 21,
-         hitbox_width = 12,
-         hitbox_height = 12,
-         hitbox_offset_x = 2,
-         hitbox_offset_y = 2,
-         shadow_offset_y = 3,
+         sprite_index = 37,
+         hitbox = {w = 12, h = 12, ox = 2, oy = 2},
+         -- shadow_offset_y = -2,
          shadow_width = 11,
          recovery_amount = 20,
       },
@@ -138,7 +111,7 @@ return {
          pickup_effect = "coin",
          width = 16,
          height = 16,
-         sprite_index = 24,
+         sprite_index = 40,
          hitbox_width = 12,
          hitbox_height = 12,
          hitbox_offset_x = 2,
@@ -153,7 +126,7 @@ return {
          pickup_effect = "key",
          width = 16,
          height = 16,
-         sprite_index = 23,
+         sprite_index = 39,
          hitbox_width = 12,
          hitbox_height = 12,
          hitbox_offset_x = 2,
@@ -168,7 +141,7 @@ return {
          pickup_effect = "bomb",
          width = 16,
          height = 16,
-         sprite_index = 22,
+         sprite_index = 38,
          hitbox_width = 12,
          hitbox_height = 12,
          hitbox_offset_x = 2,
@@ -191,13 +164,13 @@ return {
          wander_pause_min = 20,
          wander_pause_max = 60,
          sprite_index_offsets = {
-            down = 35,
-            right = 35,
-            left = 35,
-            up = 35,
+            down = 48,
+            right = 48,
+            left = 48,
+            up = 48,
          },
          animations = {
-            death = {indices = {35}, durations = {30}}
+            death = {indices = {48}, durations = {30}}
          },
          width = 16,
          height = 16,
@@ -228,10 +201,10 @@ return {
          wander_pause_min = 30,
          wander_pause_max = 90,
          sprite_index_offsets = {
-            down = 33,
-            right = 33,
-            left = 33,
-            up = 33,
+            down = 46,
+            right = 46,
+            left = 46,
+            up = 46,
          },
          width = 16,
          height = 16,
@@ -240,8 +213,8 @@ return {
          hitbox_offset_x = 2,
          hitbox_offset_y = 3,
          animations = {
-            idle = {indices = {33, 34}, durations = {30, 30}},
-            death = {indices = {33}, durations = {30}}
+            idle = {indices = {46, 47}, durations = {30, 30}},
+            death = {indices = {46}, durations = {30}}
          },
          shadow_offset_y = 2,
          shadow_width = 17,
@@ -258,27 +231,27 @@ return {
          loot_rolls = 2,
          use_diverse_loot = true,
          sprite_index_offsets = {
-            down = 40,
-            right = 40,
-            left = 40,
-            up = 40,
+            down = 53,
+            right = 53,
+            left = 53,
+            up = 53,
          },
          animations = {
             down = {
-               idle = {indices = {40}, durations = {30}},
-               death = {indices = {40}, durations = {30}}
+               idle = {indices = {53}, durations = {30}},
+               death = {indices = {53}, durations = {30}}
             },
             up = {
-               idle = {indices = {40}, durations = {30}},
-               death = {indices = {40}, durations = {30}}
+               idle = {indices = {53}, durations = {30}},
+               death = {indices = {53}, durations = {30}}
             },
             left = {
-               idle = {indices = {40}, durations = {30}},
-               death = {indices = {40}, durations = {30}}
+               idle = {indices = {53}, durations = {30}},
+               death = {indices = {53}, durations = {30}}
             },
             right = {
-               idle = {indices = {40}, durations = {30}, flip = true},
-               death = {indices = {40}, durations = {30}, flip = true}
+               idle = {indices = {53}, durations = {30}, flip = true},
+               death = {indices = {53}, durations = {30}, flip = true}
             }
          },
          width = 16,
@@ -302,12 +275,12 @@ return {
          stun_duration = 120,
          dash_speed_multiplier = 10,
          sprite_index_offsets = {
-            down = 38,
-            right = 38,
-            left = 38,
-            up = 38,
+            down = 51,
+            right = 51,
+            left = 51,
+            up = 51,
          },
-         sprite_shell = 37,
+         sprite_shell = 50,
          width = 16,
          height = 16,
          hitbox_width = 12,
@@ -316,28 +289,28 @@ return {
          hitbox_offset_y = 3,
          animations = {
             down = {
-               idle      = {indices = {38}, durations = {30}},
-               walking   = {indices = {38, 39}, durations = {8, 8}},
-               attacking = {indices = {37}, durations = {10}, loop = true},
-               death     = {indices = {37}, durations = {30}}
+               idle      = {indices = {51}, durations = {30}},
+               walking   = {indices = {51, 52}, durations = {8, 8}},
+               attacking = {indices = {50}, durations = {10}, loop = true},
+               death     = {indices = {50}, durations = {30}}
             },
             up = {
-               idle      = {indices = {38}, durations = {30}},
-               walking   = {indices = {38, 39}, durations = {8, 8}},
-               attacking = {indices = {37}, durations = {10}, loop = true},
-               death     = {indices = {37}, durations = {30}}
+               idle      = {indices = {51}, durations = {30}},
+               walking   = {indices = {51, 52}, durations = {8, 8}},
+               attacking = {indices = {50}, durations = {10}, loop = true},
+               death     = {indices = {50}, durations = {30}}
             },
             right = {
-               idle      = {indices = {38}, durations = {30}},
-               walking   = {indices = {38, 39}, durations = {8, 8}},
-               attacking = {indices = {37}, durations = {10}, loop = true},
-               death     = {indices = {37}, durations = {30}}
+               idle      = {indices = {51}, durations = {30}, flip = true},
+               walking   = {indices = {51, 52}, durations = {8, 8}, flip = true},
+               attacking = {indices = {50}, durations = {10}, loop = true, flip = true},
+               death     = {indices = {50}, durations = {30}, flip = true}
             },
             left = {
-               idle      = {indices = {38}, durations = {30}, flip = true},
-               walking   = {indices = {38, 39}, durations = {8, 8}, flip = true},
-               attacking = {indices = {37}, durations = {10}, loop = true, flip = true},
-               death     = {indices = {37}, durations = {30}, flip = true}
+               idle      = {indices = {51}, durations = {30}, flip = true},
+               walking   = {indices = {51, 52}, durations = {8, 8}, flip = true},
+               attacking = {indices = {50}, durations = {10}, loop = true, flip = true},
+               death     = {indices = {50}, durations = {30}, flip = true}
             }
          },
          shadow_offset_y = 3,

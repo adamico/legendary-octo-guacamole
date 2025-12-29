@@ -43,6 +43,7 @@ end
 local function handle_pickup_collection(player, pickup)
    -- Guard: Prevent double collection (pickup may be touched multiple frames)
    if pickup.collected then return end
+
    pickup.collected = true
 
    local effect_type = pickup.pickup_effect or "health"

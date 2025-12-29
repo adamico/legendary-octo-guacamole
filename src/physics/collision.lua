@@ -111,11 +111,18 @@ function Collision.check_trigger(entity, camera_manager)
 
     local rpx = room.pixels
 
-    -- Check if player center is outside room bounds
-    if entity.x < rpx.x or entity.x >= rpx.x + rpx.w or
-       entity.y < rpx.y or entity.y >= rpx.y + rpx.h then
+    -- Use hitbox center for accurate boundary detection
+    -- This prevents false triggers when tall sprites (like player with hitbox offset)
+    -- have their entity.y above room boundary while hitbox is still inside
+    local hb = get_hitbox(entity)
+    local cx = hb.x + hb.w / 2
+    local cy = hb.y + hb.h / 2
+
+    -- Check if hitbox center is outside room bounds
+    if cx < rpx.x or cx >= rpx.x + rpx.w or
+       cy < rpx.y or cy >= rpx.y + rpx.h then
         -- Directly trigger transition (no need for handler indirection)
-        return camera_manager:on_trigger(entity.x, entity.y)
+        return camera_manager:on_trigger(cx, cy)
     end
 
     return nil
@@ -174,6 +181,17 @@ function Collision.resolve_entities(entity1)
                 local hb2 = get_hitbox(entity2)
                 if MathUtils.segment_intersects_aabb(p_start_x, p_start_y, p_end_x, p_end_y, hb2.x, hb2.y, hb2.w, hb2.h) then
                     hit = true
+                end
+            end
+
+            if hit then
+                -- Z-elevation filtering: Enemy projectiles above player's height miss
+                if entity1.type == "EnemyProjectile" and entity2.type == "Player" then
+                    local proj_z = entity1.z or 0
+                    local target_height_z = entity2.height_z or 16
+                    if proj_z > target_height_z then
+                        hit = false -- Projectile is above player's vertical collision range
+                    end
                 end
             end
 

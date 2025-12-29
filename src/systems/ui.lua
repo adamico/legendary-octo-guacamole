@@ -1,7 +1,6 @@
 -- UI system: health bars, debug visualization
 
 local HitboxUtils = require("src/utils/hitbox_utils")
-local EntityUtils = require("src/utils/entity_utils")
 
 local UI = {}
 
@@ -82,14 +81,26 @@ local function draw_hitbox(entity)
    rect(hb.x, hb.y, hb.x + hb.w, hb.y + hb.h, 8)
 end
 
--- Draw aim line for an entity
+-- Draw aim line for an entity (origin matches projectile visual center)
 local function draw_aim_line(entity)
-   local cx, cy = EntityUtils.get_center(entity)
+   -- Projectile origin is a direct offset from entity sprite top-left
+   local origin_x = entity.x + (entity.projectile_origin_x or 0)
+   local origin_y = entity.y + (entity.projectile_origin_y or 0)
+
+   -- Get shoot direction
+   local dx = entity.shoot_dir_x or 0
+   local dy = entity.shoot_dir_y or 0
+
+   -- Apply z offset (projectile visually rendered at y - z)
+   if entity.projectile_origin_z then
+      origin_y = origin_y - entity.projectile_origin_z
+   end
+
    local aim_line = {
-      x1 = cx,
-      y1 = cy,
-      x2 = cx + entity.range * entity.shoot_dir_x,
-      y2 = cy + entity.range * entity.shoot_dir_y,
+      x1 = origin_x,
+      y1 = origin_y,
+      x2 = origin_x + entity.range * dx,
+      y2 = origin_y + entity.range * dy,
    }
    fillp(0x5A5A)
    line(aim_line.x1, aim_line.y1, aim_line.x2, aim_line.y2, 8)

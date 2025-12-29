@@ -11,8 +11,8 @@ function Player.spawn(world, x, y)
         y = y,
         width = 16,
         height = 16,
-        -- Per-direction hitbox (uses entity.hitbox[direction] lookup in HitboxUtils)
-        hitbox = GameConstants.Player.hitbox,
+        -- Per-direction hitboxes (uses entity.hitboxes[direction] lookup in HitboxUtils)
+        hitboxes = GameConstants.Player.hitboxes,
         shadow_offset_y = GameConstants.Player.shadow_offset_y or 0,
         shadow_offset_x = GameConstants.Player.shadow_offset_x or 0,
         shadow_offsets_y = GameConstants.Player.shadow_offsets_y,
@@ -63,6 +63,9 @@ function Player.spawn(world, x, y)
         -- Shooter system properties
         health_as_ammo = true, -- Shooting costs HP
         projectile_type = "Egg",
+        projectile_origin_x = GameConstants.Player.projectile_origin_x or 0,
+        projectile_origin_y = GameConstants.Player.projectile_origin_y or 0,
+        projectile_origin_z = GameConstants.Player.projectile_origin_z or 0,
         shoot_cooldown_duration = GameConstants.Player.fire_rate,
         -- Health regen properties
         regen_trigger_field = "time_since_shot", -- Trigger for regen

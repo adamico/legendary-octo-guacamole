@@ -51,4 +51,6 @@ SPATIAL_GRID_CELL_SIZE = 64    -- Spatial partitioning cell size in pixels
 SKULL_SPAWN_TIMER = 420
 SKULL_SPAWN_LOCKED_TIMER = 1800
 
+-- Spawner indicator sprite
+SPAWNER_INDICATOR_SPRITE = 45
 -- Note: These are globals, no return needed

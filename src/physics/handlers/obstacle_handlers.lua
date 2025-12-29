@@ -53,7 +53,10 @@ end
 
 
 -- Push entity out of obstacle (AABB minimum penetration resolution)
+-- Respects solid tiles - won't push entity into walls
 local function push_out(entity, obstacle)
+   local Collision = require("src/physics/collision")
+   local qsort = require("lib/qsort")
    local e_hb = HitboxUtils.get_hitbox(entity)
    local o_hb = HitboxUtils.get_hitbox(obstacle)
 
@@ -63,38 +66,57 @@ local function push_out(entity, obstacle)
    local overlap_top = (e_hb.y + e_hb.h) - o_hb.y
    local overlap_bottom = (o_hb.y + o_hb.h) - e_hb.y
 
-   -- Find minimum penetration axis
-   local min_overlap = overlap_left
-   local push_x, push_y = -overlap_left, 0
+   -- Build sorted list of push options by penetration depth (smallest first)
+   local push_options = {
+      {overlap = overlap_left,   px = -overlap_left, py = 0},
+      {overlap = overlap_right,  px = overlap_right, py = 0},
+      {overlap = overlap_top,    px = 0,             py = -overlap_top},
+      {overlap = overlap_bottom, px = 0,             py = overlap_bottom},
+   }
+   qsort(push_options, function(a, b) return a.overlap < b.overlap end)
 
-   if overlap_right < min_overlap then
-      min_overlap = overlap_right
-      push_x, push_y = overlap_right, 0
-   end
-   if overlap_top < min_overlap then
-      min_overlap = overlap_top
-      push_x, push_y = 0, -overlap_top
-   end
-   if overlap_bottom < min_overlap then
-      min_overlap = overlap_bottom
-      push_x, push_y = 0, overlap_bottom
+   -- Find first push option that doesn't collide with solid tiles
+   for _, opt in ipairs(push_options) do
+      local new_hb_x = e_hb.x + opt.px
+      local new_hb_y = e_hb.y + opt.py
+      if not Collision.is_solid(new_hb_x, new_hb_y, e_hb.w, e_hb.h, entity) then
+         -- Apply push to entity position
+         entity.x = entity.x + opt.px
+         entity.y = entity.y + opt.py
+
+         -- Zero velocity in push direction to prevent jittering
+         if opt.px ~= 0 then entity.vel_x = 0 end
+         if opt.py ~= 0 then entity.vel_y = 0 end
+         return
+      end
    end
 
-   -- Apply push to entity position
-   entity.x = entity.x + push_x
-   entity.y = entity.y + push_y
-
-   -- Zero velocity in push direction to prevent jittering
-   if push_x ~= 0 then entity.vel_x = 0 end
-   if push_y ~= 0 then entity.vel_y = 0 end
+   -- All directions blocked - entity is trapped, don't push
+   -- This prevents phasing through walls
 end
 
 -- Helper: spawn projectile pickup and delete projectile
+-- Guards against being called multiple times for the same projectile
 local function projectile_hit_obstacle(projectile)
+   -- Prevent double processing if projectile hits multiple obstacles in same frame
+   if projectile.hit_obstacle then return end
+   projectile.hit_obstacle = true
+
    local recovery = (projectile.shot_cost or 0) * (projectile.recovery_percent or 0)
    if recovery > 0 then
-      Entities.spawn_pickup_projectile(world, projectile.x, projectile.y,
-         projectile.dir_x, projectile.dir_y, recovery, projectile.sprite_index, projectile.z)
+      -- Use hitbox center for accurate spawn position
+      -- Note: hitbox.y already accounts for z (visual elevation)
+      local hb = HitboxUtils.get_hitbox(projectile)
+      local GameConstants = require("src/game/game_config")
+      local pickup_config = GameConstants.Pickup.ProjectilePickup
+      local half_pickup_w = (pickup_config.width or 16) / 2
+      local half_pickup_h = (pickup_config.height or 16) / 2
+      local spawn_x = hb.x + hb.w / 2 - half_pickup_w
+      local spawn_y = hb.y + hb.h / 2 - half_pickup_h
+      local spawn_z = projectile.z
+
+      Entities.spawn_pickup_projectile(world, spawn_x, spawn_y,
+         projectile.dir_x, projectile.dir_y, recovery, projectile.sprite_index, spawn_z, projectile.vertical_shot)
    end
    world.del(projectile)
 end

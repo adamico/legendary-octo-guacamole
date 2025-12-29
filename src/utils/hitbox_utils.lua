@@ -2,21 +2,31 @@ local HitboxUtils = {}
 
 -- Get hitbox bounds in world space
 -- Returns {x, y, w, h} for collision detection
--- Supports per-direction hitboxes via entity.hitbox[direction] table
+-- Supports two formats:
+--   1. Simple: entity.hitbox = {w, h, ox, oy} - same hitbox for all directions
+--   2. Per-direction: entity.hitboxes = {down = {...}, up = {...}, ...}
 -- Falls back to hitbox_* properties, then width/height
 function HitboxUtils.get_hitbox(entity)
     local w, h, ox, oy
 
-    -- Check for direction-based hitbox table
-    if entity.hitbox then
+    -- Check for per-direction hitboxes table first
+    if entity.hitboxes then
         local dir = entity.direction or entity.current_direction
-        local dir_hb = dir and entity.hitbox[dir]
+        local dir_hb = dir and entity.hitboxes[dir]
         if dir_hb then
             w = dir_hb.w
             h = dir_hb.h
             ox = dir_hb.ox or 0
             oy = dir_hb.oy or 0
         end
+    end
+
+    -- Check for simple hitbox table (same for all directions)
+    if not w and entity.hitbox and entity.hitbox.w then
+        w = entity.hitbox.w
+        h = entity.hitbox.h
+        ox = entity.hitbox.ox or 0
+        oy = entity.hitbox.oy or 0
     end
 
     -- Fallback to simple hitbox properties

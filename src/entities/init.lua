@@ -26,7 +26,7 @@ end
 Entities.spawn_enemy_projectile = function(world, x, y, dx, dy)
     return Projectile.spawn(world, x, y, dx, dy, "EnemyBullet")
 end
-Entities.spawn_centered_projectile = Projectile.spawn_centered
+Entities.spawn_projectile_from_origin = Projectile.spawn_from_origin
 
 -- Pickup spawners (convenience wrappers for Type Object pattern)
 Entities.spawn_pickup_projectile = Pickup.spawn_projectile

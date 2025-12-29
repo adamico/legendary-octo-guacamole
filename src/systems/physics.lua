@@ -131,11 +131,26 @@ function Physics.z_axis(world)
       end
 
       -- Apply velocity
+      local prev_z = entity.z
       entity.z += entity.vel_z
 
-      -- Ground collision
-      if entity.z <= 0 then
+      -- For vertical shots: shadow moves toward sprite instead of sprite dropping to shadow
+      -- This keeps visual position constant (y - z) while shadow (y) catches up
+      -- Only apply while z > 0 (still falling) - stop when grounded
+      if entity.vertical_shot and entity.vel_z < 0 and entity.z > 0 then
+         -- Stop projectile movement - only shadow should catch up to visual position
+         entity.vel_x = 0
+         entity.vel_y = 0
+         -- Decrease Y by the same amount Z decreased, keeps visual_y = y - z constant
+         local z_delta = entity.z - prev_z -- This is negative
+         entity.y += z_delta               -- Move shadow toward visual position
+      end
+
+      -- Ground collision (only for entities that use z elevation)
+      -- Skip if gravity_z is 0 (projectile was never elevated, e.g., vertical shots)
+      if entity.z <= 0 and entity.gravity_z and entity.gravity_z < 0 then
          entity.z = 0
+         entity.vel_z = 0 -- Stop gravity accumulation
 
          -- Player Egg: hatch into chick on landing
          if entity.tags and string.find(entity.tags, "projectile") and entity.owner == "player" then

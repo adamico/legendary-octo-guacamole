@@ -16,6 +16,10 @@ return {
    fire_rate = 15,               -- Frames between shots
    base_knockback = 4,           -- Base knockback applied to all player attacks
    vampiric_heal = 0.3,          -- Heal player for 30% of damage dealt
+   -- Projectile origin (offset from sprite top-left, i.e., entity.x and entity.y)
+   projectile_origin_x = 12,     -- X offset from sprite left edge
+   projectile_origin_y = 24,     -- Y offset from sprite top edge
+   projectile_origin_z = 16,     -- Z elevation for horizontal shots
    -- Inventory
    coins = 0,
    keys = 0,
@@ -62,15 +66,17 @@ return {
    shadow_height = 6,
    outline_color = 1,
    sort_offset_y = 38,
-   hitbox = {
-      down  = {w = 8, h = 25, ox = 7, oy = 4},
-      up    = {w = 8, h = 25, ox = 7, oy = 4},
-      right = {w = 10, h = 25, ox = 7, oy = 4},
-      left  = {w = 10, h = 25, ox = 7, oy = 4},
+   height_z = 25, -- Vertical collision height (human body, projectiles above this miss)
+   -- Per-direction hitboxes (use 'hitbox = {w, h, ox, oy}' for same hitbox all directions)
+   hitboxes = {
+      down  = {w = 10, h = 12, ox = 7, oy = 18},
+      up    = {w = 10, h = 12, ox = 7, oy = 18},
+      right = {w = 10, h = 12, ox = 7, oy = 18},
+      left  = {w = 10, h = 12, ox = 7, oy = 18},
    },
    melee_cost = 10,
    melee_cooldown = 60,
-   melee_sprite = 31,
+   melee_sprite = 41,
    melee_range = 14,
    melee_hitboxes = {
       down  = {w = 14, h = 16, ox = 4, oy = -4},

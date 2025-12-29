@@ -7,12 +7,12 @@ return {
       tags = "bomb,drawable,sprite,timers,shadow,middleground",
       width = 16,
       height = 16,
-      sprite_index = 22, -- Bomb placed sprite
+      sprite_index = 38, -- Bomb placed sprite
       sprite_index_offsets = {
-         down = 22,
-         up = 22,
-         left = 22,
-         right = 22,
+         down = 38,
+         up = 38,
+         left = 38,
+         right = 38,
       },
       fuse_time = 180,      -- 3 seconds at 60fps
       explosion_radius = 1, -- 1 tile = 3x3 grid centered on bomb
@@ -25,12 +25,12 @@ return {
       tags = "explosion,collidable,drawable,sprite,timers,middleground",
       width = 16,
       height = 16,
-      sprite_index = 27,
+      sprite_index = 44,
       sprite_index_offsets = {
-         down = 27,
-         up = 27,
-         left = 27,
-         right = 27,
+         down = 44,
+         up = 44,
+         left = 44,
+         right = 44,
       },
       hitbox_width = 14,
       hitbox_height = 14,
