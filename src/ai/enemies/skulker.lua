@@ -37,8 +37,8 @@ local function init_fsm(entity)
 end
 
 --- Main AI update for Skulker enemy type
--- @param entity The skulker entity
--- @param player The player entity (target)
+--- @param entity The skulker entity
+--- @param player The player entity (target)
 local function skulker_ai(entity, player)
    -- Initialize FSM if needed
    if not entity.skulker_fsm then

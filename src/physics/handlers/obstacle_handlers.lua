@@ -110,18 +110,11 @@ local function projectile_hit_obstacle(projectile, obstacle_type)
 
    if obstacle_type == "Rock" then
       -- Hard Obstacle: Spawns Yolk Splat (same as wall)
-      Entities.spawn_entity(world, GameConstants.EntityCollisionLayer.WORLD, {
-         x = spawn_x,
-         y = spawn_y,
-         width = 16,
-         height = 16,
-         type = "YolkSplat", -- Must match config key
-         hitbox_width = 12,
-         hitbox_height = 12,
+      Entities.spawn_minion(world, spawn_x, spawn_y, "YolkSplat", {
          creation_time = t(),
          lifespan = GameConstants.Player.yolk_splat_duration or 300,
          yolk_slow_factor = GameConstants.Player.yolk_slow_factor or 0.7,
-      }, "YolkSplat")
+      })
    elseif obstacle_type == "Destructible" then
       -- Soft Destructible: Break immediate. egg destroyed.
       -- No hatch, no splat. Just deletion.

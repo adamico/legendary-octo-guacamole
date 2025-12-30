@@ -19,6 +19,18 @@ function Timers.update(world)
          entity.melee_cooldown -= 1
       end
 
+      -- HP drain (for minions with finite lifespan based on health)
+      if entity.hp_drain_rate then
+         entity.hp_drain_timer = (entity.hp_drain_timer or 0) + 1
+         if entity.hp_drain_timer >= entity.hp_drain_rate then
+            entity.hp_drain_timer = 0
+            entity.hp = entity.hp - 1
+            if entity.hp <= 0 then
+               world.del(entity)
+            end
+         end
+      end
+
       -- Entity lifespan (for temporary hitboxes)
       if entity.lifespan then
          entity.lifespan -= 1

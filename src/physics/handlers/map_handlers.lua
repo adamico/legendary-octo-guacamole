@@ -4,7 +4,6 @@
 local Entities = require("src/entities")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local GameConstants = require("src/game/game_config")
-local Effects = require("src/systems/effects")
 
 local MapHandlers = {}
 
@@ -21,39 +20,26 @@ function MapHandlers.register(handlers)
       local cy = hb.y + hb.h / 2
 
       -- Helper to get tile under center
-      local tx = flr(cx / 16) -- GRID_SIZE
-      local ty = flr(cy / 16)
+      local tx = flr(cx / GRID_SIZE)
+      local ty = flr(cy / GRID_SIZE)
       local tile = mget(tx, ty) or 0
 
       -- Check for Pit (Silent sink)
-      -- Need GameConstants.PIT_TILE or check flag?
-      -- Using flag is safer if defined, but specific tile 85 is in tiles.lua
-      -- Let's check both or use helper. Collision.is_pit?
-      -- Collision module not required here, but we can check flag.
-      -- FEATURE_FLAG_PIT = 1 in tiles.lua
-      if fget(tile, 1) then -- FEATURE_FLAG_PIT
-         -- Silent delete (sinking)
+      if fget(tile, FEATURE_FLAG_PIT) then
          world.del(projectile)
          return
       end
 
       -- Spawn Yolk Splat at wall base (visual + slow + edible)
-      local spawn_x = cx - 8
-      local spawn_y = cy - 8
+      local spawn_x = cx - GRID_SIZE / 2
+      local spawn_y = cy - GRID_SIZE / 2
 
-      -- Using Utils to spawn so tags/shadows are processed if needed
-      Entities.spawn_entity(world, GameConstants.EntityCollisionLayer.WORLD, {
-         x = spawn_x,
-         y = spawn_y,
-         width = 16,
-         height = 16,
-         type = "YolkSplat", -- Must match config key
-         hitbox_width = 12,
-         hitbox_height = 12,
+      -- Using Entities convenience helper for YolkSplat
+      Entities.spawn_yolk_splat(world, spawn_x, spawn_y, {
          creation_time = t(),
-         lifespan = GameConstants.Player.yolk_splat_duration or 300,
-         yolk_slow_factor = GameConstants.Player.yolk_slow_factor or 0.7,
-      }, "YolkSplat")
+         lifespan = GameConstants.Player.yolk_splat_duration,
+         yolk_slow_factor = GameConstants.Player.yolk_slow_factor,
+      })
 
       world.del(projectile)
    end

@@ -20,6 +20,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Chick Minion Health & Drain**:
+  - Added 20 HP to chicks (they now have `hp = 20`).
+  - Added `hp_drain_rate = 60` config property (frames between each 1 HP drain).
+  - Extended `systems/timers.lua` to handle HP drain for any entity with `hp_drain_rate`.
+  - Chicks now lose 1 HP per second and are deleted when HP reaches 0.
 - **Refined Egg Projectile Logic (3-Outcome System)**:
   - Replaced two-roll (integrity+fertility) system with a single-roll 3-outcome mechanic (33% each):
     - **Heavy Impact**: Deals high damage (15), no refund.

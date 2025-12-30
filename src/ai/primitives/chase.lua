@@ -5,11 +5,11 @@
 local Chase = {}
 
 --- Move entity toward a target position
--- @param entity The entity to move
--- @param target_x Target X position
--- @param target_y Target Y position
--- @param speed_mult Optional speed multiplier (default 1.0)
--- @return dist The distance to target
+--- @param entity The entity to move
+--- @param target_x Target X position
+--- @param target_y Target Y position
+--- @param speed_mult Optional speed multiplier (default 1.0)
+--- @return dist The distance to target
 function Chase.toward(entity, target_x, target_y, speed_mult)
    local dx = target_x - entity.x
    local dy = target_y - entity.y
@@ -27,11 +27,11 @@ function Chase.toward(entity, target_x, target_y, speed_mult)
 end
 
 --- Move entity away from a target position (flee)
--- @param entity The entity to move
--- @param target_x Target X position to flee from
--- @param target_y Target Y position to flee from
--- @param speed_mult Optional speed multiplier (default 1.0)
--- @return dist The distance to target
+--- @param entity The entity to move
+--- @param target_x Target X position to flee from
+--- @param target_y Target Y position to flee from
+--- @param speed_mult Optional speed multiplier (default 1.0)
+--- @return dist The distance to target
 function Chase.away(entity, target_x, target_y, speed_mult)
    local dx = target_x - entity.x
    local dy = target_y - entity.y
@@ -49,12 +49,12 @@ function Chase.away(entity, target_x, target_y, speed_mult)
 end
 
 --- Maintain a specific distance from target (orbit-like)
--- @param entity The entity to position
--- @param target_x Target X position
--- @param target_y Target Y position
--- @param ideal_dist The ideal distance to maintain
--- @param tolerance How much variance is acceptable
--- @return dist The current distance to target
+--- @param entity The entity to position
+--- @param target_x Target X position
+--- @param target_y Target Y position
+--- @param ideal_dist The ideal distance to maintain
+--- @param tolerance How much variance is acceptable
+--- @return dist The current distance to target
 function Chase.maintain_distance(entity, target_x, target_y, ideal_dist, tolerance)
    local dx = target_x - entity.x
    local dy = target_y - entity.y

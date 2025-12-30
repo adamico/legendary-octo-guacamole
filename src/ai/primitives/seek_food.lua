@@ -20,10 +20,11 @@ end
 
 --- Update SeekFood behavior
 --- @param entity Entity - The hungry entity
+--- @param world table - ECS world for querying and deleting entities
 --- @param range number - Scanning range (default 100)
 --- @param heal_amount number - Amount to heal (default 5)
 --- @return boolean - Returns true if food was found/pursued/eaten, false otherwise
-function SeekFood.update(entity, range, heal_amount)
+function SeekFood.update(entity, world, range, heal_amount)
    range = range or 100
    heal_amount = heal_amount or 5
 
@@ -34,7 +35,10 @@ function SeekFood.update(entity, range, heal_amount)
    -- Iterate all entities with yolk_splat tag
    -- Using world filter if possible, or naive iteration if not efficiently indexed
    -- Efficient way: ECS query
-   local candidates = world.ecs_filter("yolk_splat")
+   local candidates = {}
+   world.sys("yolk_splat", function(food)
+      table.insert(candidates, food)
+   end)()
 
    local ex, ey = entity.x, entity.y
 

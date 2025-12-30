@@ -322,8 +322,17 @@ return {
    Minion = {
       Chick = {
          entity_type = "Chick",
-         tags = "minion,velocity,map_collidable,drawable,animatable,sprite,shadow,middleground",
-         hp = 1,
+         tags = "minion,timers,health,velocity,map_collidable,drawable,animatable,sprite,shadow,middleground",
+         hp = 20,
+         hp_drain_rate = 60,     -- Frames between each 1 HP loss (60 = 1 HP/second)
+         food_seek_range = 120,  -- Range to detect yolk splats
+         food_heal_amount = 5,   -- HP restored per yolk splat eaten
+         vision_range = 80,      -- Range to detect and chase enemies
+         chase_speed_mult = 1.2, -- Speed multiplier when chasing (1.2 = 120%)
+         attack_damage = 1,      -- Damage per attack
+         attack_cooldown = 60,   -- Frames between attacks (60 = 1 attack/second)
+         attack_knockback = 3,   -- Knockback applied to chick after attack
+         attack_range = 16,      -- Distance to trigger attack
          max_speed = 0.3,
          wander_radius = 32,
          wander_speed_mult = 0.8,
