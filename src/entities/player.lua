@@ -51,9 +51,10 @@ function Player.spawn(world, x, y)
         knockback = GameConstants.Player.base_knockback,
         range = GameConstants.Player.range,
         fire_rate = GameConstants.Player.fire_rate,
-        -- Egg stats
-        integrity = GameConstants.Player.integrity,
-        fertility = GameConstants.Player.fertility,
+        -- Egg outcome stats (single roll with 3 equal outcomes)
+        impact_damage = GameConstants.Player.impact_damage,
+        drain_damage = GameConstants.Player.drain_damage,
+        drain_heal = GameConstants.Player.drain_heal,
         hatch_time = GameConstants.Player.hatch_time,
 
         melee_cooldown = 0,

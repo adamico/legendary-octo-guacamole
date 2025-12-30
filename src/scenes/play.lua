@@ -60,15 +60,9 @@ function Play:enteredState()
       self:gotoState("GameOver")
    end)
 
-   -- Subscribe to room clear events (heal player by 1 segment)
+   -- Subscribe to room clear events
    Events.on(Events.ROOM_CLEAR, function(room)
-      local segment_hp = player.max_hp / 5
-      local old_hp = player.hp
-      player.hp = min(player.hp + segment_hp, player.max_hp)
-      local actual_heal = player.hp - old_hp
-      if actual_heal > 0 then
-         Systems.FloatingText.spawn_at_entity(player, actual_heal, "heal")
-      end
+      -- No healing on room clear anymore (as per new design)
    end)
 
    -- Setup debugui cheats toggles (clickable)

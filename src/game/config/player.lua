@@ -4,26 +4,30 @@ return {
    width = 24,
    height = 32,
    max_health = 100,
-   max_hp_to_shot_cost_ratio = 0.2,
-   recovery_percent = 0.8,
+   max_hp_to_shot_cost_ratio = 0.05, -- 5 hp per shot
+   recovery_percent = 0.8,           -- I don't think we need this anymore
    regen_rate = 0,
    regen_delay = 1.5,
    -- Stats
-   max_speed = 2,                -- Movement speed
+   max_speed = 2,                 -- Movement speed
    shot_speed = 4,
-   max_hp_to_damage_ratio = 0.2, -- Damage = max_hp * ratio
-   range = 200,                  -- Max distance in pixels
-   fire_rate = 15,               -- Frames between shots
-   base_knockback = 4,           -- Base knockback applied to all player attacks
-   vampiric_heal = 0.3,          -- Heal player for 30% of damage dealt
-   -- Egg stats
-   integrity = 0.5,              -- 50% chance egg survives collision intact
-   fertility = 0.5,              -- 50% chance surviving egg hatches into chick
-   hatch_time = 120,             -- Frames for egg to hatch into chick (2 seconds)
+   max_hp_to_damage_ratio = 0.05, -- Damage = max_hp * ratio
+   range = 200,                   -- Max distance in pixels
+   fire_rate = 15,                -- Frames between shots
+   base_knockback = 4,            -- Base knockback applied to all player attacks
+   vampiric_heal = 0.3,           -- Heal player for 30% of damage dealt, is this used?
+   -- Egg outcome probabilities (single roll, 3 equal outcomes)
+   -- 33% Heavy Impact: Deals impact_damage to enemy
+   -- 33% The Hatching: Spawns a chick (no damage to enemy)
+   -- 33% Parasitic Drain: Deals drain_damage, drops drain_heal HP pickup
+   impact_damage = 15,       -- Damage dealt on Heavy Impact outcome
+   drain_damage = 5,         -- Damage dealt on Parasitic Drain outcome
+   drain_heal = 5,           -- HP pickup dropped on Parasitic Drain outcome
+   hatch_time = 120,         -- Frames for egg to hatch into chick (2 seconds)
    -- Projectile origin (offset from sprite top-left, i.e., entity.x and entity.y)
-   projectile_origin_x = 12,     -- X offset from sprite left edge
-   projectile_origin_y = 24,     -- Y offset from sprite top edge
-   projectile_origin_z = 16,     -- Z elevation for horizontal shots
+   projectile_origin_x = 12, -- X offset from sprite left edge
+   projectile_origin_y = 24, -- Y offset from sprite top edge
+   projectile_origin_z = 16, -- Z elevation for horizontal shots
    -- Inventory
    coins = 0,
    keys = 0,

@@ -20,16 +20,15 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
-- **Implemented Two-Roll Egg Collision System**: Eggs now use integrity + fertility rolls:
-  - **Stats**: `integrity` (chance egg survives intact), `fertility` (chance intact egg hatches), `hatch_time` (frames to hatch).
-  - **Non-Living Collision** (walls, obstacles, floor):
-    - Integrity success → Fertility roll: success = spawn hatching egg, fail = spawn refund pickup.
-    - Integrity fail → Egg breaks: visual effect + health pickup (50% of shot cost).
-  - **Enemy Collision**:
-    - Integrity success → Fertility roll: success = no damage + spawn hatching egg, fail = full damage.
-    - Integrity fail → Egg breaks: half damage + visual effect (no health pickup).
-  - **Egg Minion**: Falls to ground before hatching. AI-driven animation scales with `hatch_time`.
-  - **Visual Effect**: Broken egg sprite (27) shown when eggs break.
+- **Refined Egg Projectile Logic (3-Outcome System)**:
+  - Replaced two-roll (integrity+fertility) system with a single-roll 3-outcome mechanic (33% each):
+    - **Heavy Impact**: Deals high damage (15), no refund.
+    - **The Hatching**: Spawns a chick minion, deals no damage.
+    - **Parasitic Drain**: Deals low damage (5), drops 5 HP blood glob (refund).
+  - Applied outcomes consistently across **Enemy**, **Wall**, **Obstacle**, and **Ground** collisions.
+  - Updated `Player` config, `Shooter` system, and all collision handlers.
+  - Documented flow in `DESIGN.md`.
+- **Implemented Two-Roll Egg Collision System**: (Deprecated/Superseded by 3-Outcome System)
 - **Created Rendering Architecture Documentation**:
   - Created `docs/architecture/rendering.md` covering:
     - **Y-Sorted Depth**: Foot-based sorting for 2.5D visual layering.

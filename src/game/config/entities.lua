@@ -103,7 +103,7 @@ return {
          hitbox = {w = 12, h = 12, ox = 2, oy = 2},
          -- shadow_offset_y = -2,
          shadow_width = 11,
-         recovery_amount = 20,
+         recovery_amount = 5,
       },
       Coin = {
          entity_type = "Coin",

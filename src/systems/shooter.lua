@@ -77,9 +77,12 @@ function Shooter.update(world)
                knockback = entity.knockback,
                recovery_percent = entity.recovery_percent,
                shot_cost = shot_cost,
-               lifetime = (entity.range and entity.shot_speed) and (entity.range / entity.shot_speed) or 60,
-               integrity = entity.integrity,
-               fertility = entity.fertility,
+               lifetime = (entity.range and entity.shot_speed)
+                  and (entity.range / entity.shot_speed) or 60,
+               -- Egg outcome stats (single roll with 3 equal outcomes)
+               impact_damage = entity.impact_damage,
+               drain_damage = entity.drain_damage,
+               drain_heal = entity.drain_heal,
                hatch_time = entity.hatch_time,
             }
          )

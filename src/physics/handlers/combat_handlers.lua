@@ -67,50 +67,58 @@ end
 
 -- Handler for Projectile hitting Enemy
 local function projectile_vs_enemy(projectile, enemy)
+   -- Prevent double processing if already handled
+   if projectile.hit_obstacle then return end
+   projectile.hit_obstacle = true
+
    -- Trigger impact effect
    Effects.hit_impact(projectile, enemy)
 
-   local integrity = projectile.integrity or 0
-   local fertility = projectile.fertility or 0
-   local base_damage = projectile.damage or GameConstants.Projectile.damage or 10
+   -- Get outcome values from projectile (passed from player stats)
+   local impact_damage = projectile.impact_damage or 15
+   local drain_damage = projectile.drain_damage or 5
+   local drain_heal = projectile.drain_heal or 5
+   local hatch_time = projectile.hatch_time or 120
+
    local hb = HitboxUtils.get_hitbox(projectile)
    local spawn_x = hb.x + hb.w / 2 - 8
    local spawn_y = hb.y + hb.h / 2 - 8
    local spawn_z = projectile.z or 0
 
-   if rnd() < integrity then
-      -- Egg survives intact: fertility roll
-      if rnd() < fertility then
-         -- Fertility success: no damage, spawn egg that will hatch into chick
-         Entities.spawn_egg(world, spawn_x, spawn_y, {
-            hatch_timer = projectile.hatch_time or 120,
-            z = spawn_z,
-         })
-      else
-         -- Fertility fail: full damage to enemy
-         if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
-            enemy.hp = enemy.hp - base_damage
-            enemy.invuln_timer = 10
-            FloatingText.spawn_at_entity(enemy, -base_damage, "damage")
+   -- Single roll with 3 equal outcomes (33% each)
+   local roll = rnd()
 
-            local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
-            local knockback = GameConstants.Player.base_knockback + proj_knockback
-            Effects.apply_knockback(projectile, enemy, knockback)
-         end
-      end
-   else
-      -- Egg breaks: half damage + visual breaking effect
-      local damage = base_damage / 2
+   if roll < 0.33 then
+      -- Heavy Impact (33%): Deal full damage to enemy
       if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
-         enemy.hp = enemy.hp - damage
+         enemy.hp = enemy.hp - impact_damage
          enemy.invuln_timer = 10
-         FloatingText.spawn_at_entity(enemy, -damage, "damage")
+         FloatingText.spawn_at_entity(enemy, -impact_damage, "damage")
 
          local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
          local knockback = GameConstants.Player.base_knockback + proj_knockback
          Effects.apply_knockback(projectile, enemy, knockback)
       end
-      Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
+   elseif roll < 0.66 then
+      -- The Hatching (33%): No damage, spawn chick
+      Entities.spawn_egg(world, spawn_x, spawn_y, {
+         hatch_timer = hatch_time,
+         z = spawn_z,
+      })
+   else
+      -- Parasitic Drain (33%): Partial damage + spawn health pickup
+      if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
+         enemy.hp = enemy.hp - drain_damage
+         enemy.invuln_timer = 10
+         FloatingText.spawn_at_entity(enemy, -drain_damage, "damage")
+
+         local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
+         local knockback = GameConstants.Player.base_knockback + proj_knockback
+         Effects.apply_knockback(projectile, enemy, knockback)
+      end
+      -- Spawn health pickup (blood glob)
+      local ground_y = spawn_y + spawn_z
+      Entities.spawn_health_pickup(world, spawn_x, ground_y, drain_heal)
    end
    world.del(projectile)
 end

@@ -43,7 +43,7 @@ max_hp = 100          -- 5 shots at full health
 shot_cost = 20        -- HP per projectile fired
 recovery_percent = 0.8 -- 80% return on pickups
 regen_rate = 0        -- Passive regen is DISABLED (must clear rooms to heal)
-room_clear_heal = 20  -- Heal 1 segment (20 HP) upon clearing a room
+room_clear_heal = 0  -- No healing on room clear (must use drain mechanic)
 ```
 
 ### Visual Design
@@ -106,3 +106,28 @@ The Core Mechanic: "Blood for Blood"
 The Cost: Every shot takes a small chunk of Player HP (e.g., 5 HP).
 
 The Goal: Find DNA that either makes your blood "cheaper" (Defense/Efficiency) or makes your chicks better at harvesting it back (Sustain/Lifesteal).
+
+### Projectile Outcomes (Three-Way Roll)
+
+Upon impact with ANY surface (Enemy, Wall, Floor), the egg undergoes a transformational roll with 3 equal probabilities:
+
+```mermaid
+graph LR
+    Start(Impact) --> Roll{Roll}
+    
+    Roll -->|33%| Impact[HEAVY IMPACT]
+    Impact --> I_Res[Deals 15 Dmg]
+    I_Res --> I_Net[Net: -5 HP]
+    
+    Roll -->|33%| Hatch[THE HATCHING]
+    Hatch --> H_Res[Spawns Chick]
+    H_Res --> H_Net[Net: -5 HP + Minion]
+    
+    Roll -->|33%| Drain[PARASITIC DRAIN]
+    Drain --> D_Res[5 Dmg + 5 HP Drop]
+    D_Res --> D_Net[Net: Free Refund]
+    
+    style Impact fill:#ffcccc,stroke:#333,color:#000
+    style Hatch fill:#ffffcc,stroke:#333,color:#000
+    style Drain fill:#ccffcc,stroke:#333,color:#000
+```

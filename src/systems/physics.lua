@@ -157,28 +157,29 @@ function Physics.z_axis(world)
          if entity.tags and string.find(entity.tags, "projectile") and entity.owner == "player" then
             -- Skip if landing on a pit tile
             if mget(flr(entity.x / GRID_SIZE), flr(entity.y / GRID_SIZE)) ~= PIT_TILE then
-               -- Two-roll logic for non-living collision
-               local integrity = entity.integrity or 0
-               local fertility = entity.fertility or 0
+               -- Prevent double processing if already handled
+               if entity.hit_obstacle then return end
+               entity.hit_obstacle = true
 
-               if rnd() < integrity then
-                  -- Egg survives intact: fertility roll
-                  if rnd() < fertility then
-                     -- Fertility success: spawn egg that will hatch into chick
-                     Entities.spawn_egg(world, entity.x, entity.y, {
-                        hatch_timer = entity.hatch_time or 120,
-                     })
-                  else
-                     -- Fertility fail: spawn refund pickup
-                     local refund = entity.shot_cost or 0
-                     Entities.spawn_pickup_projectile(world, entity.x, entity.y,
-                        entity.dir_x, entity.dir_y, refund, entity.sprite_index, 0, entity.vertical_shot)
-                  end
-               else
-                  -- Egg breaks: show broken egg effect and spawn health pickup (50% of shot cost)
+               -- Single roll with 3 equal outcomes (33% each)
+               local roll = rnd()
+
+               -- Get projectile stats
+               local hatch_time = entity.hatch_time or 120
+               local drain_heal = entity.drain_heal or 5
+
+               if roll < 0.33 then
+                  -- Heavy Impact (33%): Egg breaks, sunk cost (Net: -5 HP)
                   Effects.spawn_visual_effect(world, entity.x, entity.y, BROKEN_EGG_SPRITE, 15)
-                  local heal_amount = (entity.shot_cost or 0) * 0.5
-                  Entities.spawn_health_pickup(world, entity.x, entity.y, heal_amount)
+               elseif roll < 0.66 then
+                  -- The Hatching (33%): Spawns a chick (Net: -5 HP, +1 Minion)
+                  Entities.spawn_egg(world, entity.x, entity.y, {
+                     hatch_timer = hatch_time,
+                  })
+               else
+                  -- Parasitic Drain (33%): Refund/Heal (Net: 0 HP - Free shot)
+                  -- Spawns a health pickup equal to the drain heal amount
+                  Entities.spawn_health_pickup(world, entity.x, entity.y, drain_heal)
                end
             end
          end

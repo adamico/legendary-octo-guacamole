@@ -21,30 +21,27 @@ function MapHandlers.register(handlers)
       local spawn_y = hb.y + hb.h / 2 - 8
       local spawn_z = projectile.z
 
-      -- Two-roll logic for non-living collision
-      local integrity = projectile.integrity or 0
-      local fertility = projectile.fertility or 0
+      -- Single roll with 3 equal outcomes (33% each)
+      local roll = rnd()
 
-      if rnd() < integrity then
-         -- Egg survives intact: fertility roll
-         if rnd() < fertility then
-            -- Fertility success: spawn egg that will hatch into chick
-            Entities.spawn_egg(world, spawn_x, spawn_y, {
-               hatch_timer = projectile.hatch_time or 120,
-               z = spawn_z,
-            })
-         else
-            -- Fertility fail: spawn refund pickup
-            local refund = projectile.shot_cost or 0
-            Entities.spawn_pickup_projectile(world, spawn_x, spawn_y, projectile.dir_x, projectile.dir_y, refund,
-               projectile.sprite_index, spawn_z, projectile.vertical_shot)
-         end
-      else
-         -- Egg breaks: show broken egg effect and spawn health pickup at ground level (50% of shot cost)
+      -- Get projectile stats
+      local hatch_time = projectile.hatch_time or 120
+      local drain_heal = projectile.drain_heal or 5
+
+      if roll < 0.33 then
+         -- Heavy Impact (33%): Egg breaks, sunk cost (Net: -5 HP)
          Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
-         local heal_amount = (projectile.shot_cost or 0) * 0.5
-         local ground_y = spawn_y + (spawn_z or 0) -- Adjust Y to ground level
-         Entities.spawn_health_pickup(world, spawn_x, ground_y, heal_amount)
+      elseif roll < 0.66 then
+         -- The Hatching (33%): Spawns a chick (Net: -5 HP, +1 Minion)
+         Entities.spawn_egg(world, spawn_x, spawn_y, {
+            hatch_timer = hatch_time,
+            z = spawn_z,
+         })
+      else
+         -- Parasitic Drain (33%): Refund/Heal (Net: 0 HP - Free shot)
+         -- Spawns a health pickup equal to the drain heal amount
+         local ground_y = spawn_y + (spawn_z or 0)
+         Entities.spawn_health_pickup(world, spawn_x, ground_y, drain_heal)
       end
       world.del(projectile)
    end

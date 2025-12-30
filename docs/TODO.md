@@ -81,6 +81,7 @@ No known bugs at this time.
 - improve the title screen [BRAINSTORM]
 - improve the game over screen [BRAINSTORM]
 - add a credits screen [BRAINSTORM]
+- add a special screen or player effect when shooting an egg which damages the player (to show the cost of the shot) [BRAINSTORM]
 
 ## Audio
 
