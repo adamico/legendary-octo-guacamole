@@ -16,18 +16,26 @@ return {
    fire_rate = 15,                -- Frames between shots
    base_knockback = 4,            -- Base knockback applied to all player attacks
    vampiric_heal = 0.3,           -- Heal player for 30% of damage dealt, is this used?
-   -- Egg outcome probabilities (single roll, 3 equal outcomes)
-   -- 33% Heavy Impact: Deals impact_damage to enemy
-   -- 33% The Hatching: Spawns a chick (no damage to enemy)
-   -- 33% Parasitic Drain: Deals drain_damage, drops drain_heal HP pickup
-   impact_damage = 15,       -- Damage dealt on Heavy Impact outcome
-   drain_damage = 5,         -- Damage dealt on Parasitic Drain outcome
-   drain_heal = 5,           -- HP pickup dropped on Parasitic Drain outcome
-   hatch_time = 120,         -- Frames for egg to hatch into chick (2 seconds)
+   -- Egg outcome probabilities (single roll, 3 outcomes)
+   -- 50% The Dud: 3 Dmg, splats harmlessly
+   -- 35% The Hatching: 0 Dmg, spawns Chick
+   -- 15% The Leech: 5 Dmg, drops 5 HP glob
+   roll_dud_chance = 0.50,
+   roll_hatch_chance = 0.35,
+   roll_leech_chance = 0.15,
+
+   dud_damage = 3,   -- Damage dealt by "The Dud" (and splat visual)
+   leech_damage = 5, -- Damage dealt by "The Leech"
+   leech_heal = 5,   -- HP pickup dropped by "The Leech"
+   hatch_time = 120, -- Frames for egg to hatch into chick
+
+   -- Yolk Splat Settings (Wall/Rock impacts)
+   yolk_splat_duration = 300, -- 5 seconds
+   yolk_slow_factor = 0.7,    -- Enemies move at 70% speed
    -- Projectile origin (offset from sprite top-left, i.e., entity.x and entity.y)
-   projectile_origin_x = 12, -- X offset from sprite left edge
-   projectile_origin_y = 24, -- Y offset from sprite top edge
-   projectile_origin_z = 16, -- Z elevation for horizontal shots
+   projectile_origin_x = 12,  -- X offset from sprite left edge
+   projectile_origin_y = 24,  -- Y offset from sprite top edge
+   projectile_origin_z = 16,  -- Z elevation for horizontal shots
    -- Inventory
    coins = 0,
    keys = 0,

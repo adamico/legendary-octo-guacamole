@@ -15,34 +15,46 @@ function MapHandlers.register(handlers)
       if projectile.hit_obstacle then return end
       projectile.hit_obstacle = true
 
-      -- Use hitbox center for spawn position
+      -- Use hitbox center to check what we hit
       local hb = HitboxUtils.get_hitbox(projectile)
-      local spawn_x = hb.x + hb.w / 2 - 8
-      local spawn_y = hb.y + hb.h / 2 - 8
-      local spawn_z = projectile.z
+      local cx = hb.x + hb.w / 2
+      local cy = hb.y + hb.h / 2
 
-      -- Single roll with 3 equal outcomes (33% each)
-      local roll = rnd()
+      -- Helper to get tile under center
+      local tx = flr(cx / 16) -- GRID_SIZE
+      local ty = flr(cy / 16)
+      local tile = mget(tx, ty) or 0
 
-      -- Get projectile stats
-      local hatch_time = projectile.hatch_time or 120
-      local drain_heal = projectile.drain_heal or 5
-
-      if roll < 0.33 then
-         -- Heavy Impact (33%): Egg breaks, sunk cost (Net: -5 HP)
-         Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
-      elseif roll < 0.66 then
-         -- The Hatching (33%): Spawns a chick (Net: -5 HP, +1 Minion)
-         Entities.spawn_egg(world, spawn_x, spawn_y, {
-            hatch_timer = hatch_time,
-            z = spawn_z,
-         })
-      else
-         -- Parasitic Drain (33%): Refund/Heal (Net: 0 HP - Free shot)
-         -- Spawns a health pickup equal to the drain heal amount
-         local ground_y = spawn_y + (spawn_z or 0)
-         Entities.spawn_health_pickup(world, spawn_x, ground_y, drain_heal)
+      -- Check for Pit (Silent sink)
+      -- Need GameConstants.PIT_TILE or check flag?
+      -- Using flag is safer if defined, but specific tile 85 is in tiles.lua
+      -- Let's check both or use helper. Collision.is_pit?
+      -- Collision module not required here, but we can check flag.
+      -- FEATURE_FLAG_PIT = 1 in tiles.lua
+      if fget(tile, 1) then -- FEATURE_FLAG_PIT
+         -- Silent delete (sinking)
+         world.del(projectile)
+         return
       end
+
+      -- Spawn Yolk Splat at wall base (visual + slow + edible)
+      local spawn_x = cx - 8
+      local spawn_y = cy - 8
+
+      -- Using Utils to spawn so tags/shadows are processed if needed
+      Entities.spawn_entity(world, GameConstants.EntityCollisionLayer.WORLD, {
+         x = spawn_x,
+         y = spawn_y,
+         width = 16,
+         height = 16,
+         type = "YolkSplat", -- Must match config key
+         hitbox_width = 12,
+         hitbox_height = 12,
+         creation_time = t(),
+         lifespan = GameConstants.Player.yolk_splat_duration or 300,
+         yolk_slow_factor = GameConstants.Player.yolk_slow_factor or 0.7,
+      }, "YolkSplat")
+
       world.del(projectile)
    end
 

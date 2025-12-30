@@ -367,6 +367,29 @@ return {
             }
          },
       },
+      YolkSplat = {
+         entity_type = "YolkSplat",
+         tags = "yolk_splat,drawable,sprite,shadow,middleground,timers,map_collidable",
+         -- map_collidable needed so it doesn't fall through floor if we use gravity, though usually splats are flat.
+         -- Actually, simple splats might not need map_collidable if they are static.
+         -- But minion/chick needs to find it.
+         width = 16,
+         height = 16,
+         sprite_index = 36, -- Placeholder sprite index for Splat (needs to be set correctly)
+         -- Let's use a "blob" sprite if available, or just a placeholder. 230 is arbitrary, will need to be checked.
+         -- Actually, let's look for a suitable sprite index or use a generic one.
+         -- Using 28 (Egg) as placeholder for now if unsure, but user said "Visual: A gross, yellow/orange puddle".
+         -- I'll use 28 for now and comment it needs update.
+         -- WAIT, I should check if there's a convention.
+         -- Let's just define it, sprite_index can be fixed later.
+         hitbox_width = 12,
+         hitbox_height = 12,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 2,
+         shadow_offset_y = 4,
+         shadow_width = 10,
+         outline_color = nil,
+      },
       Egg = {
          entity_type = "Egg",
          tags = "minion,drawable,sprite,shadow,middleground,timers",

@@ -74,43 +74,52 @@ local function projectile_vs_enemy(projectile, enemy)
    -- Trigger impact effect
    Effects.hit_impact(projectile, enemy)
 
-   -- Get outcome values from projectile (passed from player stats)
-   local impact_damage = projectile.impact_damage or 15
-   local drain_damage = projectile.drain_damage or 5
-   local drain_heal = projectile.drain_heal or 5
-   local hatch_time = projectile.hatch_time or 120
+   -- Get outcome values from projectile (passed from player stats or config)
+   -- Using config defaults if not on projectile, though Shooter system usually copies them
+   local dud_damage = projectile.dud_damage or GameConstants.Player.dud_damage or 3
+   local leech_damage = projectile.leech_damage or GameConstants.Player.leech_damage or 5
+   local leech_heal = projectile.leech_heal or GameConstants.Player.leech_heal or 5
+   local hatch_time = projectile.hatch_time or GameConstants.Player.hatch_time or 120
+
+   local roll_dud = GameConstants.Player.roll_dud_chance or 0.50
+   local roll_hatch = GameConstants.Player.roll_hatch_chance or 0.35
+   -- Remainder is Leech (approx 0.15)
 
    local hb = HitboxUtils.get_hitbox(projectile)
    local spawn_x = hb.x + hb.w / 2 - 8
    local spawn_y = hb.y + hb.h / 2 - 8
    local spawn_z = projectile.z or 0
 
-   -- Single roll with 3 equal outcomes (33% each)
+   -- Single roll with 3 outcomes
    local roll = rnd()
+   local threshold_dud = roll_dud
+   local threshold_hatch = roll_dud + roll_hatch
 
-   if roll < 0.33 then
-      -- Heavy Impact (33%): Deal full damage to enemy
+   if roll < threshold_dud then
+      -- The Dud : 3 Dmg, splats harmlessly
       if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
-         enemy.hp = enemy.hp - impact_damage
+         enemy.hp = enemy.hp - dud_damage
          enemy.invuln_timer = 10
-         FloatingText.spawn_at_entity(enemy, -impact_damage, "damage")
+         FloatingText.spawn_at_entity(enemy, -dud_damage, "damage")
 
          local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
          local knockback = GameConstants.Player.base_knockback + proj_knockback
          Effects.apply_knockback(projectile, enemy, knockback)
       end
-   elseif roll < 0.66 then
-      -- The Hatching (33%): No damage, spawn chick
+      -- Visual splat effect for Dud
+      Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
+   elseif roll < threshold_hatch then
+      -- The Hatching (35%): No damage, spawn chick
       Entities.spawn_egg(world, spawn_x, spawn_y, {
          hatch_timer = hatch_time,
          z = spawn_z,
       })
    else
-      -- Parasitic Drain (33%): Partial damage + spawn health pickup
+      -- Parasitic Drain (approx 15%): Partial damage + spawn health pickup
       if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
-         enemy.hp = enemy.hp - drain_damage
+         enemy.hp = enemy.hp - leech_damage
          enemy.invuln_timer = 10
-         FloatingText.spawn_at_entity(enemy, -drain_damage, "damage")
+         FloatingText.spawn_at_entity(enemy, -leech_damage, "damage")
 
          local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
          local knockback = GameConstants.Player.base_knockback + proj_knockback
@@ -118,7 +127,7 @@ local function projectile_vs_enemy(projectile, enemy)
       end
       -- Spawn health pickup (blood glob)
       local ground_y = spawn_y + spawn_z
-      Entities.spawn_health_pickup(world, spawn_x, ground_y, drain_heal)
+      Entities.spawn_health_pickup(world, spawn_x, ground_y, leech_heal)
    end
    world.del(projectile)
 end

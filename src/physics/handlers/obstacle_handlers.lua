@@ -2,6 +2,7 @@
 -- Handles collisions with Rocks and Destructibles
 
 local Entities = require("src/entities")
+local GameConstants = require("src/game/game_config")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local Effects = require("src/systems/effects")
 
@@ -97,7 +98,7 @@ end
 
 -- Helper: handle egg break on obstacle collision
 -- Guards against being called multiple times for the same projectile
-local function projectile_hit_obstacle(projectile)
+local function projectile_hit_obstacle(projectile, obstacle_type)
    -- Prevent double processing if projectile hits multiple obstacles in same frame
    if projectile.hit_obstacle then return end
    projectile.hit_obstacle = true
@@ -106,30 +107,27 @@ local function projectile_hit_obstacle(projectile)
    local hb = HitboxUtils.get_hitbox(projectile)
    local spawn_x = hb.x + hb.w / 2 - 8
    local spawn_y = hb.y + hb.h / 2 - 8
-   local spawn_z = projectile.z
 
-   -- Single roll with 3 equal outcomes (33% each)
-   local roll = rnd()
-
-   -- Get projectile stats
-   local hatch_time = projectile.hatch_time or 120
-   local drain_heal = projectile.drain_heal or 5
-
-   if roll < 0.33 then
-      -- Heavy Impact (33%): Egg breaks, sunk cost (Net: -5 HP)
-      Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
-   elseif roll < 0.66 then
-      -- The Hatching (33%): Spawns a chick (Net: -5 HP, +1 Minion)
-      Entities.spawn_egg(world, spawn_x, spawn_y, {
-         hatch_timer = hatch_time,
-         z = spawn_z,
-      })
-   else
-      -- Parasitic Drain (33%): Refund/Heal (Net: 0 HP - Free shot)
-      -- Spawns a health pickup equal to the drain heal amount
-      local ground_y = spawn_y + (spawn_z or 0)
-      Entities.spawn_health_pickup(world, spawn_x, ground_y, drain_heal)
+   if obstacle_type == "Rock" then
+      -- Hard Obstacle: Spawns Yolk Splat (same as wall)
+      Entities.spawn_entity(world, GameConstants.EntityCollisionLayer.WORLD, {
+         x = spawn_x,
+         y = spawn_y,
+         width = 16,
+         height = 16,
+         type = "YolkSplat", -- Must match config key
+         hitbox_width = 12,
+         hitbox_height = 12,
+         creation_time = t(),
+         lifespan = GameConstants.Player.yolk_splat_duration or 300,
+         yolk_slow_factor = GameConstants.Player.yolk_slow_factor or 0.7,
+      }, "YolkSplat")
+   elseif obstacle_type == "Destructible" then
+      -- Soft Destructible: Break immediate. egg destroyed.
+      -- No hatch, no splat. Just deletion.
+      Effects.spawn_visual_effect(world, spawn_x, spawn_y, 29, 15) -- Broken egg visual
    end
+
    world.del(projectile)
 end
 
@@ -154,13 +152,13 @@ function ObstacleHandlers.register(handlers)
 
    -- Projectile vs Rock
    handlers.entity["Projectile,Rock"] = function(projectile, rock)
-      projectile_hit_obstacle(projectile)
+      projectile_hit_obstacle(projectile, "Rock")
    end
 
    -- Projectile vs Destructible
    handlers.entity["Projectile,Destructible"] = function(projectile, destructible)
       destroy_destructible(destructible, projectile)
-      projectile_hit_obstacle(projectile)
+      projectile_hit_obstacle(projectile, "Destructible")
    end
 
    -- EnemyProjectile vs Rock (no pickup)
