@@ -130,8 +130,8 @@ local function projectile_vs_enemy(projectile, enemy)
          Effects.apply_knockback(projectile, enemy, knockback)
       end
       -- Spawn health pickup (blood glob)
-      local ground_y = spawn_y + spawn_z
-      Entities.spawn_health_pickup(world, spawn_x, ground_y, leech_heal)
+      local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y + spawn_z, DungeonManager.current_room)
+      Entities.spawn_health_pickup(world, sx, sy, leech_heal)
    end
    world.del(projectile)
 end

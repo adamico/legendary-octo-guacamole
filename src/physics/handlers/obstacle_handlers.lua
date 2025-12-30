@@ -138,6 +138,10 @@ function ObstacleHandlers.register(handlers)
       push_out(enemy, dest)
    end
 
+   -- Chick (Minions) vs Obstacles
+   handlers.entity["Chick,Rock"] = function(chick, rock) push_out(chick, rock) end
+   handlers.entity["Chick,Destructible"] = function(chick, dest) push_out(chick, dest) end
+
    -- Melee vs Destructible
    handlers.entity["MeleeHitbox,Destructible"] = function(hitbox, destructible)
       destroy_destructible(destructible, hitbox.owner_entity)

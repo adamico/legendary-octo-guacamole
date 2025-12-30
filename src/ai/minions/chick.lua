@@ -8,6 +8,7 @@ local Chase = require("src/ai/primitives/chase")
 local SeekFood = require("src/ai/primitives/seek_food")
 local FloatingText = require("src/systems/floating_text")
 local Emotions = require("src/systems/emotions")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 local function init_fsm(entity)
    entity.chick_fsm = machine.create({
@@ -263,7 +264,8 @@ local function chick_ai(entity, world)
                -- Too far, run towards player (hoping they lead to food)
                -- We stay in 'seeking_food' state but mimic chase behavior
                local speed_mult = entity.follow_speed_mult or 1.1
-               Chase.toward(entity, player.x, player.y, speed_mult)
+               local hb = HitboxUtils.get_hitbox(player)
+               Chase.toward(entity, hb.x + hb.w / 2, hb.y + hb.h / 2, speed_mult)
                -- Ensure emotion stays correct (Chase/Wander might override it)
                if entity.emotion ~= "seeking_food" then
                   Emotions.set(entity, "seeking_food")
@@ -287,14 +289,16 @@ local function chick_ai(entity, world)
    elseif fsm:is("chasing") then
       local target = entity.chase_target
       if target then
-         Chase.toward(entity, target.x, target.y, entity.chase_speed_mult)
+         local hb = HitboxUtils.get_hitbox(target)
+         Chase.toward(entity, hb.x + hb.w / 2, hb.y + hb.h / 2, entity.chase_speed_mult)
       else
          Wander.update(entity)
       end
    elseif fsm:is("following") then
       if player then
          local speed_mult = entity.follow_speed_mult or 1.1
-         Chase.toward(entity, player.x, player.y, speed_mult)
+         local hb = HitboxUtils.get_hitbox(player)
+         Chase.toward(entity, hb.x + hb.w / 2, hb.y + hb.h / 2, speed_mult)
       else
          Wander.update(entity)
       end

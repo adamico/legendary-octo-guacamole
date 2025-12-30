@@ -7,6 +7,7 @@ local Wander = require("src/ai/primitives/wander")
 local Chase = require("src/ai/primitives/chase")
 local Emotions = require("src/systems/emotions")
 local EntityUtils = require("src/utils/entity_utils")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 local SHOOTER_VISION_RANGE = 200
 local SHOOTER_TARGET_DIST = 100
@@ -56,8 +57,14 @@ local function shooter_ai(entity, player)
    local dist = math.huge
    local dx, dy = 0, 0
    if player then
-      local my_cx, my_cy = EntityUtils.get_center(entity)
-      local target_cx, target_cy = EntityUtils.get_center(player)
+      -- Calculate centers using hitbox (more accurate for targeting)
+      local my_hb = HitboxUtils.get_hitbox(entity)
+      local my_cx = my_hb.x + my_hb.w / 2
+      local my_cy = my_hb.y + my_hb.h / 2
+
+      local target_hb = HitboxUtils.get_hitbox(player)
+      local target_cx = target_hb.x + target_hb.w / 2
+      local target_cy = target_hb.y + target_hb.h / 2
 
       -- Account for z-axis (aim at visual height)
       if player.z then target_cy = target_cy - player.z end

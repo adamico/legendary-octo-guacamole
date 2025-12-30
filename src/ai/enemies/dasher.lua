@@ -5,6 +5,7 @@
 local machine = require("lib/lua-state-machine/statemachine")
 local EntityUtils = require("src/utils/entity_utils")
 local Emotions = require("src/systems/emotions")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 local PUZZLED_DURATION = 60 -- frames to stay puzzled before patrol
 
@@ -29,8 +30,10 @@ end
 
 -- Check if current patrol direction points toward the player
 local function is_facing_player(entity, player)
-   local dx = player.x - entity.x
-   local dy = player.y - entity.y
+   local hb_p = HitboxUtils.get_hitbox(player)
+   local hb_e = HitboxUtils.get_hitbox(entity)
+   local dx = (hb_p.x + hb_p.w / 2) - (hb_e.x + hb_e.w / 2)
+   local dy = (hb_p.y + hb_p.h / 2) - (hb_e.y + hb_e.h / 2)
 
    -- Check if patrol direction aligns with player direction
    if entity.patrol_dir_x ~= 0 then
@@ -115,8 +118,10 @@ local function dasher_ai(entity, player)
    local in_range = false
    local dx, dy, dist = 0, 0, math.huge
    if player then
-      dx = player.x - entity.x
-      dy = player.y - entity.y
+      local hb_p = HitboxUtils.get_hitbox(player)
+      local hb_e = HitboxUtils.get_hitbox(entity)
+      dx = (hb_p.x + hb_p.w / 2) - (hb_e.x + hb_e.w / 2)
+      dy = (hb_p.y + hb_p.h / 2) - (hb_e.y + hb_e.h / 2)
       dist = sqrt(dx * dx + dy * dy)
       in_range = dist <= entity.vision_range
    end

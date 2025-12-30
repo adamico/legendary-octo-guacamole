@@ -322,7 +322,7 @@ return {
    Minion = {
       Chick = {
          entity_type = "Chick",
-         tags = "minion,timers,health,velocity,map_collidable,drawable,animatable,sprite,shadow,middleground",
+         tags = "minion,timers,health,velocity,map_collidable,collidable,drawable,animatable,sprite,shadow,middleground",
          hp = 20,
          hp_drain_rate = 60,    -- Frames between each 1 HP loss (60 = 1 HP/second)
          food_seek_range = 120, -- Range to detect yolk splats

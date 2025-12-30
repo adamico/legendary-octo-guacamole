@@ -98,16 +98,25 @@ end
 function Projectile.spawn_from_origin(world, shooter, dx, dy, projectile_type, instance_data)
     local projectile_config = GameConstants.Projectile[projectile_type or "Egg"]
 
-    -- Projectile origin is a direct offset from shooter position
-    local origin_x = shooter.x + (shooter.projectile_origin_x or 0)
-    local origin_y = shooter.y + (shooter.projectile_origin_y or 0)
+    local origin_x, origin_y
+    if shooter.projectile_origin_x then
+        origin_x = shooter.x + shooter.projectile_origin_x
+        origin_y = shooter.y + (shooter.projectile_origin_y or 0)
+    else
+        -- Default to hitbox center (Ground-relative)
+        local hb = HitboxUtils.get_hitbox(shooter)
+        local z = shooter.z or 0
+        origin_x = hb.x + hb.w / 2
+        origin_y = (hb.y + hb.h / 2) + z -- Convert visual Y back to ground Y
+    end
 
     -- Offset by half projectile size to center it on origin
     local spawn_x = origin_x - (projectile_config.width / 2)
     local spawn_y = origin_y - (projectile_config.height / 2)
 
     -- Z elevation for all shots (visual height)
-    local projectile_z = shooter.projectile_origin_z or 0
+    -- Default to shooter defined z, or shooter's own z, or 0
+    local projectile_z = shooter.projectile_origin_z or shooter.z or 0
 
     instance_data = instance_data or {}
     instance_data.z = projectile_z

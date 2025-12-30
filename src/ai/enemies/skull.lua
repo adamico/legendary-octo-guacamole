@@ -6,6 +6,7 @@
 local machine = require("lib/lua-state-machine/statemachine")
 local Chase = require("src/ai/primitives/chase")
 local Emotions = require("src/systems/emotions")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 -- Initialize Skull FSM on entity
 local function init_fsm(entity)
@@ -53,7 +54,10 @@ local function skull_ai(entity, player)
          fsm:lose()
       else
          -- Chase the player
-         Chase.toward(entity, player.x, player.y)
+         local hb = HitboxUtils.get_hitbox(player)
+         local tx = hb.x + hb.w / 2
+         local ty = hb.y + hb.h / 2
+         Chase.toward(entity, tx, ty)
       end
    end
 end

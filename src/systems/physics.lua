@@ -2,6 +2,7 @@
 -- Handles acceleration, friction, and velocity application
 local Entities = require("src/entities")
 local Effects = require("src/systems/effects")
+local DungeonManager = require("src/world/dungeon_manager")
 
 local Physics = {}
 
@@ -179,7 +180,9 @@ function Physics.z_axis(world)
                else
                   -- Parasitic Drain (33%): Refund/Heal (Net: 0 HP - Free shot)
                   -- Spawns a health pickup equal to the drain heal amount
-                  Entities.spawn_health_pickup(world, entity.x, entity.y, drain_heal)
+
+                  local sx, sy = DungeonManager.snap_to_nearest_floor(entity.x, entity.y, DungeonManager.current_room)
+                  Entities.spawn_health_pickup(world, sx, sy, drain_heal)
                end
             end
          end

@@ -6,6 +6,7 @@ local machine = require("lib/lua-state-machine/statemachine")
 local Wander = require("src/ai/primitives/wander")
 local Chase = require("src/ai/primitives/chase")
 local Emotions = require("src/systems/emotions")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 local PUZZLED_DURATION = 60 -- frames to stay puzzled before wandering
 
@@ -67,8 +68,12 @@ local function skulker_ai(entity, player)
    elseif fsm:is("chasing") then
       if not in_range then
          fsm:lose()
+         -- ... (inside skulker_ai)
       elseif player then
-         Chase.toward(entity, player.x, player.y)
+         local hb = HitboxUtils.get_hitbox(player)
+         local tx = hb.x + hb.w / 2
+         local ty = hb.y + hb.h / 2
+         Chase.toward(entity, tx, ty)
       end
    elseif fsm:is("puzzled") then
       -- Stand still, wait for timer (grace period - cannot spot during this time)

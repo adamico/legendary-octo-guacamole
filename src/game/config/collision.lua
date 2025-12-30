@@ -18,8 +18,8 @@ local CollisionMasks = {
    [4] = 2 + 32 + 64,                -- PLAYER_PROJECTILE: Enemy + World + Obstacle
    [8] = 1 + 32 + 64,                -- ENEMY_PROJECTILE: Player + World + Obstacle
    [16] = 1 + 16,                    -- PICKUP: Player + other Pickups
-   [32] = 1 + 2 + 4 + 8,             -- WORLD: Everything except Pickup
-   [64] = 1 + 2 + 4 + 8 + 128,       -- OBSTACLE: Player + Enemy + Projectiles + Explosion
+   [32] = 1 + 2 + 4 + 8 + 64,        -- WORLD: Everything except Pickup (+Obstacle)
+   [64] = 1 + 2 + 4 + 8 + 32 + 128,  -- OBSTACLE: Player + Enemy + Projectiles + World + Explosion
    [128] = 1 + 2 + 64,               -- EXPLOSION: Player + Enemy + Obstacle
 }
 
