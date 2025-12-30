@@ -498,4 +498,80 @@ function DungeonManager.init()
    DungeonManager.generate()
 end
 
+--- Find the nearest valid floor tile to a position
+--- @param px number Pixel X
+--- @param py number Pixel Y
+--- @param room table|nil Optional room object to check layout features
+--- @return number, number (New valid pixel coordinates, centered in tile)
+function DungeonManager.snap_to_nearest_floor(px, py, room)
+   local cx = flr(px / GRID_SIZE)
+   local cy = flr(py / GRID_SIZE)
+
+   -- Check if current tile is valid
+   if DungeonManager.is_valid_spawn_tile(cx, cy, room) then
+      return px, py
+   end
+
+   -- Spiral search for nearest valid tile
+   local radius = 1
+   local max_radius = 5 -- Search up to 5 tiles away
+
+   while radius <= max_radius do
+      for dy = -radius, radius do
+         for dx = -radius, radius do
+            -- Only check the outer ring
+            if abs(dx) == radius or abs(dy) == radius then
+               local tx, ty = cx + dx, cy + dy
+               if DungeonManager.is_valid_spawn_tile(tx, ty, room) then
+                  -- Return center of the valid tile
+                  return tx * GRID_SIZE + GRID_SIZE / 2 - 8, ty * GRID_SIZE + GRID_SIZE / 2 - 8
+                  -- Note: -8 centers a 16x16 entity.
+                  -- Ideally we'd know entity size, but centering on tile is a safe default.
+               end
+            end
+         end
+      end
+      radius = radius + 1
+   end
+
+   return px, py -- Fallback to original if nothing found
+end
+
+--- Check if a tile is a valid spawn location (floor, no pit/obstacle)
+function DungeonManager.is_valid_spawn_tile(tx, ty, room)
+   -- 1. Check bounds
+   if tx < 0 or tx >= EXT_MAP_W or ty < 0 or ty >= EXT_MAP_H then return false end
+
+   -- 2. Check if floor tile
+   if not DungeonManager.is_floor_tile(tx, ty) then return false end
+
+   -- 3. Check for map features (Pits)
+   local tile = mget(tx, ty)
+   if tile == PIT_TILE then return false end
+   if fget(tile, FEATURE_FLAG_PIT) then return false end
+
+   -- 4. Check for layout features (Rocks/Destructibles) if room provided
+   if room and room.layout and room.layout.grid then
+      local RoomLayouts = require("src/world/room_layouts")
+      local floor_rect = room:get_inner_bounds()
+      -- tx, ty are world coordinates. Convert to room-relative.
+      local room_w = floor_rect.x2 - floor_rect.x1 + 1
+      local room_h = floor_rect.y2 - floor_rect.y1 + 1
+
+      -- Only check inside the room's floor area
+      if tx >= floor_rect.x1 and tx <= floor_rect.x2 and
+         ty >= floor_rect.y1 and ty <= floor_rect.y2 then
+         local gx = tx - floor_rect.x1
+         local gy = ty - floor_rect.y1
+
+         local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
+         if feature == "rock" or feature == "destructible" or feature == "pit" then
+            return false
+         end
+      end
+   end
+
+   return true
+end
+
 return DungeonManager

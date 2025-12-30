@@ -7,6 +7,7 @@ local Effects = require("src/systems/effects")
 local FloatingText = require("src/systems/floating_text")
 local Entities = require("src/entities")
 local HitboxUtils = require("src/utils/hitbox_utils")
+local DungeonManager = require("src/world/dungeon_manager")
 
 local CombatHandlers = {}
 
@@ -110,7 +111,10 @@ local function projectile_vs_enemy(projectile, enemy)
       Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
    elseif roll < threshold_hatch then
       -- The Hatching (35%): No damage, spawn chick
-      Entities.spawn_egg(world, spawn_x, spawn_y, {
+
+      local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y, DungeonManager.current_room)
+
+      Entities.spawn_egg(world, sx, sy, {
          hatch_timer = hatch_time,
          z = spawn_z,
       })

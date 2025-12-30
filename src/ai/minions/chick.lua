@@ -149,9 +149,9 @@ local function chick_ai(entity, world)
 
    -- State transitions based on priority: hungry > attack > chase > follow > wander
    if fsm:is("wandering") then
-      if is_hungry and fsm:can("get_hungry") then
+      if is_hungry then
          fsm:get_hungry()
-      elseif has_target and fsm:can("spot_enemy") then
+      elseif has_target then
          fsm:spot_enemy()
          entity.chase_target = nearest_enemy
       elseif player then
@@ -161,7 +161,7 @@ local function chick_ai(entity, world)
          local dist_sq = dx * dx + dy * dy
          local trigger_dist = entity.follow_trigger_dist or 100
 
-         if dist_sq > trigger_dist * trigger_dist and fsm:can("start_following") then
+         if dist_sq > trigger_dist * trigger_dist then
             -- Too far, start following
             Wander.reset(entity)
             fsm:start_following()
@@ -169,9 +169,9 @@ local function chick_ai(entity, world)
       end
    elseif fsm:is("following") then
       -- Priority checks (override following)
-      if is_hungry and fsm:can("get_hungry") then
+      if is_hungry then
          fsm:get_hungry()
-      elseif has_target and fsm:can("spot_enemy") then
+      elseif has_target then
          fsm:spot_enemy()
          entity.chase_target = nearest_enemy
       elseif player then
@@ -181,13 +181,13 @@ local function chick_ai(entity, world)
          local dist_sq = dx * dx + dy * dy
          local stop_dist = entity.follow_stop_dist or 50
 
-         if dist_sq < stop_dist * stop_dist and fsm:can("stop_following") then
+         if dist_sq < stop_dist * stop_dist then
             -- Close enough, resume wandering
             fsm:stop_following()
          end
       else
          -- Player lost/dead? Wander
-         if fsm:can("stop_following") then
+         if true then
             fsm:stop_following()
          end
       end
@@ -196,22 +196,17 @@ local function chick_ai(entity, world)
       if not entity.emotion and rnd(1) < 0.02 then
          Emotions.set(entity, "seeking_food")
       end
-      -- If an enemy gets close, switch to chase (defend self)
-      if has_target and fsm:can("spot_enemy") then
-         fsm:spot_enemy()
-         entity.chase_target = nearest_enemy
-      end
    elseif fsm:is("chasing") then
       -- If hungry, prioritize food
-      if is_hungry and fsm:can("get_hungry") then
+      if is_hungry then
          fsm:get_hungry()
          entity.chase_target = nil
          -- Lost target? Go back to wandering
-      elseif not has_target and fsm:can("lose_target") then
+      elseif not has_target then
          fsm:lose_target()
          entity.chase_target = nil
          -- Close enough to attack?
-      elseif in_attack_range and fsm:can("reach_enemy") then
+      elseif in_attack_range then
          fsm:reach_enemy()
          entity.chase_target = nearest_enemy
       else
@@ -220,15 +215,15 @@ local function chick_ai(entity, world)
       end
    elseif fsm:is("attacking") then
       -- If hungry, prioritize food
-      if is_hungry and fsm:can("get_hungry") then
+      if is_hungry then
          fsm:get_hungry()
          entity.chase_target = nil
          -- Lost target?
-      elseif not has_target and fsm:can("lose_target") then
+      elseif not has_target then
          fsm:lose_target()
          entity.chase_target = nil
          -- Target moved out of range? Chase again
-      elseif not in_attack_range and fsm:can("back_off") then
+      elseif not in_attack_range then
          fsm:back_off()
          entity.chase_target = nearest_enemy
       else
@@ -243,28 +238,50 @@ local function chick_ai(entity, world)
       local found_food = SeekFood.update(entity, world, range, heal)
 
       -- If no food found and not hungry anymore, go back to wandering
-      if not found_food and not is_hungry and fsm:can("eat_done") then
+      if not found_food and not is_hungry then
          fsm:eat_done()
       elseif not found_food then
-         -- No food nearby, check if we should follow the player
-         if player then
+         -- No food found. If we have an enemy, fight them instead of wandering aimlessly.
+         if has_target then
+            fsm:spot_enemy()
+            entity.chase_target = nearest_enemy
+         elseif player then
             local dx = player.x - entity.x
             local dy = player.y - entity.y
             local dist_sq = dx * dx + dy * dy
             local trigger_dist = entity.follow_trigger_dist or 100
+            local stop_dist = entity.follow_stop_dist or 50
 
+            -- Hysteresis logic
             if dist_sq > trigger_dist * trigger_dist then
+               entity.seeking_follow_active = true
+            elseif dist_sq < stop_dist * stop_dist then
+               entity.seeking_follow_active = false
+            end
+
+            if entity.seeking_follow_active then
                -- Too far, run towards player (hoping they lead to food)
                -- We stay in 'seeking_food' state but mimic chase behavior
                local speed_mult = entity.follow_speed_mult or 1.1
                Chase.toward(entity, player.x, player.y, speed_mult)
+               -- Ensure emotion stays correct (Chase/Wander might override it)
+               if entity.emotion ~= "seeking_food" then
+                  Emotions.set(entity, "seeking_food")
+               end
             else
                -- Close enough, just wander
                Wander.update(entity)
+               -- Ensure emotion stays correct (Wander might set it to idle)
+               if entity.emotion ~= "seeking_food" then
+                  Emotions.set(entity, "seeking_food")
+               end
             end
          else
             -- No player, just wander
             Wander.update(entity)
+            if entity.emotion ~= "seeking_food" then
+               Emotions.set(entity, "seeking_food")
+            end
          end
       end
    elseif fsm:is("chasing") then

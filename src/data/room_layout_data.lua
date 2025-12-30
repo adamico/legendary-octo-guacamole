@@ -191,11 +191,11 @@ LayoutData.Layouts = {
       layout_type = "ring",
       floor_pattern = "random",
       cell_pattern = {
-         "f", "f", "f",
-         "br", "f", "f", "f", "bl",
-         "f", "f", "f", "f", "f",
-         "tr", "f", "f", "f", "tl",
-         "f", "f", "f",
+         56, 56, 56,
+         36, "f", "f", "f", 9,
+         36, "f", "f", "f", 9,
+         36, "f", "f", "f", 9,
+         7, 7, 7,
       },
       grid = {
          ".........",

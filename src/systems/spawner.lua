@@ -1,6 +1,7 @@
 -- Enemy spawning system
 local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
+local DungeonManager = require("src/world/dungeon_manager")
 local Spawner = {}
 
 Spawner.indicator_sprite = SPAWNER_INDICATOR_SPRITE
@@ -134,17 +135,8 @@ function Spawner.populate(room, player)
     local function nudge_to_valid(px, py, etype)
         if is_valid_spawn(px, py, etype) then return px, py end
 
-        -- Search in expanding rings
-        for r = 8, 48, 8 do
-            for angle = 0, 0.875, 0.125 do -- 0 to 7/8 cycles (0 to 315 degrees)
-                local nx = px + cos(angle) * r
-                local ny = py + sin(angle) * r
-                if is_valid_spawn(nx, ny, etype) then
-                    return nx, ny
-                end
-            end
-        end
-        return nil
+        -- Use robust snap logic from DungeonManager to find nearest floor
+        return DungeonManager.snap_to_nearest_floor(px, py, room)
     end
 
     -- Pattern-based spawning

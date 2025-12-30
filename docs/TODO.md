@@ -2,6 +2,7 @@
 
 ## Next
 
+- add AI pathfinding [BRAINSTORM]
 - add powerups  [BRAINSTORM]
 - add key using mechanics [BRAINSTORM]
 - add chests (locked and unlocked) as room features [BRAINSTORM]

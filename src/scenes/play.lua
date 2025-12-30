@@ -46,6 +46,7 @@ function Play:enteredState()
    -- Subscribe to room transition events
    Events.on(Events.ROOM_TRANSITION, function(new_room)
       current_room = new_room
+      DungeonManager.current_room = new_room
       camera_manager:set_room(current_room)
       DungeonManager.setup_room(current_room, player, world)
       Minimap.visit(current_room) -- Mark new room as visited
