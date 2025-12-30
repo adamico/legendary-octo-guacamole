@@ -93,3 +93,16 @@ To prevent players from stalling to exploit mechanics:
 1. **Clarity**: The health bar must instantly convey "Can I shoot?".
 2. **Stat-Driven**: Everything scales (Damage = Max HP * Ratio).
 3. **Risk Management**: Overflow HP is a resource for trade/power, not just safety.
+
+## Lore/mechanics explanation
+
+The Player is the host of a "Symbiotic Chicken Parasite". The chicken uses the player's life force to reproduce. The egg shooting consumes player health.
+
+The core tension is: the player hurts himself to create an army, and needs that army to hunt effectively so he can heal and do it again.
+
+Here is a breakdown of the "Symbiotic Sacrifice" System for your MVP, focusing on 3 distinct DNA Strands (items) you can prototype.
+
+The Core Mechanic: "Blood for Blood"
+The Cost: Every shot takes a small chunk of Player HP (e.g., 5 HP).
+
+The Goal: Find DNA that either makes your blood "cheaper" (Defense/Efficiency) or makes your chicks better at harvesting it back (Sustain/Lifesteal).

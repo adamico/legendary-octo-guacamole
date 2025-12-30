@@ -53,4 +53,7 @@ SKULL_SPAWN_LOCKED_TIMER = 1800
 
 -- Spawner indicator sprite
 SPAWNER_INDICATOR_SPRITE = 45
+
+-- Broken egg sprite constant
+BROKEN_EGG_SPRITE = 27
 -- Note: These are globals, no return needed

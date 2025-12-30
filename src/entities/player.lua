@@ -51,6 +51,10 @@ function Player.spawn(world, x, y)
         knockback = GameConstants.Player.base_knockback,
         range = GameConstants.Player.range,
         fire_rate = GameConstants.Player.fire_rate,
+        -- Egg stats
+        integrity = GameConstants.Player.integrity,
+        fertility = GameConstants.Player.fertility,
+        hatch_time = GameConstants.Player.hatch_time,
 
         melee_cooldown = 0,
         melee_cost = GameConstants.Player.melee_cost,

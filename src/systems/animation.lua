@@ -184,6 +184,9 @@ local function change_sprite(entity)
    local config = EntityUtils.get_config(entity)
    if not config then return end
 
+   -- Skip if entity doesn't have directional sprites (uses static sprite_index)
+   if not config.sprite_index_offsets then return end
+
    if neutral or down then sprite_index = config.sprite_index_offsets.down end
    if right or down_right or up_right then sprite_index = config.sprite_index_offsets.right end
    if up or up_left or down_left then sprite_index = config.sprite_index_offsets.up end

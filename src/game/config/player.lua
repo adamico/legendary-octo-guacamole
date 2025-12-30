@@ -16,6 +16,10 @@ return {
    fire_rate = 15,               -- Frames between shots
    base_knockback = 4,           -- Base knockback applied to all player attacks
    vampiric_heal = 0.3,          -- Heal player for 30% of damage dealt
+   -- Egg stats
+   integrity = 0.5,              -- 50% chance egg survives collision intact
+   fertility = 0.5,              -- 50% chance surviving egg hatches into chick
+   hatch_time = 120,             -- Frames for egg to hatch into chick (2 seconds)
    -- Projectile origin (offset from sprite top-left, i.e., entity.x and entity.y)
    projectile_origin_x = 12,     -- X offset from sprite left edge
    projectile_origin_y = 24,     -- Y offset from sprite top edge

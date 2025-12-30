@@ -367,6 +367,21 @@ return {
             }
          },
       },
+      Egg = {
+         entity_type = "Egg",
+         tags = "minion,drawable,sprite,shadow,middleground,timers",
+         width = 16,
+         height = 16,
+         sprite_index = 28, -- Initial egg sprite
+         hitbox_width = 8,
+         hitbox_height = 8,
+         hitbox_offset_x = 4,
+         hitbox_offset_y = 4,
+         shadow_offset_y = 4,
+         shadow_width = 6,
+         -- Hatching animation frames (AI-driven based on hatch_timer progress)
+         hatch_frames = {28, 29, 30},
+      },
    },
    Obstacle = {
       Rock = {

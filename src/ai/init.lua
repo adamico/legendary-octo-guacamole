@@ -12,7 +12,8 @@ local shooter_ai = require("src/ai/enemies/shooter")
 local dasher_ai = require("src/ai/enemies/dasher")
 
 -- Minion AI profiles
-local chick_ai = require("src/ai/enemies/chick")
+local chick_ai = require("src/ai/minions/chick")
+local egg_ai = require("src/ai/minions/egg")
 
 local AI = {}
 
@@ -33,6 +34,7 @@ local enemy_profiles = {
 -- Minion AI lookup table (maps minion_type to AI function)
 local minion_profiles = {
    Chick = chick_ai,
+   Egg = egg_ai,
 }
 
 --- Dispatch AI update to the appropriate enemy profile
@@ -47,10 +49,11 @@ end
 
 --- Dispatch AI update for minions
 -- @param entity The minion entity to process
-function AI.dispatch_minion(entity)
+-- @param world The ECS world (for spawning entities)
+function AI.dispatch_minion(entity, world)
    local profile = minion_profiles[entity.minion_type]
    if profile then
-      profile(entity)
+      profile(entity, world)
    end
 end
 

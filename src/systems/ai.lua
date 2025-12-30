@@ -13,7 +13,7 @@ function AISystem.update(world, player)
 
    -- Execute AI dispatch for all minions
    world.sys("minion", function(entity)
-      AI.dispatch_minion(entity)
+      AI.dispatch_minion(entity, world)
    end)()
 end
 

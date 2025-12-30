@@ -77,7 +77,10 @@ function Shooter.update(world)
                knockback = entity.knockback,
                recovery_percent = entity.recovery_percent,
                shot_cost = shot_cost,
-               lifetime = (entity.range and entity.shot_speed) and (entity.range / entity.shot_speed) or 60
+               lifetime = (entity.range and entity.shot_speed) and (entity.range / entity.shot_speed) or 60,
+               integrity = entity.integrity,
+               fertility = entity.fertility,
+               hatch_time = entity.hatch_time,
             }
          )
 

@@ -5,13 +5,15 @@ local GameConstants = require("src/game/game_config")
 local GameState = require("src/game/game_state")
 local Effects = require("src/systems/effects")
 local FloatingText = require("src/systems/floating_text")
+local Entities = require("src/entities")
+local HitboxUtils = require("src/utils/hitbox_utils")
 
 local CombatHandlers = {}
 
--- Helper: Apply damage, consuming overheal first before base HP
--- @param entity - Entity to damage (must have hp, overflow_hp properties)
--- @param damage - Amount of damage to apply
--- @return actual_damage - Damage applied to base HP (after overheal absorption)
+--- Helper: Apply damage, consuming overheal first before base HP
+--- @param entity Entity to damage (must have hp, overflow_hp properties)
+--- @param damage integer - Amount of damage to apply
+--- @return integer actual_damage - Damage applied to base HP (after overheal absorption)
 local function apply_damage_with_overheal(entity, damage)
    local overheal = entity.overflow_hp or 0
 
@@ -34,7 +36,9 @@ local function apply_damage_with_overheal(entity, damage)
    end
 end
 
--- Handler for MeleeHitbox hitting Enemy
+--- Handler for MeleeHitbox hitting Enemy
+--- @param hitbox MeleeHitbox entity
+--- @param enemy Enemy entity
 local function melee_vs_enemy(hitbox, enemy)
    -- Skip if enemy is invulnerable
    if enemy.invuln_timer and enemy.invuln_timer > 0 then
@@ -63,27 +67,57 @@ end
 
 -- Handler for Projectile hitting Enemy
 local function projectile_vs_enemy(projectile, enemy)
-   -- Always destroy the projectile upon impact
-   world.del(projectile)
+   -- Trigger impact effect
    Effects.hit_impact(projectile, enemy)
 
-   -- Skip damage if enemy is invulnerable
-   if enemy.invuln_timer and enemy.invuln_timer > 0 then
-      return
+   local integrity = projectile.integrity or 0
+   local fertility = projectile.fertility or 0
+   local base_damage = projectile.damage or GameConstants.Projectile.damage or 10
+   local hb = HitboxUtils.get_hitbox(projectile)
+   local spawn_x = hb.x + hb.w / 2 - 8
+   local spawn_y = hb.y + hb.h / 2 - 8
+   local spawn_z = projectile.z or 0
+
+   if rnd() < integrity then
+      -- Egg survives intact: fertility roll
+      if rnd() < fertility then
+         -- Fertility success: no damage, spawn egg that will hatch into chick
+         Entities.spawn_egg(world, spawn_x, spawn_y, {
+            hatch_timer = projectile.hatch_time or 120,
+            z = spawn_z,
+         })
+      else
+         -- Fertility fail: full damage to enemy
+         if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
+            enemy.hp = enemy.hp - base_damage
+            enemy.invuln_timer = 10
+            FloatingText.spawn_at_entity(enemy, -base_damage, "damage")
+
+            local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
+            local knockback = GameConstants.Player.base_knockback + proj_knockback
+            Effects.apply_knockback(projectile, enemy, knockback)
+         end
+      end
+   else
+      -- Egg breaks: half damage + visual breaking effect
+      local damage = base_damage / 2
+      if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
+         enemy.hp = enemy.hp - damage
+         enemy.invuln_timer = 10
+         FloatingText.spawn_at_entity(enemy, -damage, "damage")
+
+         local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
+         local knockback = GameConstants.Player.base_knockback + proj_knockback
+         Effects.apply_knockback(projectile, enemy, knockback)
+      end
+      Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
    end
-
-   local damage = projectile.damage or GameConstants.Projectile.damage or 10
-   enemy.hp = enemy.hp - damage
-   enemy.invuln_timer = 10 -- Brief invulnerability after hit
-   FloatingText.spawn_at_entity(enemy, -damage, "damage")
-
-   -- Composite knockback: base player knockback + projectile knockback
-   local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
-   local knockback = GameConstants.Player.base_knockback + proj_knockback
-   Effects.apply_knockback(projectile, enemy, knockback)
+   world.del(projectile)
 end
 
--- Handler for Player touching Enemy (contact damage)
+--- Handler for Player touching Enemy (contact damage)
+--- @param player Player entity
+--- @param enemy Enemy entity
 local function player_vs_enemy(player, enemy)
    if enemy.enemy_type == "Dasher" and enemy.dasher_fsm and enemy.dasher_fsm:is("dash") then
       enemy.dasher_collision = true

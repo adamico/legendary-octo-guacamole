@@ -39,6 +39,7 @@ local EntityCollisionLayer = {
    Destructible = CollisionLayers.OBSTACLE,
    Explosion = CollisionLayers.EXPLOSION,
    Chick = CollisionLayers.WORLD,
+   Egg = CollisionLayers.WORLD,
 }
 
 return {

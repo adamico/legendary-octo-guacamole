@@ -48,4 +48,8 @@ Entities.spawn_chick = function(world, x, y, instance_data)
     return Minion.spawn(world, x, y, "Chick", instance_data)
 end
 
+Entities.spawn_egg = function(world, x, y, instance_data)
+    return Minion.spawn(world, x, y, "Egg", instance_data)
+end
+
 return Entities

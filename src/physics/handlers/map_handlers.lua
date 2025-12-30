@@ -4,6 +4,7 @@
 local Entities = require("src/entities")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local GameConstants = require("src/game/game_config")
+local Effects = require("src/systems/effects")
 
 local MapHandlers = {}
 
@@ -14,19 +15,37 @@ function MapHandlers.register(handlers)
       if projectile.hit_obstacle then return end
       projectile.hit_obstacle = true
 
-      local recovery = (projectile.shot_cost or 0) * (projectile.recovery_percent or 0)
-      -- Use hitbox center for accurate spawn position
-      -- Note: hitbox.y already accounts for z (visual elevation)
+      -- Use hitbox center for spawn position
       local hb = HitboxUtils.get_hitbox(projectile)
-      local pickup_config = GameConstants.Pickup.ProjectilePickup
-      local half_pickup_w = (pickup_config.width or 16) / 2
-      local half_pickup_h = (pickup_config.height or 16) / 2
-      local spawn_x = hb.x + hb.w / 2 - half_pickup_w
-      local spawn_y = hb.y + hb.h / 2 - half_pickup_h
+      local spawn_x = hb.x + hb.w / 2 - 8
+      local spawn_y = hb.y + hb.h / 2 - 8
       local spawn_z = projectile.z
 
-      Entities.spawn_pickup_projectile(world, spawn_x, spawn_y, projectile.dir_x, projectile.dir_y, recovery,
-         projectile.sprite_index, spawn_z, projectile.vertical_shot)
+      -- Two-roll logic for non-living collision
+      local integrity = projectile.integrity or 0
+      local fertility = projectile.fertility or 0
+
+      if rnd() < integrity then
+         -- Egg survives intact: fertility roll
+         if rnd() < fertility then
+            -- Fertility success: spawn egg that will hatch into chick
+            Entities.spawn_egg(world, spawn_x, spawn_y, {
+               hatch_timer = projectile.hatch_time or 120,
+               z = spawn_z,
+            })
+         else
+            -- Fertility fail: spawn refund pickup
+            local refund = projectile.shot_cost or 0
+            Entities.spawn_pickup_projectile(world, spawn_x, spawn_y, projectile.dir_x, projectile.dir_y, refund,
+               projectile.sprite_index, spawn_z, projectile.vertical_shot)
+         end
+      else
+         -- Egg breaks: show broken egg effect and spawn health pickup at ground level (50% of shot cost)
+         Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
+         local heal_amount = (projectile.shot_cost or 0) * 0.5
+         local ground_y = spawn_y + (spawn_z or 0) -- Adjust Y to ground level
+         Entities.spawn_health_pickup(world, spawn_x, ground_y, heal_amount)
+      end
       world.del(projectile)
    end
 

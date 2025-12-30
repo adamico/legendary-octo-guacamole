@@ -20,6 +20,16 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Two-Roll Egg Collision System**: Eggs now use integrity + fertility rolls:
+  - **Stats**: `integrity` (chance egg survives intact), `fertility` (chance intact egg hatches), `hatch_time` (frames to hatch).
+  - **Non-Living Collision** (walls, obstacles, floor):
+    - Integrity success → Fertility roll: success = spawn hatching egg, fail = spawn refund pickup.
+    - Integrity fail → Egg breaks: visual effect + health pickup (50% of shot cost).
+  - **Enemy Collision**:
+    - Integrity success → Fertility roll: success = no damage + spawn hatching egg, fail = full damage.
+    - Integrity fail → Egg breaks: half damage + visual effect (no health pickup).
+  - **Egg Minion**: Falls to ground before hatching. AI-driven animation scales with `hatch_time`.
+  - **Visual Effect**: Broken egg sprite (27) shown when eggs break.
 - **Created Rendering Architecture Documentation**:
   - Created `docs/architecture/rendering.md` covering:
     - **Y-Sorted Depth**: Foot-based sorting for 2.5D visual layering.

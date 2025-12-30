@@ -1,6 +1,7 @@
 -- Physics and movement systems
 -- Handles acceleration, friction, and velocity application
 local Entities = require("src/entities")
+local Effects = require("src/systems/effects")
 
 local Physics = {}
 
@@ -152,11 +153,33 @@ function Physics.z_axis(world)
          entity.z = 0
          entity.vel_z = 0 -- Stop gravity accumulation
 
-         -- Player Egg: hatch into chick on landing
+         -- Player Egg: apply fertility roll on landing
          if entity.tags and string.find(entity.tags, "projectile") and entity.owner == "player" then
-            -- Spawn chick at landing spot unless it lands in a pit tile
+            -- Skip if landing on a pit tile
             if mget(flr(entity.x / GRID_SIZE), flr(entity.y / GRID_SIZE)) ~= PIT_TILE then
-               Entities.spawn_chick(world, entity.x, entity.y)
+               -- Two-roll logic for non-living collision
+               local integrity = entity.integrity or 0
+               local fertility = entity.fertility or 0
+
+               if rnd() < integrity then
+                  -- Egg survives intact: fertility roll
+                  if rnd() < fertility then
+                     -- Fertility success: spawn egg that will hatch into chick
+                     Entities.spawn_egg(world, entity.x, entity.y, {
+                        hatch_timer = entity.hatch_time or 120,
+                     })
+                  else
+                     -- Fertility fail: spawn refund pickup
+                     local refund = entity.shot_cost or 0
+                     Entities.spawn_pickup_projectile(world, entity.x, entity.y,
+                        entity.dir_x, entity.dir_y, refund, entity.sprite_index, 0, entity.vertical_shot)
+                  end
+               else
+                  -- Egg breaks: show broken egg effect and spawn health pickup (50% of shot cost)
+                  Effects.spawn_visual_effect(world, entity.x, entity.y, BROKEN_EGG_SPRITE, 15)
+                  local heal_amount = (entity.shot_cost or 0) * 0.5
+                  Entities.spawn_health_pickup(world, entity.x, entity.y, heal_amount)
+               end
             end
          end
 

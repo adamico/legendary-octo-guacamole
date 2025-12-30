@@ -66,6 +66,25 @@ function Effects.spawn_particles(x, y, ptype, count)
     -- that move, fade, and self-destruct
 end
 
+-- Spawn a temporary visual effect sprite at position
+-- @param world - ECS world
+-- @param x, y - spawn position
+-- @param sprite_index - sprite to display
+-- @param lifespan - frames before removal (default 15)
+function Effects.spawn_visual_effect(world, x, y, sprite_index, lifespan)
+    lifespan = lifespan or 15
+    local effect = {
+        type = "VisualEffect",
+        x = x,
+        y = y,
+        width = 16,
+        height = 16,
+        sprite_index = sprite_index,
+        lifespan = lifespan,
+    }
+    world.ent("drawable,sprite,timers,middleground", effect)
+end
+
 -- Apply knockback to target entity, pushing away from source
 -- Uses separate knockback velocity that decays with friction
 function Effects.apply_knockback(source, target, strength)
