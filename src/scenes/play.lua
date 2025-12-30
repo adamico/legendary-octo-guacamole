@@ -1,4 +1,3 @@
-local GameConstants = require("src/game/game_config")
 local GameState = require("src/game/game_state")
 local World = require("src/world")
 local Entities = require("src/entities")
@@ -6,6 +5,7 @@ local Systems = require("src/systems")
 local Emotions = require("src/systems/emotions")
 local Events = require("src/game/events")
 local UI = require("src/ui")
+local Wander = require("src/ai/primitives/wander")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -52,6 +52,15 @@ function Play:enteredState()
       world.sys("projectile", function(e) world.del(e) end)()
       world.sys("pickup", function(e) world.del(e) end)()
       world.sys("skull", function(e) world.del(e) end)()
+      -- Teleport minions to player in new room
+      world.sys("minion", function(e)
+         e.x = player.x
+         e.y = player.y
+         if e.chick_fsm then
+            -- Reset behavior
+            Wander.reset(e)
+         end
+      end)()
       Systems.FloatingText.clear()
    end)
 

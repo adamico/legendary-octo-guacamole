@@ -24,14 +24,17 @@ end
 
 -- Update emotion timers (call once per frame for all entities)
 function Emotions.update(world)
-    world.sys("enemy", function(entity)
+    local function update_emotion(entity)
         if entity.emotion_timer then
             entity.emotion_timer = entity.emotion_timer - 1
             if entity.emotion_timer <= 0 then
                 Emotions.clear(entity)
             end
         end
-    end)()
+    end
+
+    world.sys("enemy", update_emotion)()
+    world.sys("minion", update_emotion)()
 end
 
 -- Draw emotion indicators above entities using print with p8scii controls
@@ -42,7 +45,7 @@ function Emotions.draw(world)
     local bounce_height = emotions_config.bounce_height or 2
     local outline_col = emotions_config.outline_color or 0
 
-    world.sys("enemy", function(entity)
+    local function draw_emotion(entity)
         if not entity.emotion then return end
 
         local config = emotions_config[entity.emotion]
@@ -57,10 +60,12 @@ function Emotions.draw(world)
 
         -- Draw the emotion text with outline
         local TextUtils = require("src/utils/text_utils")
-        local cx = entity.x + (entity.width or 16) / 2 - 2
-        local cy = entity.y + offset_y + bounce
-        TextUtils.print_outlined(config.text, cx, cy, config.color, outline_col)
-    end)()
+        local final_cy = cy + bounce
+        TextUtils.print_outlined(config.text, cx, final_cy, config.color, outline_col)
+    end
+
+    world.sys("enemy", draw_emotion)()
+    world.sys("minion", draw_emotion)()
 end
 
 return Emotions

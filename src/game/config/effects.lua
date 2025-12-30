@@ -43,6 +43,9 @@ return {
       confused = {text = "?", color = 12, duration = 90}, -- cyan "?" when losing player
       idle = {text = "♪", color = 11, duration = 120}, -- green "♪" when wandering
       stunned = {text = "★", color = 10, duration = 90}, -- yellow "★" when stunned
+      following = {text = "@", color = 14, duration = 60}, -- pink/flesh "@" when following
+      chasing = {text = "🐱", color = 8, duration = 60}, -- red "cat" when chasing enemy
+      seeking_food = {text = "😐", color = 13, duration = 60}, -- indigo/blue "neutral" when hungry
       offset_y = -18, -- Vertical offset above entity
       bounce_speed = 0.15, -- Bounce animation speed
       bounce_height = 2, -- Bounce amplitude in pixels

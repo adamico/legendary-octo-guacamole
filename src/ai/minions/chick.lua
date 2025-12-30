@@ -7,19 +7,59 @@ local Wander = require("src/ai/primitives/wander")
 local Chase = require("src/ai/primitives/chase")
 local SeekFood = require("src/ai/primitives/seek_food")
 local FloatingText = require("src/systems/floating_text")
+local Emotions = require("src/systems/emotions")
 
 local function init_fsm(entity)
    entity.chick_fsm = machine.create({
       initial = "wandering",
       events = {
-         {name = "get_hungry",  from = {"wandering", "chasing", "attacking"}, to = "seeking_food"},
-         {name = "spot_enemy",  from = {"wandering", "seeking_food"},         to = "chasing"},
-         {name = "reach_enemy", from = "chasing",                             to = "attacking"},
-         {name = "lose_target", from = {"chasing", "attacking"},              to = "wandering"},
-         {name = "back_off",    from = "attacking",                           to = "chasing"},
-         {name = "eat_done",    from = "seeking_food",                        to = "wandering"},
+         {
+            name = "get_hungry",
+            from = {"wandering", "chasing", "attacking", "following"},
+            to = "seeking_food"
+         },
+         {
+            name = "spot_enemy",
+            from = {"wandering", "seeking_food", "following"},
+            to = "chasing"
+         },
+         {
+            name = "reach_enemy",
+            from = "chasing",
+            to = "attacking"
+         },
+         {
+            name = "lose_target",
+            from = {"chasing", "attacking"},
+            to = "wandering"
+         },
+         {
+            name = "back_off",
+            from = "attacking",
+            to = "chasing"
+         },
+         {
+            name = "eat_done",
+            from = "seeking_food",
+            to = "wandering"
+         },
+         {
+            name = "start_following",
+            from = "wandering",
+            to = "following"
+         },
+         {
+            name = "stop_following",
+            from = "following",
+            to = "wandering"
+         },
       },
-      callbacks = {}
+      callbacks = {
+         onwandering = function(self, event, from, to) Emotions.set(entity, "idle") end,
+         onseeking_food = function(self, event, from, to) Emotions.set(entity, "seeking_food") end,
+         onchasing = function(self, event, from, to) Emotions.set(entity, "chasing") end,
+         onfollowing = function(self, event, from, to) Emotions.set(entity, "following") end,
+      }
    })
 end
 
@@ -103,15 +143,59 @@ local function chick_ai(entity, world)
    local has_target = nearest_enemy ~= nil
    local in_attack_range = has_target and enemy_dist < entity.attack_range
 
-   -- State transitions based on priority: hungry > attack > chase > wander
+   -- Get player for follow behavior
+   local player = nil
+   world.sys("player", function(p) player = p end)()
+
+   -- State transitions based on priority: hungry > attack > chase > follow > wander
    if fsm:is("wandering") then
       if is_hungry and fsm:can("get_hungry") then
          fsm:get_hungry()
       elseif has_target and fsm:can("spot_enemy") then
          fsm:spot_enemy()
          entity.chase_target = nearest_enemy
+      elseif player then
+         -- Check if we should start following player
+         local dx = player.x - entity.x
+         local dy = player.y - entity.y
+         local dist_sq = dx * dx + dy * dy
+         local trigger_dist = entity.follow_trigger_dist or 100
+
+         if dist_sq > trigger_dist * trigger_dist and fsm:can("start_following") then
+            -- Too far, start following
+            Wander.reset(entity)
+            fsm:start_following()
+         end
+      end
+   elseif fsm:is("following") then
+      -- Priority checks (override following)
+      if is_hungry and fsm:can("get_hungry") then
+         fsm:get_hungry()
+      elseif has_target and fsm:can("spot_enemy") then
+         fsm:spot_enemy()
+         entity.chase_target = nearest_enemy
+      elseif player then
+         -- Check if we should stop following
+         local dx = player.x - entity.x
+         local dy = player.y - entity.y
+         local dist_sq = dx * dx + dy * dy
+         local stop_dist = entity.follow_stop_dist or 50
+
+         if dist_sq < stop_dist * stop_dist and fsm:can("stop_following") then
+            -- Close enough, resume wandering
+            fsm:stop_following()
+         end
+      else
+         -- Player lost/dead? Wander
+         if fsm:can("stop_following") then
+            fsm:stop_following()
+         end
       end
    elseif fsm:is("seeking_food") then
+      -- Re-trigger 'seeking_food' emotion periodically if needed, or rely on state entry
+      if not entity.emotion and rnd(1) < 0.02 then
+         Emotions.set(entity, "seeking_food")
+      end
       -- If an enemy gets close, switch to chase (defend self)
       if has_target and fsm:can("spot_enemy") then
          fsm:spot_enemy()
@@ -162,13 +246,38 @@ local function chick_ai(entity, world)
       if not found_food and not is_hungry and fsm:can("eat_done") then
          fsm:eat_done()
       elseif not found_food then
-         -- No food nearby, wander while looking
-         Wander.update(entity)
+         -- No food nearby, check if we should follow the player
+         if player then
+            local dx = player.x - entity.x
+            local dy = player.y - entity.y
+            local dist_sq = dx * dx + dy * dy
+            local trigger_dist = entity.follow_trigger_dist or 100
+
+            if dist_sq > trigger_dist * trigger_dist then
+               -- Too far, run towards player (hoping they lead to food)
+               -- We stay in 'seeking_food' state but mimic chase behavior
+               local speed_mult = entity.follow_speed_mult or 1.1
+               Chase.toward(entity, player.x, player.y, speed_mult)
+            else
+               -- Close enough, just wander
+               Wander.update(entity)
+            end
+         else
+            -- No player, just wander
+            Wander.update(entity)
+         end
       end
    elseif fsm:is("chasing") then
       local target = entity.chase_target
       if target then
          Chase.toward(entity, target.x, target.y, entity.chase_speed_mult)
+      else
+         Wander.update(entity)
+      end
+   elseif fsm:is("following") then
+      if player then
+         local speed_mult = entity.follow_speed_mult or 1.1
+         Chase.toward(entity, player.x, player.y, speed_mult)
       else
          Wander.update(entity)
       end

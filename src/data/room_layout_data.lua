@@ -148,11 +148,11 @@ LayoutData.Layouts = {
       layout_type = "cross",
       floor_pattern = "random",
       cell_pattern = {
-         "f",
+         56,
          "br", "f", "bl",
          "f", "f",
          "tr", "f", "tl",
-         "f",
+         7,
       },
       grid = {
          ".........",
