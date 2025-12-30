@@ -20,6 +20,20 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Optimized Chick AI Performance**:
+  - Fixed CPU spikes when 2-3 chicks are on screen, especially when paths fail.
+  - `chick.lua`: Cached player/room queries once per frame, use squared distances for range comparisons.
+  - `seek_food.lua`: Removed intermediate table allocation in ECS query.
+  - `path_follow.lua`: Added frame budget guard (max 2 A* per frame), increased `DIRECT_MOVE_DIST` to 64px, improved entity staggering.
+  - `systems/ai.lua`: Reset pathfinding frame budget at start of each update.
+  - `lua-star.lua`: Added `MAX_NODES=150` limit to prevent exhaustive search when no path exists.
+  - `pathfinder.lua`: Added failed path cache (2s TTL), reduced `SEARCH_MARGIN` from 15 to 8 tiles.
+- **Implemented AI Pathfinding System**:
+  - Added `lua-star` A* library (`lib/lua-star/lua-star.lua`) from Wesley Werner.
+  - Created `lib/lua-star/pathfinder.lua` Picotron wrapper with walkability integration.
+  - Created `src/ai/primitives/path_follow.lua` AI primitive with waypoint tracking, stuck detection, and automatic re-pathing.
+  - Updated `src/ai/minions/chick.lua` to use PathFollow for `following`, `chasing`, and `seeking_food` states.
+  - Chicks now navigate around obstacles using A* instead of walking into walls.
 - **Implemented Chick Minion Health & Drain**:
   - Added 20 HP to chicks (they now have `hp = 20`).
   - Added `hp_drain_rate = 60` config property (frames between each 1 HP drain).

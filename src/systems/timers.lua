@@ -1,4 +1,6 @@
 -- Generic countdown timer system
+local GameState = require("src/game/game_state")
+
 local Timers = {}
 
 -- Update countdown timers on entities with "timers" tag
@@ -20,7 +22,8 @@ function Timers.update(world)
       end
 
       -- HP drain (for minions with finite lifespan based on health)
-      if entity.hp_drain_rate then
+      -- Skip drain if godmode is active
+      if entity.hp_drain_rate and not GameState.cheats.godmode then
          entity.hp_drain_timer = (entity.hp_drain_timer or 0) + 1
          if entity.hp_drain_timer >= entity.hp_drain_rate then
             entity.hp_drain_timer = 0

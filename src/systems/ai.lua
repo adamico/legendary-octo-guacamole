@@ -1,4 +1,5 @@
 local AI = require("src/ai")
+local PathFollow = require("src/ai/primitives/path_follow")
 local AISystem = {}
 
 -- AI system: orchestrates AI updates for enemies and minions
@@ -6,6 +7,9 @@ local AISystem = {}
 -- @param world - ECS world
 -- @param player - Player entity (may be nil if player is dead)
 function AISystem.update(world, player)
+   -- OPTIMIZATION: Reset pathfinding frame budget at start of each update
+   PathFollow.reset_frame_budget()
+
    -- Execute AI dispatch for all enemies
    world.sys("enemy", function(entity)
       AI.dispatch(entity, player)

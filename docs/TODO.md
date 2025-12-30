@@ -2,7 +2,7 @@
 
 ## Next
 
-- add AI pathfinding [BRAINSTORM]
+- remove the directional line of sight of the dasher enemies, make it a circle with a radius equal to their current vision value
 - add powerups  [BRAINSTORM]
 - add key using mechanics [BRAINSTORM]
 - add chests (locked and unlocked) as room features [BRAINSTORM]

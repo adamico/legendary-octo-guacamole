@@ -1,14 +1,17 @@
 -- Chick AI behavior
 -- FSM: wandering <-> seeking_food <-> chasing <-> attacking
 -- Priority: hungry > enemy in range > wander
+-- Uses A* pathfinding for navigation
 
 local machine = require("lib/lua-state-machine/statemachine")
 local Wander = require("src/ai/primitives/wander")
 local Chase = require("src/ai/primitives/chase")
+local PathFollow = require("src/ai/primitives/path_follow")
 local SeekFood = require("src/ai/primitives/seek_food")
 local FloatingText = require("src/systems/floating_text")
 local Emotions = require("src/systems/emotions")
 local HitboxUtils = require("src/utils/hitbox_utils")
+local DungeonManager = require("src/world/dungeon_manager")
 
 local function init_fsm(entity)
    entity.chick_fsm = machine.create({
@@ -64,18 +67,47 @@ local function init_fsm(entity)
    })
 end
 
---- Find nearest enemy within vision range
+--- Find nearest enemy within vision range (current room only)
+--- OPTIMIZED: Uses squared distances, takes pre-fetched room bounds
 --- @param entity table - The chick
 --- @param world table - ECS world
---- @return table|nil, number - Nearest enemy and distance (or nil if none)
-local function find_nearest_enemy(entity, world)
+--- @param room_bounds table|nil - Pre-fetched room bounds
+--- @return table|nil, number - Nearest enemy and distance squared (or nil if none)
+local function find_nearest_enemy(entity, world, room_bounds)
    local vision_range = entity.vision_range
+   local vision_range_sq = vision_range * vision_range
    local nearest_enemy = nil
-   local nearest_dist_sq = vision_range * vision_range
+   local nearest_dist_sq = vision_range_sq
+
+   local ex, ey = entity.x, entity.y
 
    world.sys("enemy", function(enemy)
-      local dx = enemy.x - entity.x
-      local dy = enemy.y - entity.y
+      -- LOGGING: Debug Dasher detection
+      local is_dasher = (enemy.enemy_type == "Dasher")
+      if is_dasher then
+         local d_dist = sqrt((enemy.x - ex) ^ 2 + (enemy.y - ey) ^ 2)
+         if d_dist < 400 then
+            Log.trace("Dasher nearby: "..d_dist.." px. Pos: "..flr(enemy.x / 16)..","..flr(enemy.y / 16))
+         end
+      end
+
+      -- Skip if enemy is outside current room bounds (padded by 1 tile to include walls)
+      if room_bounds then
+         local etx = flr(enemy.x / 16)
+         local ety = flr(enemy.y / 16)
+         -- Fix: Widen bounds by 1 to include enemies overlapping walls (e.g. Dashers)
+         if etx < room_bounds.x1 - 1 or etx > room_bounds.x2 + 1 or
+            ety < room_bounds.y1 - 1 or ety > room_bounds.y2 + 1 then
+            if is_dasher then
+               Log.trace("  -> REJECTED by bounds: "..
+                  room_bounds.x1..","..room_bounds.y1.." to "..room_bounds.x2..","..room_bounds.y2)
+            end
+            return -- Skip enemies outside room
+         end
+      end
+
+      local dx = enemy.x - ex
+      local dy = enemy.y - ey
       local dist_sq = dx * dx + dy * dy
       if dist_sq < nearest_dist_sq then
          nearest_dist_sq = dist_sq
@@ -83,7 +115,11 @@ local function find_nearest_enemy(entity, world)
       end
    end)()
 
-   return nearest_enemy, sqrt(nearest_dist_sq)
+   if nearest_enemy and nearest_enemy.enemy_type == "Dasher" then
+      Log.trace("  -> Dasher SELECTED as target")
+   end
+
+   return nearest_enemy, nearest_dist_sq
 end
 
 --- Apply attack to target enemy
@@ -104,8 +140,9 @@ local function attack_enemy(entity, target)
    -- Knockback the chick away from enemy (recoil)
    local dx = entity.x - target.x
    local dy = entity.y - target.y
-   local len = sqrt(dx * dx + dy * dy)
-   if len > 0 then
+   local len_sq = dx * dx + dy * dy
+   if len_sq > 0 then
+      local len = sqrt(len_sq)
       dx = dx / len
       dy = dy / len
    else
@@ -123,6 +160,7 @@ local function attack_enemy(entity, target)
 end
 
 --- Main AI update for Chick minion
+--- OPTIMIZED: Caches queries, uses squared distances, reduces redundant calculations
 --- @param entity table - The chick entity
 --- @param world table - ECS world
 local function chick_ai(entity, world)
@@ -138,17 +176,35 @@ local function chick_ai(entity, world)
 
    local fsm = entity.chick_fsm
 
-   -- Gather perception data
-   local is_hungry = entity.hp < (entity.max_hp or 20) / 2
-   local nearest_enemy, enemy_dist = find_nearest_enemy(entity, world)
-   local has_target = nearest_enemy ~= nil
-   local in_attack_range = has_target and enemy_dist < entity.attack_range
+   -- OPTIMIZATION: Cache room and bounds once per frame
+   local room = DungeonManager.current_room
+   local room_bounds = room and room:get_inner_bounds()
 
-   -- Get player for follow behavior
+   -- OPTIMIZATION: Cache player reference once per frame (avoid repeated ECS queries)
    local player = nil
    world.sys("player", function(p) player = p end)()
 
+   -- OPTIMIZATION: Cache player hitbox center if player exists (reused multiple times)
+   local player_cx, player_cy
+   if player then
+      local phb = HitboxUtils.get_hitbox(player)
+      player_cx = phb.x + phb.w / 2
+      player_cy = phb.y + phb.h / 2
+   end
+
+   -- Gather perception data
+   local is_hungry = entity.hp < (entity.max_hp or 20) / 2
+   local nearest_enemy, enemy_dist_sq = find_nearest_enemy(entity, world, room_bounds)
+   local has_target = nearest_enemy ~= nil
+
+   -- OPTIMIZATION: Use squared distances for range comparisons
+   local attack_range_sq = entity.attack_range * entity.attack_range
+   local in_attack_range = has_target and enemy_dist_sq < attack_range_sq
+
    -- State transitions based on priority: hungry > attack > chase > follow > wander
+   -- Track previous target to detect target changes
+   local prev_target = entity.chase_target
+
    if fsm:is("wandering") then
       if is_hungry then
          fsm:get_hungry()
@@ -161,8 +217,9 @@ local function chick_ai(entity, world)
          local dy = player.y - entity.y
          local dist_sq = dx * dx + dy * dy
          local trigger_dist = entity.follow_trigger_dist or 100
+         local trigger_dist_sq = trigger_dist * trigger_dist
 
-         if dist_sq > trigger_dist * trigger_dist then
+         if dist_sq > trigger_dist_sq then
             -- Too far, start following
             Wander.reset(entity)
             fsm:start_following()
@@ -173,6 +230,8 @@ local function chick_ai(entity, world)
       if is_hungry then
          fsm:get_hungry()
       elseif has_target then
+         -- Switching from player to enemy target
+         PathFollow.clear_path(entity)
          fsm:spot_enemy()
          entity.chase_target = nearest_enemy
       elseif player then
@@ -181,29 +240,32 @@ local function chick_ai(entity, world)
          local dy = player.y - entity.y
          local dist_sq = dx * dx + dy * dy
          local stop_dist = entity.follow_stop_dist or 50
+         local stop_dist_sq = stop_dist * stop_dist
 
-         if dist_sq < stop_dist * stop_dist then
+         if dist_sq < stop_dist_sq then
             -- Close enough, resume wandering
+            PathFollow.clear_path(entity)
             fsm:stop_following()
          end
       else
          -- Player lost/dead? Wander
-         if true then
-            fsm:stop_following()
-         end
+         PathFollow.clear_path(entity)
+         fsm:stop_following()
       end
    elseif fsm:is("seeking_food") then
-      -- Re-trigger 'seeking_food' emotion periodically if needed, or rely on state entry
+      -- OPTIMIZATION: Only update emotion if not already set (debounce)
       if not entity.emotion and rnd(1) < 0.02 then
          Emotions.set(entity, "seeking_food")
       end
    elseif fsm:is("chasing") then
       -- If hungry, prioritize food
       if is_hungry then
+         PathFollow.clear_path(entity)
          fsm:get_hungry()
          entity.chase_target = nil
          -- Lost target? Go back to wandering
       elseif not has_target then
+         PathFollow.clear_path(entity)
          fsm:lose_target()
          entity.chase_target = nil
          -- Close enough to attack?
@@ -232,6 +294,11 @@ local function chick_ai(entity, world)
       end
    end
 
+   -- Clear path if target entity changed (prevents following stale path to old target)
+   if entity.chase_target ~= prev_target and prev_target ~= nil then
+      PathFollow.clear_path(entity)
+   end
+
    -- Execute behavior based on current state
    if fsm:is("seeking_food") then
       local range = entity.food_seek_range
@@ -246,17 +313,19 @@ local function chick_ai(entity, world)
          if has_target then
             fsm:spot_enemy()
             entity.chase_target = nearest_enemy
-         elseif player then
+         elseif player and player_cx then
             local dx = player.x - entity.x
             local dy = player.y - entity.y
             local dist_sq = dx * dx + dy * dy
             local trigger_dist = entity.follow_trigger_dist or 100
             local stop_dist = entity.follow_stop_dist or 50
+            local trigger_dist_sq = trigger_dist * trigger_dist
+            local stop_dist_sq = stop_dist * stop_dist
 
             -- Hysteresis logic
-            if dist_sq > trigger_dist * trigger_dist then
+            if dist_sq > trigger_dist_sq then
                entity.seeking_follow_active = true
-            elseif dist_sq < stop_dist * stop_dist then
+            elseif dist_sq < stop_dist_sq then
                entity.seeking_follow_active = false
             end
 
@@ -264,16 +333,14 @@ local function chick_ai(entity, world)
                -- Too far, run towards player (hoping they lead to food)
                -- We stay in 'seeking_food' state but mimic chase behavior
                local speed_mult = entity.follow_speed_mult or 1.1
-               local hb = HitboxUtils.get_hitbox(player)
-               Chase.toward(entity, hb.x + hb.w / 2, hb.y + hb.h / 2, speed_mult)
-               -- Ensure emotion stays correct (Chase/Wander might override it)
+               Chase.toward(entity, player_cx, player_cy, speed_mult)
+               -- OPTIMIZATION: Only set emotion if different
                if entity.emotion ~= "seeking_food" then
                   Emotions.set(entity, "seeking_food")
                end
             else
                -- Close enough, just wander
                Wander.update(entity)
-               -- Ensure emotion stays correct (Wander might set it to idle)
                if entity.emotion ~= "seeking_food" then
                   Emotions.set(entity, "seeking_food")
                end
@@ -289,17 +356,18 @@ local function chick_ai(entity, world)
    elseif fsm:is("chasing") then
       local target = entity.chase_target
       if target then
-         local hb = HitboxUtils.get_hitbox(target)
-         Chase.toward(entity, hb.x + hb.w / 2, hb.y + hb.h / 2, entity.chase_speed_mult)
+         local thb = HitboxUtils.get_hitbox(target)
+         PathFollow.toward(entity, thb.x + thb.w / 2, thb.y + thb.h / 2, entity.chase_speed_mult, room)
       else
+         PathFollow.clear_path(entity)
          Wander.update(entity)
       end
    elseif fsm:is("following") then
-      if player then
+      if player and player_cx then
          local speed_mult = entity.follow_speed_mult or 1.1
-         local hb = HitboxUtils.get_hitbox(player)
-         Chase.toward(entity, hb.x + hb.w / 2, hb.y + hb.h / 2, speed_mult)
+         PathFollow.toward(entity, player_cx, player_cy, speed_mult, room)
       else
+         PathFollow.clear_path(entity)
          Wander.update(entity)
       end
    elseif fsm:is("attacking") then

@@ -1,5 +1,6 @@
 -- AI Primitive: Seek Food
 -- Causes entity to seek towards YolkSplat entities and consume them for health
+-- OPTIMIZED: No intermediate table allocation, squared distances
 
 local HitboxUtils = require("src/utils/hitbox_utils")
 local GameConstants = require("src/game/game_config")
@@ -19,6 +20,7 @@ local function check_collision(entity, food)
 end
 
 --- Update SeekFood behavior
+--- OPTIMIZED: Find nearest directly in ECS callback (no table allocation)
 --- @param entity Entity - The hungry entity
 --- @param world table - ECS world for querying and deleting entities
 --- @param range number - Scanning range (default 100)
@@ -28,36 +30,28 @@ function SeekFood.update(entity, world, range, heal_amount)
    range = range or 100
    heal_amount = heal_amount or 5
 
-   -- Find nearest YolkSplat
+   -- Find nearest YolkSplat directly in callback (avoid table allocation)
    local nearest_food = nil
-   local nearest_dist = range * range -- Distance squared
-
-   -- Iterate all entities with yolk_splat tag
-   -- Using world filter if possible, or naive iteration if not efficiently indexed
-   -- Efficient way: ECS query
-   local candidates = {}
-   world.sys("yolk_splat", function(food)
-      table.insert(candidates, food)
-   end)()
-
+   local nearest_dist_sq = range * range -- Distance squared
    local ex, ey = entity.x, entity.y
 
-   for _, food in ipairs(candidates) do
+   -- OPTIMIZATION: Find nearest directly in ECS query callback
+   world.sys("yolk_splat", function(food)
       local dx = food.x - ex
       local dy = food.y - ey
       local dist_sq = dx * dx + dy * dy
 
-      if dist_sq < nearest_dist then
-         nearest_dist = dist_sq
+      if dist_sq < nearest_dist_sq then
+         nearest_dist_sq = dist_sq
          nearest_food = food
       end
-   end
+   end)()
 
    if nearest_food then
-      -- Move towards food
+      -- Move towards food (need sqrt only for movement direction)
       local dx = nearest_food.x - ex
       local dy = nearest_food.y - ey
-      local dist = sqrt(nearest_dist)
+      local dist = sqrt(nearest_dist_sq)
 
       if dist > 0 then
          dx = dx / dist
