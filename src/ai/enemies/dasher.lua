@@ -28,23 +28,6 @@ local function get_orthogonal_directions(dx, dy)
    end
 end
 
--- Check if current patrol direction points toward the player
-local function is_facing_player(entity, player)
-   local hb_p = HitboxUtils.get_hitbox(player)
-   local hb_e = HitboxUtils.get_hitbox(entity)
-   local dx = (hb_p.x + hb_p.w / 2) - (hb_e.x + hb_e.w / 2)
-   local dy = (hb_p.y + hb_p.h / 2) - (hb_e.y + hb_e.h / 2)
-
-   -- Check if patrol direction aligns with player direction
-   if entity.patrol_dir_x ~= 0 then
-      -- Moving horizontally
-      return (entity.patrol_dir_x > 0 and dx > 0) or (entity.patrol_dir_x < 0 and dx < 0)
-   else
-      -- Moving vertically
-      return (entity.patrol_dir_y > 0 and dy > 0) or (entity.patrol_dir_y < 0 and dy < 0)
-   end
-end
-
 -- Initialize Dasher FSM on entity
 local function init_fsm(entity)
    -- Pick initial random direction
@@ -104,8 +87,8 @@ local function init_fsm(entity)
 end
 
 --- Main AI update for Dasher enemy type
--- @param entity The dasher entity
--- @param player The player entity (target)
+--- @param entity The dasher entity
+--- @param player The player entity (target)
 local function dasher_ai(entity, player)
    -- Initialize FSM if needed
    if not entity.dasher_fsm then
@@ -144,8 +127,8 @@ local function dasher_ai(entity, player)
       entity.dir_x = entity.patrol_dir_x ~= 0 and entity.patrol_dir_x or entity.dir_x
       entity.dir_y = entity.patrol_dir_y ~= 0 and entity.patrol_dir_y or entity.dir_y
 
-      -- Transition: player in range AND facing toward them
-      if in_range and is_facing_player(entity, player) then
+      -- Transition: player in range
+      if in_range then
          -- Cache the dash direction (normalized toward player)
          if dist > 0 then
             entity.dash_target_dx = dx / dist
