@@ -8,6 +8,7 @@ local FloatingText = require("src/systems/floating_text")
 local Entities = require("src/entities")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local DungeonManager = require("src/world/dungeon_manager")
+local AI = require("src/ai")
 
 local CombatHandlers = {}
 
@@ -75,12 +76,21 @@ local function projectile_vs_enemy(projectile, enemy)
    -- Trigger impact effect
    Effects.hit_impact(projectile, enemy)
 
+   -- Target painting: Mark this enemy as priority target for all chicks
+   AI.ChickAI.paint_target(enemy)
+
    -- Get outcome values from projectile (passed from player stats or config)
    -- Using config defaults if not on projectile, though Shooter system usually copies them
    local dud_damage = projectile.dud_damage or GameConstants.Player.dud_damage or 3
    local leech_damage = projectile.leech_damage or GameConstants.Player.leech_damage or 5
    local leech_heal = projectile.leech_heal or GameConstants.Player.leech_heal or 5
    local hatch_time = projectile.hatch_time or GameConstants.Player.hatch_time or 120
+
+   -- Sticky Yolk effect config (stun + slow instead of knockback)
+   local stun_dur = GameConstants.Player.egg_stun_duration or 12
+   local slow_dur = GameConstants.Player.egg_slow_duration or 60
+   local slow_factor = GameConstants.Player.egg_slow_factor or 0.5
+   local attach_dur = GameConstants.Player.chick_attach_duration or 60
 
    local roll_dud = GameConstants.Player.roll_dud_chance or 0.50
    local roll_hatch = GameConstants.Player.roll_hatch_chance or 0.35
@@ -97,37 +107,36 @@ local function projectile_vs_enemy(projectile, enemy)
    local threshold_hatch = roll_dud + roll_hatch
 
    if roll < threshold_dud then
-      -- The Dud : 3 Dmg, splats harmlessly
+      -- The Dud : 3 Dmg, splats harmlessly + Sticky Yolk (stun/slow)
       if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
          enemy.hp = enemy.hp - dud_damage
          enemy.invuln_timer = 10
          FloatingText.spawn_at_entity(enemy, -dud_damage, "damage")
-
-         local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
-         local knockback = GameConstants.Player.base_knockback + proj_knockback
-         Effects.apply_knockback(projectile, enemy, knockback)
+         -- Sticky Yolk: stun + slow instead of knockback
+         Effects.apply_sticky_yolk(enemy, stun_dur, slow_dur, slow_factor)
       end
       -- Visual splat effect for Dud
       Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
    elseif roll < threshold_hatch then
-      -- The Hatching (35%): No damage, spawn chick
+      -- The Hatching (35%): No damage, spawn chick attached to enemy (Face-Hugger)
+      -- Apply Sticky Yolk so enemy can't escape during chick hatch
+      Effects.apply_sticky_yolk(enemy, stun_dur, slow_dur, slow_factor)
 
-      local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y, DungeonManager.current_room)
-
-      Entities.spawn_egg(world, sx, sy, {
+      -- Spawn egg at enemy position with attachment
+      Entities.spawn_egg(world, enemy.x, enemy.y, {
          hatch_timer = hatch_time,
          z = spawn_z,
+         attachment_target = enemy,
+         attachment_timer = attach_dur,
       })
    else
-      -- Parasitic Drain (approx 15%): Partial damage + spawn health pickup
+      -- Parasitic Drain (approx 15%): Partial damage + spawn health pickup + Sticky Yolk
       if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
          enemy.hp = enemy.hp - leech_damage
          enemy.invuln_timer = 10
          FloatingText.spawn_at_entity(enemy, -leech_damage, "damage")
-
-         local proj_knockback = GameConstants.Projectile.Egg.knockback or 2
-         local knockback = GameConstants.Player.base_knockback + proj_knockback
-         Effects.apply_knockback(projectile, enemy, knockback)
+         -- Sticky Yolk: stun + slow instead of knockback
+         Effects.apply_sticky_yolk(enemy, stun_dur, slow_dur, slow_factor)
       end
       -- Spawn health pickup (blood glob)
       local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y + spawn_z, DungeonManager.current_room)

@@ -8,6 +8,14 @@ local Physics = {}
 
 -- Internal: apply acceleration, friction, and clamp velocity
 local function apply_acceleration(entity)
+   -- Handle stun: no movement at all
+   if entity.stun_timer and entity.stun_timer > 0 then
+      entity.stun_timer = entity.stun_timer - 1
+      entity.vel_x = 0
+      entity.vel_y = 0
+      return
+   end
+
    local dx = entity.dir_x or 0
    local dy = entity.dir_y or 0
 
@@ -25,8 +33,14 @@ local function apply_acceleration(entity)
    if dx == 0 then entity.vel_x *= entity.friction end
    if dy == 0 then entity.vel_y *= entity.friction end
 
-   -- Clamp to max speed
+   -- Handle slow: reduce max_speed temporarily
    local max_spd = entity.max_speed
+   if entity.slow_timer and entity.slow_timer > 0 then
+      entity.slow_timer = entity.slow_timer - 1
+      max_spd = max_spd * (entity.slow_factor or 0.5)
+   end
+
+   -- Clamp to max speed
    entity.vel_x = mid(-max_spd, entity.vel_x, max_spd)
    entity.vel_y = mid(-max_spd, entity.vel_y, max_spd)
 

@@ -13,6 +13,9 @@ local Emotions = require("src/systems/emotions")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local DungeonManager = require("src/world/dungeon_manager")
 
+-- Target painting: enemy hit by player becomes priority target for all chicks
+local painted_target = nil
+
 local function init_fsm(entity)
    entity.chick_fsm = machine.create({
       initial = "wandering",
@@ -81,16 +84,21 @@ local function find_nearest_enemy(entity, world, room_bounds)
 
    local ex, ey = entity.x, entity.y
 
-   world.sys("enemy", function(enemy)
-      -- LOGGING: Debug Dasher detection
-      local is_dasher = (enemy.enemy_type == "Dasher")
-      if is_dasher then
-         local d_dist = sqrt((enemy.x - ex) ^ 2 + (enemy.y - ey) ^ 2)
-         if d_dist < 400 then
-            Log.trace("Dasher nearby: "..d_dist.." px. Pos: "..flr(enemy.x / 16)..","..flr(enemy.y / 16))
-         end
+   -- Target painting: If painted target exists and is alive, prioritize it
+   if painted_target and painted_target.hp and painted_target.hp > 0 then
+      local dx = painted_target.x - ex
+      local dy = painted_target.y - ey
+      local dist_sq = dx * dx + dy * dy
+      -- Always target painted enemy if within extended vision (2x range)
+      if dist_sq < vision_range_sq * 4 then
+         return painted_target, dist_sq
       end
+   else
+      -- Clear stale painted target
+      painted_target = nil
+   end
 
+   world.sys("enemy", function(enemy)
       -- Skip if enemy is outside current room bounds (padded by 1 tile to include walls)
       if room_bounds then
          local etx = flr(enemy.x / 16)
@@ -98,10 +106,6 @@ local function find_nearest_enemy(entity, world, room_bounds)
          -- Fix: Widen bounds by 1 to include enemies overlapping walls (e.g. Dashers)
          if etx < room_bounds.x1 - 1 or etx > room_bounds.x2 + 1 or
             ety < room_bounds.y1 - 1 or ety > room_bounds.y2 + 1 then
-            if is_dasher then
-               Log.trace("  -> REJECTED by bounds: "..
-                  room_bounds.x1..","..room_bounds.y1.." to "..room_bounds.x2..","..room_bounds.y2)
-            end
             return -- Skip enemies outside room
          end
       end
@@ -114,10 +118,6 @@ local function find_nearest_enemy(entity, world, room_bounds)
          nearest_enemy = enemy
       end
    end)()
-
-   if nearest_enemy and nearest_enemy.enemy_type == "Dasher" then
-      Log.trace("  -> Dasher SELECTED as target")
-   end
 
    return nearest_enemy, nearest_dist_sq
 end
@@ -172,6 +172,40 @@ local function chick_ai(entity, world)
    -- Decrement attack timer
    if entity.attack_timer and entity.attack_timer > 0 then
       entity.attack_timer = entity.attack_timer - 1
+   end
+
+   -- Face-Hugger attachment: Skip normal AI while attached to enemy
+   if entity.attachment_target then
+      local target = entity.attachment_target
+
+      -- Check if target is still valid (exists and alive)
+      if target.hp and target.hp > 0 then
+         -- Follow target position (stick to enemy)
+         entity.x = target.x
+         entity.y = target.y
+
+         -- Attack while attached (guaranteed hits, no range check needed)
+         if (entity.attack_timer or 0) <= 0 then
+            attack_enemy(entity, target)
+         end
+
+         -- Decrement attachment timer
+         entity.attachment_timer = (entity.attachment_timer or 0) - 1
+
+         -- Detach when timer expires
+         if entity.attachment_timer <= 0 then
+            entity.attachment_target = nil
+            -- Initialize FSM to wandering state after detaching
+            if entity.chick_fsm then
+               Emotions.set(entity, "idle")
+            end
+         end
+      else
+         -- Target died, detach immediately
+         entity.attachment_target = nil
+      end
+
+      return -- Skip rest of AI while attached
    end
 
    local fsm = entity.chick_fsm
@@ -386,4 +420,19 @@ local function chick_ai(entity, world)
    end
 end
 
-return chick_ai
+-- Module exports (AI function + target painting utilities)
+return {
+   update = chick_ai,
+   -- Paint a target for all chicks to prioritize
+   paint_target = function(enemy)
+      painted_target = enemy
+   end,
+   -- Clear the painted target (called on room transition or target death)
+   clear_target = function()
+      painted_target = nil
+   end,
+   -- Get current painted target (for debugging)
+   get_painted_target = function()
+      return painted_target
+   end,
+}

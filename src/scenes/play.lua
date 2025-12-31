@@ -6,6 +6,7 @@ local Emotions = require("src/systems/emotions")
 local Events = require("src/game/events")
 local UI = require("src/ui")
 local Wander = require("src/ai/primitives/wander")
+local AI = require("src/ai")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -63,6 +64,7 @@ function Play:enteredState()
          end
       end)()
       Systems.FloatingText.clear()
+      AI.ChickAI.clear_target() -- Clear painted target from previous room
    end)
 
    -- Subscribe to Game Over event

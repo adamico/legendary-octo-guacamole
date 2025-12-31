@@ -20,6 +20,22 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Cleanup**:
+  - **Removed Chick AI Debug Logging**: Cleaned up `Log.trace` statements used for debugging Dasher detection and selection in `chick.lua`.
+- **Implemented Sticky Yolk & Face-Hugger Combat Mechanics**:
+  - **Removed Knockback**: Egg projectiles no longer push enemies away (was counter-productive for minion swarm).
+  - **Sticky Yolk Effect**: Added stun (12 frames ~0.2s) + slow (60 frames ~1s at 50% speed) on all egg impacts.
+    - Config in `player.lua`: `egg_stun_duration`, `egg_slow_duration`, `egg_slow_factor`.
+    - New `Effects.apply_sticky_yolk()` in `effects.lua`.
+    - Physics handles `stun_timer` (zero velocity) and `slow_timer` (reduced max_speed) in `apply_acceleration()`.
+  - **Face-Hugger**: Chicks spawned from direct enemy hits attach to the target for ~1s (60 frames).
+    - `combat_handlers.lua`: Spawns egg at enemy position with `attachment_target` and `attachment_timer`.
+    - `egg.lua`: Passes attachment data to spawned chick.
+    - `chick.lua`: Attached chicks follow enemy, get guaranteed attacks, then detach when timer expires or enemy dies.
+  - **Target Painting**: Enemies hit by eggs become priority targets for all chicks (2x vision range to painted target).
+    - `chick.lua`: Module now exports `paint_target()`, `clear_target()`, and `get_painted_target()`.
+    - `combat_handlers.lua`: Calls `AI.ChickAI.paint_target(enemy)` on egg impacts.
+    - `play.lua`: Calls `AI.ChickAI.clear_target()` on room transition.
 - **Optimized Chick AI Performance**:
   - Fixed CPU spikes when 2-3 chicks are on screen, especially when paths fail.
   - `chick.lua`: Cached player/room queries once per frame, use squared distances for range comparisons.

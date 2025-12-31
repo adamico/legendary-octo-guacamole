@@ -12,7 +12,7 @@ local shooter_ai = require("src/ai/enemies/shooter")
 local dasher_ai = require("src/ai/enemies/dasher")
 
 -- Minion AI profiles
-local chick_ai = require("src/ai/minions/chick")
+local ChickAI = require("src/ai/minions/chick")
 local egg_ai = require("src/ai/minions/egg")
 
 local AI = {}
@@ -33,9 +33,12 @@ local enemy_profiles = {
 
 -- Minion AI lookup table (maps minion_type to AI function)
 local minion_profiles = {
-   Chick = chick_ai,
+   Chick = ChickAI.update, -- ChickAI is a module with update + target painting
    Egg = egg_ai,
 }
+
+-- Expose ChickAI for target painting access
+AI.ChickAI = ChickAI
 
 --- Dispatch AI update to the appropriate enemy profile
 -- @param entity The entity to process

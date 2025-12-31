@@ -29,6 +29,14 @@ return {
    leech_heal = 5,   -- HP pickup dropped by "The Leech"
    hatch_time = 120, -- Frames for egg to hatch into chick
 
+   -- Sticky Yolk Effect (applied on egg impacts with enemies)
+   egg_stun_duration = 12, -- Frames of micro-stun (~0.2s)
+   egg_slow_duration = 60, -- Frames of 50% slow (~1s)
+   egg_slow_factor = 0.5,  -- Speed multiplier during slow
+
+   -- Face-Hugger (chick attachment on direct hit)
+   chick_attach_duration = 60, -- Frames chick stays attached (~1s)
+
    -- Yolk Splat Settings (Wall/Rock impacts)
    yolk_splat_duration = 300, -- 5 seconds
    yolk_slow_factor = 0.7,    -- Enemies move at 70% speed

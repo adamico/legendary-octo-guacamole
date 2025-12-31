@@ -34,7 +34,11 @@ return function(entity, world)
 
       -- Hatch into chick when timer reaches 0
       if entity.hatch_timer <= 0 then
-         Entities.spawn_chick(world, entity.x, entity.y)
+         -- Pass attachment data to chick (Face-Hugger mechanic)
+         local chick = Entities.spawn_chick(world, entity.x, entity.y, {
+            attachment_target = entity.attachment_target,
+            attachment_timer = entity.attachment_timer,
+         })
          world.del(entity)
       end
    end
