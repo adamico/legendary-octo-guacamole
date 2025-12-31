@@ -4,7 +4,7 @@ return {
    Hud = {
       inventory = {
          x = 10,             -- Base X position from left
-         y = 16,             -- Base Y position from top (below health bar)
+         y = 32,             -- Base Y position from top (lowered to make room for hearts)
          spacing_y = 24,     -- Vertical spacing between items (icon + text below)
          icon_size = 11,     -- Size of icons
          text_offset_x = 1,  -- Text centered below icon
@@ -15,6 +15,27 @@ return {
             coins = 197,
             bombs = 196,
             keys = 198,
+         }
+      },
+      combat_timer = {
+         x = 10,
+         y = 80,    -- Moved down
+         color = 8, -- Red
+      },
+      health_bar = {
+         x = 10,
+         y = 10,
+         heart_sprite = 42,       -- Full Heart
+         half_heart_sprite = 43,  -- Half Heart
+         empty_heart_sprite = 56, -- Empty Heart
+         heart_size = 16,         -- 16x16 sprite
+         heart_spacing = 18,      -- 16 + 2px gap
+         -- Heart sprite base colors (in luminance order): 7, 8, 24, 2
+         -- Each palette maps: {color_for_7, color_for_8, color_for_24, color_for_2}
+         colors = {
+            normal = nil,               -- No swap needed (use original red)
+            empty = nil,                -- Empty sprite (56) has its own colors
+            overheal = {7, 28, 12, 16}, -- Blue hue equivalent
          }
       },
    },
@@ -44,10 +65,10 @@ return {
    },
    XpBar = {
       y = 250,          -- At screen bottom (overlap with wall)
-      height = 8,       -- Bar height
-      padding = 4,      -- Horizontal padding from screen edges
+      height = 9,       -- Bar height
+      padding = 16,     -- Horizontal padding from screen edges
       bg_color = 1,     -- Black background
-      fill_color = 10,  -- Yellow fill
+      fill_color = 11,  -- Yellow fill
       border_color = 5, -- Dark gray border
       text_color = 7,   -- White level text
    },

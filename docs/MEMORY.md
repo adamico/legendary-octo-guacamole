@@ -20,6 +20,18 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Reorganized Debug UI**:
+  - **Groups**: Divided the F1 debug panel into logical "Cheats" and "Debug" sections using headers.
+  - **Toggles**: Added interactive toggles for `show_grid`, `show_combat_timer`, and `show_pathfinding` alongside existing toggles.
+  - **Visuals**: Used `_ACCENT1_color` (gray) for headers to distinguish them from interactive buttons and info groups.
+- **Implemented Infinite Inventory Cheat**:
+  - **Feature**: Added `infinite_inventory` cheat to `GameState.cheats` (F6 shortcut).
+  - **Logic**: When active, bombs (in `bomber.lua`) and keys (in `obstacle_handlers.lua`) are not consumed, and actions requiring them can be performed even with 0 in inventory.
+  - **UI**: Added a toggle for `infinite_inventory` in the debug UI.
+- **Implemented Combat Timer Debug Configuration**:
+  - **Feature**: Added `show_combat_timer` toggle to `GameState.debug`.
+  - **Config**: Added `Hud.combat_timer` to `ui.lua` with configurable `x`, `y`, and `color`.
+  - **Logic**: The combat timer is now hidden by default and only renders when the debug flag is active, using properties from the UI config.
 - **Fixed XP Bar UI Configuration Usage**:
   - **Issue**: The XP bar in `src/ui/xp_bar.lua` was using hardcoded values for its vertical position, height, and colors, ignoring the values defined in `src/game/config/ui.lua`.
   - **Fix**: Updated `XpBar.draw()` to use `GameConstants.XpBar` for `y` position, `height`, `padding`, and colors. Also replaced hardcoded `480` and `50` with `SCREEN_WIDTH` and `GameConstants.Player.base_xp_to_level`.

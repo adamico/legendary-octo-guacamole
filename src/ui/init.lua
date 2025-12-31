@@ -4,9 +4,11 @@
 local Minimap = require("src/ui/minimap")
 local Hud = require("src/ui/hud")
 local XpBar = require("src/ui/xp_bar")
+local HealthBar = require("src/ui/health_bar")
 
 return {
    Minimap = Minimap,
    Hud = Hud,
    XpBar = XpBar,
+   HealthBar = HealthBar,
 }

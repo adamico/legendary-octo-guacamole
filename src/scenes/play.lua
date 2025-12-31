@@ -1,4 +1,5 @@
 local GameState = require("src/game/game_state")
+local GameConstants = require("src/game/game_config")
 local World = require("src/world")
 local Entities = require("src/entities")
 local Systems = require("src/systems")
@@ -75,6 +76,11 @@ function Play:enteredState()
       AI.ChickAI.clear_target() -- Clear painted target from previous room
    end)
 
+   -- Subscribe to Level Up event
+   Events.on(Events.LEVEL_UP, function(player_entity, new_level)
+      self:pushState("LevelUp", player_entity)
+   end)
+
    -- Subscribe to Game Over event
    Events.on(Events.GAME_OVER, function()
       self:gotoState("GameOver")
@@ -95,6 +101,11 @@ function Play:enteredState()
       end
    end
 
+   -- Cheats Group
+   add(debugui.elements, debugui.create_group(7, debugui.config._ACCENT1_color, true, function(self)
+      self.vars = {"[== cheats ==]"}
+   end))
+
    local godmode_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "godmode",
       function(self) sync_toggle_visual(self, GameState.cheats.godmode) end,
       nil,
@@ -107,11 +118,40 @@ function Play:enteredState()
       function(self) GameState.cheats.free_attacks = not GameState.cheats.free_attacks end)
    add(debugui.elements, free_attacks_toggle)
 
+   local infinite_inv_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "infinite_inventory",
+      function(self) sync_toggle_visual(self, GameState.cheats.infinite_inventory) end,
+      nil,
+      function(self) GameState.cheats.infinite_inventory = not GameState.cheats.infinite_inventory end)
+   add(debugui.elements, infinite_inv_toggle)
+
+   -- Debug Group
+   add(debugui.elements, debugui.create_group(7, debugui.config._ACCENT1_color, true, function(self)
+      self.vars = {"[== debug ==]"}
+   end))
+
    local hitboxes_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_hitboxes",
       function(self) sync_toggle_visual(self, GameState.debug.show_hitboxes) end,
       nil,
       function(self) GameState.debug.show_hitboxes = not GameState.debug.show_hitboxes end)
    add(debugui.elements, hitboxes_toggle)
+
+   local grid_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_grid",
+      function(self) sync_toggle_visual(self, GameState.debug.show_grid) end,
+      nil,
+      function(self) GameState.debug.show_grid = not GameState.debug.show_grid end)
+   add(debugui.elements, grid_toggle)
+
+   local combat_timer_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_combat_timer",
+      function(self) sync_toggle_visual(self, GameState.debug.show_combat_timer) end,
+      nil,
+      function(self) GameState.debug.show_combat_timer = not GameState.debug.show_combat_timer end)
+   add(debugui.elements, combat_timer_toggle)
+
+   local pathfinding_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_pathfinding",
+      function(self) sync_toggle_visual(self, GameState.debug.show_pathfinding) end,
+      nil,
+      function(self) GameState.debug.show_pathfinding = not GameState.debug.show_pathfinding end)
+   add(debugui.elements, pathfinding_toggle)
 
    -- Player Stats Group (Real-time monitoring)
    local stats_group = debugui.create_group(7, debugui.config._ACCENT2_color, true,
@@ -212,12 +252,16 @@ function Play:update()
    if keyp("f2") then
       GameState.debug.show_hitboxes = not GameState.debug.show_hitboxes
       GameState.debug.show_grid = not GameState.debug.show_grid
+      GameState.debug.show_combat_timer = not GameState.debug.show_combat_timer
    end
    if keyp("f3") then
       GameState.cheats.godmode = not GameState.cheats.godmode
    end
    if keyp("f4") then
       GameState.cheats.free_attacks = not GameState.cheats.free_attacks
+   end
+   if keyp("f5") then
+      GameState.cheats.infinite_inventory = not GameState.cheats.infinite_inventory
    end
 end
 
@@ -250,6 +294,10 @@ function Play:draw()
 
       clip_square = RoomRenderer.draw_exploring(current_room, cam_x, cam_y)
       RoomRenderer.draw_room_features(current_room)
+
+      if GameState.debug.show_grid then
+         RoomRenderer.draw_debug_grid(current_room)
+      end
    end
 
    -- Lighting (self-iterating)
@@ -329,6 +377,9 @@ function Play:draw()
    -- Reset camera for global UI
    camera()
 
+   -- Draw HUD (Health Bar)
+   UI.HealthBar.draw(player)
+
    -- Draw HUD (Inventory)
    UI.Hud.draw(player)
 
@@ -338,13 +389,14 @@ function Play:draw()
    -- Draw minimap
    Minimap.draw(current_room)
 
-   -- draw combat timer
-   if current_room.combat_timer and current_room.combat_timer >= 0 then
+   -- draw combat timer (debug)
+   if GameState.debug.show_combat_timer and current_room.combat_timer and current_room.combat_timer >= 0 then
+      local config = GameConstants.Hud.combat_timer
       local timer = current_room.combat_timer
       local minutes = math.floor(timer / 60)
       local seconds = timer % 60
       local timer_str = string.format("%02d:%02d", minutes, seconds)
-      print(timer_str, 10, 10, 8)
+      print(timer_str, config.x, config.y, config.color)
    end
 end
 

@@ -1,6 +1,7 @@
 -- Bomber system
 -- Handles bomb placement on X button press and fuse countdown/explosion
 
+local GameState = require("src/game/game_state")
 local GameConstants = require("src/game/game_config")
 local Entities = require("src/entities")
 local EntityUtils = require("src/utils/entity_utils")
@@ -19,12 +20,15 @@ function Bomber.update(world)
          return
       end
 
-      -- Check if X button pressed and player has bombs
+      -- Check if X button pressed and player has bombs (or infinite inventory)
       local input_pressed = btnp(GameConstants.controls.place_bomb)
+      local has_bombs = (player.bombs and player.bombs > 0) or GameState.cheats.infinite_inventory
 
-      if input_pressed and player.bombs and player.bombs > 0 then
-         -- Consume bomb from inventory
-         player.bombs = player.bombs - 1
+      if input_pressed and has_bombs then
+         -- Consume bomb from inventory if not infinite
+         if not GameState.cheats.infinite_inventory then
+            player.bombs = player.bombs - 1
+         end
 
          -- Spawn bomb at player's center position (tile-aligned)
          local cx, cy = EntityUtils.get_center(player)

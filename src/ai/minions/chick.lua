@@ -80,9 +80,11 @@ end
 --- @param entity table - The chick
 --- @param world table - ECS world
 --- @param room_bounds table|nil - Pre-fetched room bounds
+--- @param player table|nil - Player (for vision bonus)
 --- @return table|nil, number - Nearest enemy and distance squared (or nil if none)
-local function find_nearest_enemy(entity, world, room_bounds)
-   local vision_range = entity.vision_range
+local function find_nearest_enemy(entity, world, room_bounds, player)
+   -- Apply player's vision bonus if available
+   local vision_range = entity.vision_range + ((player and player.minion_vision_bonus) or 0)
    local vision_range_sq = vision_range * vision_range
    local nearest_enemy = nil
    local nearest_dist_sq = vision_range_sq
@@ -147,14 +149,18 @@ end
 --- Apply attack to target enemy
 --- @param entity table - The chick
 --- @param target table - The enemy being attacked
-local function attack_enemy(entity, target)
+--- @param player table|nil - The player (for bonus damage)
+local function attack_enemy(entity, target, player)
    -- Check attack cooldown
    if entity.attack_timer and entity.attack_timer > 0 then
       return false -- Still on cooldown
    end
 
-   -- Deal damage
+   -- Deal damage (base + player bonus)
    local damage = entity.attack_damage
+   if player and player.minion_damage_bonus then
+      damage = damage + player.minion_damage_bonus
+   end
    target.hp = target.hp - damage
    target.invuln_timer = 5 -- Brief invuln
    FloatingText.spawn_at_entity(target, -damage, "damage")
@@ -175,8 +181,10 @@ local function attack_enemy(entity, target)
    entity.knockback_vel_x = dx * knockback
    entity.knockback_vel_y = dy * knockback
 
-   -- Reset attack cooldown
-   entity.attack_timer = entity.attack_cooldown
+   -- Reset attack cooldown (apply player's reduction bonus if available)
+   local base_cooldown = entity.attack_cooldown
+   local reduction = (player and player.minion_cooldown_reduction) or 0
+   entity.attack_timer = math.max(5, base_cooldown - reduction)
 
    return true
 end
@@ -196,6 +204,20 @@ local function chick_ai(entity, world)
       entity.attack_timer = entity.attack_timer - 1
    end
 
+   -- OPTIMIZATION: Cache player reference early (needed for Face-Hugger and bonuses)
+   local player = nil
+   world.sys("player", function(p) player = p end)()
+
+   -- One-time bonus application: Add minion HP bonus when first spawned
+   if not entity.bonuses_applied and player then
+      local hp_bonus = player.minion_hp_bonus or 0
+      if hp_bonus > 0 then
+         entity.max_hp = (entity.max_hp or 20) + hp_bonus
+         entity.hp = (entity.hp or entity.max_hp) + hp_bonus
+      end
+      entity.bonuses_applied = true
+   end
+
    -- Face-Hugger attachment: Skip normal AI while attached to enemy
    if entity.attachment_target then
       local target = entity.attachment_target
@@ -208,7 +230,7 @@ local function chick_ai(entity, world)
 
          -- Attack while attached (guaranteed hits, no range check needed)
          if (entity.attack_timer or 0) <= 0 then
-            attack_enemy(entity, target)
+            attack_enemy(entity, target, player)
          end
 
          -- Decrement attachment timer
@@ -236,9 +258,6 @@ local function chick_ai(entity, world)
    local room = DungeonManager.current_room
    local room_bounds = room and room:get_inner_bounds()
 
-   -- OPTIMIZATION: Cache player reference once per frame (avoid repeated ECS queries)
-   local player = nil
-   world.sys("player", function(p) player = p end)()
 
    -- OPTIMIZATION: Cache player hitbox center if player exists (reused multiple times)
    local player_cx, player_cy
@@ -250,7 +269,7 @@ local function chick_ai(entity, world)
 
    -- Gather perception data
    local is_hungry = entity.hp < (entity.max_hp or 20) / 2
-   local nearest_enemy, enemy_dist_sq = find_nearest_enemy(entity, world, room_bounds)
+   local nearest_enemy, enemy_dist_sq = find_nearest_enemy(entity, world, room_bounds, player)
    local has_target = nearest_enemy ~= nil
 
    -- OPTIMIZATION: Use squared distances for range comparisons
@@ -467,7 +486,7 @@ local function chick_ai(entity, world)
       local target = entity.chase_target
       if target then
          -- Attack the target
-         attack_enemy(entity, target)
+         attack_enemy(entity, target, player)
          -- Stop moving while attacking (knockback will push us back)
          entity.vel_x = 0
          entity.vel_y = 0

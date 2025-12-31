@@ -61,7 +61,8 @@ local function melee_vs_enemy(hitbox, enemy)
    -- Vampiric healing: Heal player for % of damage dealt
    local owner = hitbox.owner_entity
    if owner and owner.type == "Player" then
-      local vampiric_heal = damage * GameConstants.Player.vampiric_heal
+      local heal_percent = owner.vampiric_heal or GameConstants.Player.vampiric_heal or 0.3
+      local vampiric_heal = damage * heal_percent
       owner.hp = math.min(owner.hp + vampiric_heal, owner.max_hp)
       FloatingText.spawn_at_entity(owner, vampiric_heal, "heal")
    end
@@ -87,9 +88,10 @@ local function projectile_vs_enemy(projectile, enemy)
    local hatch_time = projectile.hatch_time or GameConstants.Player.hatch_time or 120
 
    -- Sticky Yolk effect config (stun + slow instead of knockback)
+   -- Read from projectile (passed from player stats) or fall back to constants
    local stun_dur = GameConstants.Player.egg_stun_duration or 12
-   local slow_dur = GameConstants.Player.egg_slow_duration or 60
-   local slow_factor = GameConstants.Player.egg_slow_factor or 0.5
+   local slow_dur = projectile.egg_slow_duration or GameConstants.Player.egg_slow_duration or 60
+   local slow_factor = projectile.egg_slow_factor or GameConstants.Player.egg_slow_factor or 0.5
    local attach_dur = GameConstants.Player.chick_attach_duration or 60
 
    local roll_dud = GameConstants.Player.roll_dud_chance or 0.50
@@ -157,13 +159,15 @@ local function player_vs_enemy(player, enemy)
       return
    end
    local damage = enemy.contact_damage or 10
+   -- Apply damage reduction if player has upgrade
+   damage = math.floor(damage * (player.damage_reduction or 1.0))
    if not GameState.cheats.godmode then
       apply_damage_with_overheal(player, damage)
       FloatingText.spawn_at_entity(player, -damage, "damage")
    end
    Effects.hit_impact(enemy, player, "heavy_shake")
    Effects.apply_knockback(enemy, player, 16)
-   player.invuln_timer = 30
+   player.invuln_timer = player.invulnerability_duration or 120
    player.time_since_shot = 0
 end
 
@@ -179,7 +183,7 @@ local function enemy_projectile_vs_player(projectile, player)
    end
    Effects.hit_impact(projectile, player, "heavy_shake")
    Effects.apply_knockback(projectile, player, 8)
-   player.invuln_timer = 30
+   player.invuln_timer = player.invulnerability_duration or 120
    player.time_since_shot = 0
    world.del(projectile)
 end
@@ -221,7 +225,7 @@ local function explosion_vs_player(explosion, player)
    end
    Effects.hit_impact(explosion, player, "heavy_shake")
    apply_explosion_knockback(explosion, player, 16)
-   player.invuln_timer = 30
+   player.invuln_timer = player.invulnerability_duration or 120
 end
 
 -- Handler for Explosion hitting Enemy

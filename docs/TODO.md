@@ -2,6 +2,7 @@
 
 ## Next
 
+- add levelup choice modal screen [BRAINSTORM]
 - add genetic mutation system (powerups that modify the mechanics) [BRAINSTORM]
 - add locked treasure room for powerups [BRAINSTORM]
 - add shop room with items [BRAINSTORM]

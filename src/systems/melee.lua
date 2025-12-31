@@ -51,9 +51,9 @@ function Melee.update(world)
             if dy > 0 then angle = 180 else angle = 0 end
          end
 
-         -- Calculate damage based on missing health
+         -- Calculate damage based on missing health + bonus
          local damage = math.floor((player.max_hp - player.hp) / 4)
-         damage = math.max(1, damage)
+         damage = math.max(1, damage) + (player.melee_bonus_damage or 0)
 
          -- Spawn MeleeHitbox
          local hitbox = {

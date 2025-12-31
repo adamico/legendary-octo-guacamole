@@ -56,10 +56,13 @@ function Player.spawn(world, x, y)
         drain_damage = GameConstants.Player.drain_damage,
         drain_heal = GameConstants.Player.drain_heal,
         hatch_time = GameConstants.Player.hatch_time,
+        vampiric_heal = GameConstants.Player.vampiric_heal,
 
         melee_cooldown = 0,
         melee_cost = GameConstants.Player.melee_cost,
-        invuln_timer = 0, -- Frames of invulnerability remaining after taking damage
+        melee_bonus_damage = 0,         -- Bonus flat damage for melee
+        invuln_timer = 0,               -- Frames of invulnerability remaining after taking damage
+        invulnerability_duration = 120, -- Default duration (can be upgraded)
 
         -- Inventory
         coins = GameConstants.Player.coins,

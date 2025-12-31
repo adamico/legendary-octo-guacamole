@@ -84,6 +84,9 @@ function Shooter.update(world)
                drain_damage = entity.drain_damage,
                drain_heal = entity.drain_heal,
                hatch_time = entity.hatch_time,
+               -- Sticky Yolk effect stats
+               egg_slow_duration = entity.egg_slow_duration,
+               egg_slow_factor = entity.egg_slow_factor,
             }
          )
 

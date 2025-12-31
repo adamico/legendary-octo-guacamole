@@ -1,6 +1,7 @@
 -- Obstacle collision handlers
 -- Handles collisions with Rocks and Destructibles
 
+local GameState = require("src/game/game_state")
 local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
 local HitboxUtils = require("src/utils/hitbox_utils")
@@ -66,15 +67,15 @@ local CHEST_LOOT = {
    {type = "HealthPickup", weight = 0.20},
 }
 
--- Helper: Open a chest entity and spawn loot
--- @param chest The chest entity
--- @param player The player entity (for key checking on locked chests)
--- @return true if chest was opened, false if locked and no key
+--- Helper: Open a chest entity and spawn loot
+--- @param chest The chest entity
+--- @param player The player entity (for key checking on locked chests)
+--- @return true if chest was opened, false if locked and no key
 local function open_chest(chest, player)
    if chest.dead or chest.opened then return false end
 
    -- Check if locked and player has keys
-   if chest.is_locked then
+   if chest.is_locked and not GameState.cheats.infinite_inventory then
       local key_cost = chest.key_cost or 1
       if not player.keys or player.keys < key_cost then
          -- Not enough keys - cannot open
@@ -124,8 +125,12 @@ local function open_chest(chest, player)
 end
 
 
--- Push entity out of obstacle (AABB minimum penetration resolution)
--- Respects solid tiles - won't push entity into walls
+--- Push entity out of obstacle (AABB minimum penetration resolution)
+---
+--- Respects solid tiles - won't push entity into walls
+---
+--- @param entity The entity to push out of the obstacle
+--- @param obstacle The obstacle to push the entity out of
 local function push_out(entity, obstacle)
    local Collision = require("src/physics/collision")
    local qsort = require("lib/qsort")
@@ -167,7 +172,10 @@ local function push_out(entity, obstacle)
    -- This prevents phasing through walls
 end
 
--- Push enemy out of obstacle and handle Dasher stun
+--- Push enemy out of obstacle and handle Dasher stun
+---
+--- @param enemy The enemy to push out of the obstacle
+--- @param obstacle The obstacle to push the enemy out of
 local function push_out_enemy(enemy, obstacle)
    if world.msk(enemy).flying then return end
    push_out(enemy, obstacle)
@@ -178,8 +186,11 @@ local function push_out_enemy(enemy, obstacle)
    end
 end
 
--- Helper: handle egg break on obstacle collision
--- Guards against being called multiple times for the same projectile
+--- Helper: handle egg break on obstacle collision
+--- Guards against being called multiple times for the same projectile
+---
+--- @param projectile The projectile to handle
+--- @param obstacle_type The type of obstacle the projectile hit
 local function projectile_hit_obstacle(projectile, obstacle_type)
    -- Prevent double processing if projectile hits multiple obstacles in same frame
    if projectile.hit_obstacle then return end
@@ -206,7 +217,9 @@ local function projectile_hit_obstacle(projectile, obstacle_type)
    world.del(projectile)
 end
 
--- Register all obstacle handlers
+--- Register all obstacle handlers
+---
+--- @param handlers The handlers table to register the obstacle handlers to
 function ObstacleHandlers.register(handlers)
    -- Player/Enemy push-out
    handlers.entity["Player,Rock"] = function(player, rock) push_out(player, rock) end

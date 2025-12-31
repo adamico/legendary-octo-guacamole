@@ -26,11 +26,6 @@ function Leveling.check_level_up(player)
 
       -- Emit level up event for UI/effects
       Events.emit(Events.LEVEL_UP, player, player.level)
-
-      -- Phase 1: Auto-apply generic stat boost (+5% max HP)
-      local hp_boost = math.floor(player.max_hp * 0.05)
-      player.max_hp = player.max_hp + hp_boost
-      player.hp = player.hp + hp_boost -- Also heal by the boost amount
    end
 end
 

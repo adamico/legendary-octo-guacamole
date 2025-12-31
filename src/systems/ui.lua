@@ -4,9 +4,8 @@ local HitboxUtils = require("src/utils/hitbox_utils")
 
 local UI = {}
 
--- Draw health bar for an entity
 local function draw_health_bar(entity)
-   if not entity.hp or entity.type == "Skull" then return end
+   if not entity.hp or entity.type == "Skull" or entity.type == "Player" then return end
 
    local bar_h = 3
    local py = flr(entity.y - 8)
