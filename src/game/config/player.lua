@@ -46,7 +46,7 @@ return {
    projectile_origin_z = 16,  -- Z elevation for horizontal shots
    -- Inventory
    coins = 0,
-   keys = 0,
+   keys = 1,
    bombs = 2,
    animations = {
       down = {

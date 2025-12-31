@@ -13,7 +13,7 @@ local GameState = {
       free_attacks = false, -- Removes shot/melee costs and activation conditions
    },
    -- Level seed for reproducible dungeon generation (nil = random)
-   level_seed = nil,
+   level_seed = 83,
    -- The actual seed used for the current level (set at generation time)
    current_seed = nil,
 }

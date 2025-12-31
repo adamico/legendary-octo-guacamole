@@ -85,7 +85,7 @@ function Spawner.populate(room, player)
         local tile = mget(tx, ty)
         if tile == PIT_TILE then return false end
 
-        -- Fast layout-based feature check (Rocks/Pits/Destructibles)
+        -- Fast layout-based feature check (Rocks/Pits/Destructibles/Chests)
         if room.layout and room.layout.grid then
             local floor_rect = room:get_inner_bounds()
             local room_w = floor_rect.x2 - floor_rect.x1 + 1
@@ -94,7 +94,8 @@ function Spawner.populate(room, player)
             local gy = ty - floor_rect.y1
 
             local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
-            if feature == "rock" or feature == "destructible" or feature == "pit" then
+            if feature == "rock" or feature == "destructible" or feature == "pit"
+               or feature == "chest" or feature == "locked_chest" then
                 return false
             end
         end

@@ -20,6 +20,21 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Dasher Stunning on Obstacle Collision**:
+  - **Logic**: Dashers now enter the `stunned` state when colliding with obstacles (Rocks, Destructibles, Chests) while in the `dash` state, matching their existing behavior for wall and player collisions.
+  - **Implementation**: Added `push_out_enemy` helper in `obstacle_handlers.lua` to manage spatial resolution and Dasher collision state triggers.
+  - **Config**: Added `Chest` and `LockedChest` to `EntityCollisionLayer` for explicit collision filtering.
+- **Implemented Chest and Locked Chest Room Feature**:
+  - **Feature Types**: Added `"C"` for chest and `"L"` for locked chest to `FEATURE_LEGEND` in `room_layout_data.lua`.
+  - **Entity Configs**: Added `Chest` (sprite 166) and `LockedChest` (sprite 167) to `GameConstants.Obstacle` in `entities.lua`.
+    - Normal chests: `loot_min=1`, `loot_max=3` (drop 1-3 pickups)
+    - Locked chests: `loot_min=2`, `loot_max=6` (drop 2-6 pickups), `key_cost=1`
+  - **Collision Handlers**: Added handlers in `obstacle_handlers.lua`:
+    - Player touching chest = opens it (checks for key on locked chests)
+    - Melee/Projectile/Explosion can open chests (bombs force locked chests open only with key)
+    - Loot table: Coins (40%), Bombs (25%), Health (20%), Keys (15%)
+  - **Spawn Validation**: Updated both `is_valid_spawn_tile()` in `dungeon_manager.lua` and `is_tile_valid()` in `spawner.lua` to block enemy spawns on chest/locked chest tiles.
+  - **Example Layouts**: Added `treasure_vault` (locked chest in center) and `chest_corners` (4 chests in corners).
 - **Implemented Level Seed for Reproducible Dungeons**:
   - Added `level_seed` and `current_seed` fields to `GameState` in `game_state.lua`.
   - Set seed with `srand()` before `DungeonManager.init()` in `play.lua`.

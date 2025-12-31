@@ -232,6 +232,12 @@ function DungeonManager.place_room_obstacles(room)
          -- Pre-select sprite during generation for seed determinism
          local sprite = DESTRUCTIBLE_TILES[flr(rnd(#DESTRUCTIBLE_TILES)) + 1]
          add(room.obstacle_data, {feature = "destructible", tx = f.tx, ty = f.ty, sprite = sprite})
+      elseif f.feature == "chest" then
+         -- Normal chest - sprite is fixed
+         add(room.obstacle_data, {feature = "chest", tx = f.tx, ty = f.ty, sprite = CHEST_TILE})
+      elseif f.feature == "locked_chest" then
+         -- Locked chest - sprite is fixed
+         add(room.obstacle_data, {feature = "locked_chest", tx = f.tx, ty = f.ty, sprite = LOCKED_CHEST_TILE})
       end
    end
 
@@ -430,18 +436,28 @@ function DungeonManager.setup_room(room, player, world)
 
    Systems.Spawner.populate(room, player)
 
-   -- Spawn obstacles (Rocks, Destructibles) if not already spawned
+   -- Spawn obstacles (Rocks, Destructibles, Chests) if not already spawned
    -- Uses pre-generated obstacle_data from dungeon generation for seed determinism
    if not room.obstacles_spawned and room.obstacle_data then
       local Entities = require("src/entities")
       local rocks_count = 0
       local dest_count = 0
+      local chest_count = 0
+      local locked_chest_count = 0
 
       -- Initialize obstacle entity tracking for this room
       room.obstacle_entities = room.obstacle_entities or {}
 
       for _, f in ipairs(room.obstacle_data) do
-         local wx, wy = f.tx * GRID_SIZE - 4, f.ty * GRID_SIZE - 4
+         -- Base position: tile coords to pixels
+         -- Rocks/Destructibles have hitbox_offset=4, so we offset by -4 to align hitbox with tile
+         -- Chests have hitbox_offset=0, so no offset needed
+         local wx, wy
+         if f.feature == "chest" or f.feature == "locked_chest" then
+            wx, wy = f.tx * GRID_SIZE, f.ty * GRID_SIZE
+         else
+            wx, wy = f.tx * GRID_SIZE - 4, f.ty * GRID_SIZE - 4
+         end
          local entity = nil
          if f.feature == "rock" then
             entity = Entities.spawn_obstacle(world, wx, wy, "Rock", f.sprite)
@@ -449,6 +465,12 @@ function DungeonManager.setup_room(room, player, world)
          elseif f.feature == "destructible" then
             entity = Entities.spawn_obstacle(world, wx, wy, "Destructible", f.sprite)
             dest_count += 1
+         elseif f.feature == "chest" then
+            entity = Entities.spawn_obstacle(world, wx, wy, "Chest", f.sprite)
+            chest_count += 1
+         elseif f.feature == "locked_chest" then
+            entity = Entities.spawn_obstacle(world, wx, wy, "LockedChest", f.sprite)
+            locked_chest_count += 1
          end
          if entity then
             entity.room_key = room.grid_x..","..room.grid_y
@@ -456,7 +478,8 @@ function DungeonManager.setup_room(room, player, world)
          end
       end
       Log.info("Spawned obstacles in room ("..
-         room.grid_x..","..room.grid_y.."): "..rocks_count.." rocks, "..dest_count.." destructibles")
+         room.grid_x..","..room.grid_y.."): "..rocks_count.." rocks, "..dest_count..
+         " destructibles, "..chest_count.." chests, "..locked_chest_count.." locked chests")
       room.obstacles_spawned = true
    end
 
@@ -564,7 +587,7 @@ function DungeonManager.is_valid_spawn_tile(tx, ty, room)
    if tile == PIT_TILE then return false end
    if fget(tile, FEATURE_FLAG_PIT) then return false end
 
-   -- 5. Check for layout features (Rocks/Destructibles) if room provided
+   -- 5. Check for layout features (Rocks/Destructibles/Chests) if room provided
    if room and room.layout and room.layout.grid then
       local RoomLayouts = require("src/world/room_layouts")
       local floor_rect = room:get_inner_bounds()
@@ -574,7 +597,8 @@ function DungeonManager.is_valid_spawn_tile(tx, ty, room)
       local gy = ty - floor_rect.y1
 
       local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
-      if feature == "rock" or feature == "destructible" or feature == "pit" then
+      if feature == "rock" or feature == "destructible" or feature == "pit"
+         or feature == "chest" or feature == "locked_chest" then
          return false
       end
    end

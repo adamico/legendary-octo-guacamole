@@ -23,6 +23,8 @@ LayoutData.FEATURE_LEGEND = {
    ["P"] = "pit",          -- Pit (blocks walking, not projectiles)
    ["D"] = "destructible", -- Breakable obstacle
    ["W"] = "wall",         -- Interior wall (solid)
+   ["C"] = "chest",        -- Normal chest (drops 1-3 pickups)
+   ["L"] = "locked_chest", -- Locked chest (requires key, drops 2-6 pickups)
 }
 
 -- Cell pattern position offsets within 3×2 cell
@@ -80,14 +82,20 @@ LayoutData.Layouts = {
       room_types = {"combat"},
       layout_type = "corners",
       floor_pattern = "random",
+      cell_pattern = {
+         "f", 16, "f", "f", 16, "f",
+         2, 2,
+         16, 16,
+         "f", 2, "f", "f", 2, "f",
+      },
       grid = {
-         "R.R...R.R",
+         "RCR...RLR",
+         ".R.....R.",
          ".........",
          ".........",
          ".........",
-         ".........",
-         ".........",
-         "R.R...R.R",
+         ".R.....R.",
+         "RLR...RCR",
       }
    },
 
@@ -131,12 +139,16 @@ LayoutData.Layouts = {
       layout_type = "diagonal",
       floor_pattern = "random",
       -- Bitmask 33 = 0b100001 = top-left + bottom-right tiles
-      cell_pattern = {33, 33, 33, 33},
+      cell_pattern = {
+         33, 33,
+         16,
+         33, 33,
+      },
       grid = {
          "R.......R",
          ".........",
          ".........",
-         ".........",
+         "....L....",
          ".........",
          ".........",
          "R.......R",
@@ -150,7 +162,7 @@ LayoutData.Layouts = {
       cell_pattern = {
          56,
          "br", "f", "bl",
-         "f", "f",
+         "f", 16, "f",
          "tr", "f", "tl",
          7,
       },
@@ -158,7 +170,7 @@ LayoutData.Layouts = {
          ".........",
          "....P....",
          "...PPP...",
-         "..P...P..",
+         "..R.C.R..",
          "...PPP...",
          "....P....",
          ".........",
@@ -193,7 +205,7 @@ LayoutData.Layouts = {
       cell_pattern = {
          56, 56, 56,
          36, "f", "f", "f", 9,
-         36, "f", "f", "f", 9,
+         36, 16, 9,
          36, "f", "f", "f", 9,
          7, 7, 7,
       },
@@ -201,7 +213,7 @@ LayoutData.Layouts = {
          ".........",
          "...RRR...",
          "..RPPPR..",
-         "..RPPPR..",
+         "..R.L.R..",
          "..RPPPR..",
          "...RRR...",
          ".........",
@@ -216,7 +228,7 @@ LayoutData.Layouts = {
          "tl", "tr",
          "bm",
          "tm", "tm",
-         "f", "f",
+         "f", 16, "f",
          "bm", "bm",
          "tm",
          "bl", "br"
@@ -225,7 +237,7 @@ LayoutData.Layouts = {
          ".R.....R.",
          "....R....",
          "...R.R...",
-         "...R.R...",
+         "...RCR...",
          "...R.R...",
          "....R....",
          ".R.....R.",
@@ -258,17 +270,17 @@ LayoutData.Layouts = {
       layout_type = "mixed",
       floor_pattern = "random",
       cell_pattern = {
-         "f", "f", "f", "f", "f", "f", "f", "f", "f", "f",
-         "bm",
          "f", "f",
+         "bm",
+         "f", "bm", "f",
          "tm",
-         "f", "f", "f", "f", "f", "f", "f", "f", "f", "f",
+         "f", "f",
       },
       grid = {
          "R.......R",
          ".........",
          "....D....",
-         "...P.P...",
+         "...PLP...",
          "....D....",
          ".........",
          "R.......R",

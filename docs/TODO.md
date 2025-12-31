@@ -7,15 +7,12 @@
 - add chests (locked and unlocked) as room features [BRAINSTORM]
 - add locked treasure room for powerups [BRAINSTORM]
 - add shop room with items [BRAINSTORM]
-- don't show enemies spawning spots when transitioning from room to room [BRAINSTORM]
 
 ## Bugs
 
-No known bugs at this time.
+- dasher colliding with obstacles should be stunned (like they do when colliding with solid tiles)
 
 ## Architecture
-
-- add rendering.md in docs/architecture/ [DONE]
 
 - implement movement mechanics [BRAINSTORM]
   - [ ] Dodge Roll / Dash (invulnerability frames or vaulting)
@@ -34,7 +31,6 @@ No known bugs at this time.
 ## AI & Enemies
 
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
-- add simple pathfinding for enemies [BRAINSTORM]
 - make skull harder to kill (faster) [BRAINSTORM]
 
 ## World & Level Design
@@ -51,19 +47,6 @@ No known bugs at this time.
   - [ ] Room-based: Speed Clear bonus, No-Hit bonus
   - [ ] Risk/Reward: Skull Conversion (killing pressure skull drops big heart), Low-HP desperation buff
   - [ ] Mechanical: Boomerang shots (recover HP on catch), Magnetic Hearts
-
-## Future Roadmap: Pizza Theme Overhaul
-
-- [ ] **Currency**: "The Nickel Pizak" (coins) or "Slices" (spendable health)
-- [ ] **Keys**: "Dough Knots" or "Pizza Cutter Handles"
-- [ ] **Bombs**: "Dough-mbs" (sticky dough explosion) or "Spicy Meatballs" (fire trail)
-- [ ] **Ammo Types (Hearts)**:
-  - Red Slice (Standard)
-  - Garlic Clove (Stink Aura/DoT)
-  - Anchovy Heart (Curse: 2x Dmg, Double Hit Penalty)
-  - Pineapple Slice (Ghost/Shield Ammo)
-- [ ] **Consumables**: "Menu Extras" (Cold Pizza=Heal+Slow, Marinara Dip=Dmg Boost)
-- [ ] **Breakables**: Pizza Boxes, Flour Sacks (Smoke Screen), Olive Oil Bottles (Slippery Tiles)
 
 ## Balance Tuning (Research)
 

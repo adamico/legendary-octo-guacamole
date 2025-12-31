@@ -25,7 +25,8 @@ WALL_TILE_INNER_TOP = 137                            -- 2 diagonals on top (TL +
 WALL_TILE_INNER_BOTTOM = 145                         -- 2 diagonals on bottom (BL + BR): inner corner pointing up
 WALL_TILE_INNER_RIGHT = 116                          -- 2 diagonals on right (TR + BR): inner corner pointing left
 WALL_TILE_INNER_LEFT = 115                           -- 2 diagonals on left (TL + BL): inner corner pointing right
-FLOOR_TILES = {73, 74, 75, 81, 82, 83, 89, 90, 91}   -- F: floor variants
+-- TODO: readd floor tiles when floor autotiling is implemented
+FLOOR_TILES = {73}                                   -- , 74, 75, 81, 82, 83, 89, 90, 91}   -- F: floor variants
 
 -- Door frame tiles
 DOOR_FRAME_H_TOP = {77, 93, 123, 124, 148, 153} -- Horizontal door top frame
@@ -37,6 +38,8 @@ DOOR_FRAME_V_RIGHT = {114, 120, 136, 139, 144}  -- Vertical door right frame
 ROCK_TILES = {134, 135, 142, 143}         -- R: solid rock obstacles
 PIT_TILE = 85                             -- P: pit (blocks walking, not projectiles)
 DESTRUCTIBLE_TILES = {150, 151, 158, 159} -- D: breakable obstacles
+CHEST_TILE = 166                          -- C: normal chest
+LOCKED_CHEST_TILE = 167                   -- L: locked chest
 
 -- Feature type flags (for collision logic)
 SOLID_FLAG = 0

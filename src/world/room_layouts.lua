@@ -17,8 +17,6 @@ local CELL_POSITIONS = LayoutData.CELL_POSITIONS
 local Layouts = LayoutData.Layouts
 
 -- Grid constants
-local GRID_COLS = LayoutData.GRID_COLS or 9
-local GRID_ROWS = LayoutData.GRID_ROWS or 7
 local CELL_WIDTH = LayoutData.CELL_WIDTH or 3
 local CELL_HEIGHT = LayoutData.CELL_HEIGHT or 2
 
@@ -217,7 +215,7 @@ function RoomLayouts.get_feature_at(layout, gx, gy, room_w, room_h)
 end
 
 --- Get tile for a feature type
--- @param feature Feature type string ("rock", "pit", "destructible")
+-- @param feature Feature type string ("rock", "pit", "destructible", "chest", "locked_chest")
 -- @return Tile number
 function RoomLayouts.get_feature_tile(feature)
    if feature == "rock" then
@@ -228,11 +226,15 @@ function RoomLayouts.get_feature_tile(feature)
       return DESTRUCTIBLE_TILES[flr(rnd(#DESTRUCTIBLE_TILES)) + 1]
    elseif feature == "wall" then
       return WALL_TILE
+   elseif feature == "chest" then
+      return CHEST_TILE
+   elseif feature == "locked_chest" then
+      return LOCKED_CHEST_TILE
    end
    return nil
 end
 
---- Check if a tile is a feature tile (rock, pit, or destructible)
+--- Check if a tile is a feature tile (rock, pit, destructible, or chest)
 -- @param tile Tile number
 -- @return Feature type string or nil
 function RoomLayouts.get_tile_feature_type(tile)
@@ -246,6 +248,9 @@ function RoomLayouts.get_tile_feature_type(tile)
    for _, t in ipairs(DESTRUCTIBLE_TILES) do
       if tile == t then return "destructible" end
    end
+   -- Check chests
+   if tile == CHEST_TILE then return "chest" end
+   if tile == LOCKED_CHEST_TILE then return "locked_chest" end
    return nil
 end
 
