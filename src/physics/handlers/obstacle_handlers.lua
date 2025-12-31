@@ -5,6 +5,7 @@ local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local Effects = require("src/systems/effects")
+local DungeonManager = require("src/world/dungeon_manager")
 
 local ObstacleHandlers = {}
 
@@ -40,6 +41,11 @@ local function destroy_destructible(destructible, attacker)
       local cx = destructible.x + destructible.width / 2
       local cy = destructible.y + destructible.height / 2
       local loot_type = pick_loot(DESTRUCTIBLE_LOOT)
+
+      -- Snap to floor to avoid pits
+      local sx, sy = DungeonManager.snap_to_nearest_floor(cx, cy, DungeonManager.current_room)
+      if sx then cx, cy = sx, sy end
+
       Entities.spawn_pickup(world, cx, cy, loot_type)
    end
 end
@@ -97,6 +103,11 @@ local function open_chest(chest, player)
       local dist = 12 + rnd(8)
       local spawn_x = cx + cos(angle) * dist - 8
       local spawn_y = cy + sin(angle) * dist - 8
+
+      -- Snap to floor to avoid pits
+      local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y, DungeonManager.current_room)
+      if sx then spawn_x, spawn_y = sx, sy end
+
       Entities.spawn_pickup(world, spawn_x, spawn_y, loot_type)
    end
 

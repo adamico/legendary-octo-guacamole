@@ -20,6 +20,24 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Fixed XP Bar UI Configuration Usage**:
+  - **Issue**: The XP bar in `src/ui/xp_bar.lua` was using hardcoded values for its vertical position, height, and colors, ignoring the values defined in `src/game/config/ui.lua`.
+  - **Fix**: Updated `XpBar.draw()` to use `GameConstants.XpBar` for `y` position, `height`, `padding`, and colors. Also replaced hardcoded `480` and `50` with `SCREEN_WIDTH` and `GameConstants.Player.base_xp_to_level`.
+  - **Result**: The XP bar now respects the `y = 256` configuration and uses project-wide constants.
+- **Prevented DNAStrand and Loot Pickups from Spawning on Pits**:
+  - **Issue**: DNA strands (XP) and other loot (Coins, Bombs, Keys) were sometimes spawning over pit tiles when enemies died or chests were opened, making them unreachable.
+  - **Fix**: Integrated `DungeonManager.snap_to_nearest_floor()` into `DeathHandlers.Enemy` in `death_handlers.lua` and into `destroy_destructible` and `open_chest` in `obstacle_handlers.lua`.
+  - **Result**: All pickups spawned from combat or environmental destruction now automatically snap to the nearest walkable floor tile if they would have landed on a pit.
+- **Implemented Player XP/Leveling System**:
+  - **Config**: Added `starting_level`, `starting_xp`, `base_xp_to_level` (50), `xp_per_level_linear` (25) to `player.lua`.
+  - **Entity XP Values**: Added `xp_value` to all enemies in `entities.lua`: Skulker (10), Shooter (15), Dasher (25), Skull (50).
+  - **DNAStrand Pickup**: New pickup type for XP drops (sprite 199), defined in `entities.lua` with `pickup_effect = "xp"`.
+  - **Death Handlers**: Modified `death_handlers.lua` to spawn DNAStrand on enemy death.
+  - **Pickup Handler**: Added `PickupEffects.xp` in `pickup_handlers.lua` to grant XP on collection.
+  - **Leveling Utility**: Created `src/utils/leveling.lua` with `check_level_up()` - checks XP threshold and auto-applies +5% max HP per level (Phase 1).
+  - **XP Bar UI**: Created `src/ui/xp_bar.lua` rendering at screen bottom with level text and XP progress.
+  - **Integration**: Updated `play.lua` import, update loop call, draw call, and debug panel display.
+  - **Events**: Added `LEVEL_UP` event to `events.lua` for future level-up UI modal.
 - **Implemented Dasher Stunning on Obstacle Collision**:
   - **Logic**: Dashers now enter the `stunned` state when colliding with obstacles (Rocks, Destructibles, Chests) while in the `dash` state, matching their existing behavior for wall and player collisions.
   - **Implementation**: Added `push_out_enemy` helper in `obstacle_handlers.lua` to manage spatial resolution and Dasher collision state triggers.

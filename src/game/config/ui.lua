@@ -5,12 +5,12 @@ return {
       inventory = {
          x = 10,             -- Base X position from left
          y = 16,             -- Base Y position from top (below health bar)
-         spacing_y = 16,     -- Vertical spacing between items
+         spacing_y = 24,     -- Vertical spacing between items (icon + text below)
          icon_size = 11,     -- Size of icons
-         text_offset_x = 16, -- Text distance from icon left
-         text_offset_y = 2,  -- Text vertical alignment
-         text_color = 7,     -- White text
-         shadow_color = 1,   -- Black shadow/outline
+         text_offset_x = 1,  -- Text centered below icon
+         text_offset_y = 14, -- Text below icon (icon_size + 1px gap)
+         text_color = 1,     -- White text
+         shadow_color = 0,   -- Black shadow/outline
          sprites = {
             coins = 197,
             bombs = 196,
@@ -41,5 +41,14 @@ return {
          treasure = 194,
          boss = 195,
       },
+   },
+   XpBar = {
+      y = 250,          -- At screen bottom (overlap with wall)
+      height = 8,       -- Bar height
+      padding = 4,      -- Horizontal padding from screen edges
+      bg_color = 1,     -- Black background
+      fill_color = 10,  -- Yellow fill
+      border_color = 5, -- Dark gray border
+      text_color = 7,   -- White level text
    },
 }

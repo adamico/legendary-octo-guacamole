@@ -7,6 +7,7 @@ local Events = require("src/game/events")
 local UI = require("src/ui")
 local Wander = require("src/ai/primitives/wander")
 local AI = require("src/ai")
+local Leveling = require("src/utils/leveling")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -128,6 +129,9 @@ function Play:enteredState()
             "coins: "..tostring(player.coins),
             "keys: "..tostring(player.keys),
             "bombs: "..tostring(player.bombs),
+            "[== xp ==]",
+            "level: "..tostring(player.level),
+            "xp: "..tostring(player.xp).."/"..tostring(player.xp_to_next_level),
             "[== level ==]",
             "seed: "..tostring(GameState.current_seed),
          }
@@ -201,6 +205,9 @@ function Play:update()
    -- Effects
    Systems.Effects.update_shake()
    Systems.FloatingText.update()
+
+   -- Leveling (check for level ups after XP collection)
+   Leveling.check_level_up(player)
 
    if keyp("f2") then
       GameState.debug.show_hitboxes = not GameState.debug.show_hitboxes
@@ -324,6 +331,9 @@ function Play:draw()
 
    -- Draw HUD (Inventory)
    UI.Hud.draw(player)
+
+   -- Draw XP bar
+   UI.XpBar.draw(player)
 
    -- Draw minimap
    Minimap.draw(current_room)

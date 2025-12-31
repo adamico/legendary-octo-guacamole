@@ -39,6 +39,12 @@ PickupEffects.health = function(player, pickup)
    FloatingText.spawn_at_entity(player, heal_amount, "heal")
 end
 
+PickupEffects.xp = function(player, pickup)
+   local amount = pickup.xp_amount or 10
+   player.xp = (player.xp or 0) + amount
+   -- Note: Floating text intentionally omitted per design
+end
+
 -- Unified pickup collection handler
 local function handle_pickup_collection(player, pickup)
    -- Guard: Prevent double collection (pickup may be touched multiple frames)
@@ -61,6 +67,7 @@ function PickupHandlers.register(handlers)
    handlers.entity["Player,Coin"] = handle_pickup_collection
    handlers.entity["Player,Key"] = handle_pickup_collection
    handlers.entity["Player,Bomb"] = handle_pickup_collection
+   handlers.entity["Player,DNAStrand"] = handle_pickup_collection
 end
 
 return PickupHandlers

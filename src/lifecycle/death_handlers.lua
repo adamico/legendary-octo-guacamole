@@ -2,6 +2,7 @@
 local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
 local Events = require("src/game/events")
+local DungeonManager = require("src/world/dungeon_manager")
 
 local DeathHandlers = {}
 
@@ -48,9 +49,26 @@ DeathHandlers.Enemy = function(world, entity)
          -- Offset each item slightly to reduce overlap
          local offset_x = (i - 1) * 8 - (loot_rolls - 1) * 4
          local offset_y = (rnd() - 0.5) * 4
-         Entities.spawn_pickup(world, cx + offset_x, cy + offset_y, loot_type)
+         local spawn_x, spawn_y = cx + offset_x, cy + offset_y
+
+         -- Snap to floor to avoid pits
+         local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y, DungeonManager.current_room)
+         if sx then spawn_x, spawn_y = sx, sy end
+
+         Entities.spawn_pickup(world, spawn_x, spawn_y, loot_type)
       end
    end
+
+   -- XP Drop (always drops)
+   local xp_value = entity.xp_value or 10
+   local xp_x, xp_y = cx, cy + 8
+
+   -- Snap to floor to avoid pits
+   local sx, sy = DungeonManager.snap_to_nearest_floor(xp_x, xp_y, DungeonManager.current_room)
+   if sx then xp_x, xp_y = sx, sy end
+
+   Entities.spawn_pickup(world, xp_x, xp_y, "DNAStrand", {xp_amount = xp_value})
+
    world.del(entity)
 end
 

@@ -36,6 +36,7 @@ local GameConstants = {
    -- UI (from ui.lua)
    Hud = ui.Hud,
    Minimap = ui.Minimap,
+   XpBar = ui.XpBar,
 
    -- Controls (from controls.lua)
    buttons = controls_config.buttons,

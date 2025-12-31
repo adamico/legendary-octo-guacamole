@@ -150,12 +150,28 @@ return {
          shadow_width = 11,
          amount = 1,
       },
+      DNAStrand = {
+         entity_type = "DNAStrand",
+         tags = "pickup,collidable,drawable,sprite,background,shadow",
+         pickup_effect = "xp",
+         width = 16,
+         height = 16,
+         sprite_index = 41, -- DNA helix icon
+         hitbox_width = 8,
+         hitbox_height = 16,
+         hitbox_offset_x = 4,
+         hitbox_offset_y = 0,
+         shadow_offset_y = 3,
+         shadow_width = 11,
+         -- xp_amount set at spawn time via instance_data
+      },
    },
    Enemy = {
       Skulker = {
          entity_type = "Enemy",
          tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 20,
+         xp_value = 10,
          max_speed = 0.5,
          contact_damage = 10,
          vision_range = 120,
@@ -188,6 +204,7 @@ return {
          tags =
          "enemy,shooter,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 30,
+         xp_value = 15,
          max_speed = 0.3,
          shot_speed = 1.5,
          damage = 10,
@@ -225,6 +242,7 @@ return {
          entity_type = "Enemy",
          tags = "skull,enemy,timers,velocity,collidable,health,drawable,animatable,shadow,middleground,flying",
          hp = 100,
+         xp_value = 50,
          max_speed = 0.6,
          contact_damage = 100,
          drop_chance = 0.5,
@@ -268,6 +286,7 @@ return {
          entity_type = "Enemy",
          tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 60,
+         xp_value = 25,
          max_speed = 0.2,
          contact_damage = 15,
          vision_range = 150,

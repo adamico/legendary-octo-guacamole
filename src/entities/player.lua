@@ -65,6 +65,10 @@ function Player.spawn(world, x, y)
         coins = GameConstants.Player.coins,
         keys = GameConstants.Player.keys,
         bombs = GameConstants.Player.bombs,
+        -- XP/Leveling
+        xp = GameConstants.Player.starting_xp,
+        level = GameConstants.Player.starting_level,
+        xp_to_next_level = GameConstants.Player.base_xp_to_level,
         -- Shooter system properties
         health_as_ammo = true, -- Shooting costs HP
         projectile_type = "Egg",

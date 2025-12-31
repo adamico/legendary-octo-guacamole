@@ -8,6 +8,11 @@ return {
    recovery_percent = 0.8,           -- I don't think we need this anymore
    regen_rate = 0,
    regen_delay = 1.5,
+   -- XP System
+   starting_level = 1,
+   starting_xp = 0,
+   base_xp_to_level = 50,         -- XP to reach level 2
+   xp_per_level_linear = 25,      -- Linear growth for levels 1-10
    -- Stats
    max_speed = 2,                 -- Movement speed
    shot_speed = 4,
