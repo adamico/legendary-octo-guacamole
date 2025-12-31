@@ -17,7 +17,7 @@ function Hud.draw(player)
    local config = GameConstants.Hud.inventory
    local x = config.x
    local y = config.y
-   local spacing = config.spacing_y
+   local spacing = config.spacing_x
 
    -- Draw Coins
    Rendering.draw_outlined(config.sprites.coins, x, y, config.shadow_color)
@@ -25,13 +25,13 @@ function Hud.draw(player)
    print_shadowed(coin_str, x + config.text_offset_x, y + config.text_offset_y, config.text_color, config.shadow_color)
 
    -- Draw Bombs
-   y = y + spacing
+   x += spacing
    Rendering.draw_outlined(config.sprites.bombs, x, y, config.shadow_color)
    local bomb_str = string.format("%02d", player.bombs or 0)
    print_shadowed(bomb_str, x + config.text_offset_x, y + config.text_offset_y, config.text_color, config.shadow_color)
 
    -- Draw Keys
-   y = y + spacing
+   x += spacing
    Rendering.draw_outlined(config.sprites.keys, x, y, config.shadow_color)
    local key_str = string.format("%02d", player.keys or 0)
    print_shadowed(key_str, x + config.text_offset_x, y + config.text_offset_y, config.text_color, config.shadow_color)

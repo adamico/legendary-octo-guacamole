@@ -15,14 +15,14 @@ end
 function XpBar.draw(player)
    if not player then return end
 
-   local config = GameConstants.XpBar
+   local config = GameConstants.Hud.xp_bar
    local screen_width = SCREEN_WIDTH -- Picotron screen width
 
    -- Calculate bar dimensions
    local bar_height = config.height or 6
-   local bar_x = config.padding or 4
+   local bar_x = config.x or 4
    local bar_y = config.y or 256
-   local bar_width = screen_width - (bar_x * 2)
+   local bar_width = config.width or screen_width - (bar_x * 2)
 
    -- Calculate fill percentage
    local xp = player.xp or 0

@@ -3,12 +3,12 @@
 return {
    Hud = {
       inventory = {
-         x = 10,             -- Base X position from left
-         y = 32,             -- Base Y position from top (lowered to make room for hearts)
-         spacing_y = 24,     -- Vertical spacing between items (icon + text below)
+         x = 26,             -- Base X position from left
+         y = 249,            -- Base Y position from top (lowered to make room for hearts)
+         spacing_x = 30,     -- Horizontal spacing between items
          icon_size = 11,     -- Size of icons
-         text_offset_x = 1,  -- Text centered below icon
-         text_offset_y = 14, -- Text below icon (icon_size + 1px gap)
+         text_offset_x = 14, -- Text centered below icon
+         text_offset_y = 2,  -- Text below icon (icon_size + 1px gap)
          text_color = 1,     -- White text
          shadow_color = 0,   -- Black shadow/outline
          sprites = {
@@ -23,8 +23,8 @@ return {
          color = 8, -- Red
       },
       health_bar = {
-         x = 10,
-         y = 10,
+         x = 24,
+         y = 7,
          heart_sprite = 42,       -- Full Heart
          half_heart_sprite = 43,  -- Half Heart
          empty_heart_sprite = 56, -- Empty Heart
@@ -37,6 +37,16 @@ return {
             empty = nil,                -- Empty sprite (56) has its own colors
             overheal = {7, 28, 12, 16}, -- Blue hue equivalent
          }
+      },
+      xp_bar = {
+         x = 254,          -- Horizontal position from left screen edge
+         y = 10,           -- At screen bottom (overlap with wall)
+         width = 200,      -- Bar width
+         height = 9,       -- Bar height
+         bg_color = 1,     -- Black background
+         fill_color = 11,  -- Yellow fill
+         border_color = 5, -- Dark gray border
+         text_color = 7,   -- White level text
       },
    },
    Minimap = {
@@ -62,14 +72,5 @@ return {
          treasure = 194,
          boss = 195,
       },
-   },
-   XpBar = {
-      y = 250,          -- At screen bottom (overlap with wall)
-      height = 9,       -- Bar height
-      padding = 16,     -- Horizontal padding from screen edges
-      bg_color = 1,     -- Black background
-      fill_color = 11,  -- Yellow fill
-      border_color = 5, -- Dark gray border
-      text_color = 7,   -- White level text
    },
 }

@@ -2,7 +2,6 @@
 
 ## Next
 
-- add levelup choice modal screen [BRAINSTORM]
 - add genetic mutation system (powerups that modify the mechanics) [BRAINSTORM]
 - add locked treasure room for powerups [BRAINSTORM]
 - add shop room with items [BRAINSTORM]
@@ -50,7 +49,7 @@
 - add a bouncing effect for the pickup items [BRAINSTORM]
 - separate upper and lower body animations [BRAINSTORM]
 - improve the visuals of the aiming line [BRAINSTORM]
-- decorate the starting screen with game instructions [BRAINSTORM]
+- decorate the starting room with game instructions [BRAINSTORM]
 - improve the title screen [BRAINSTORM]
 - improve the game over screen [BRAINSTORM]
 - add a credits screen [BRAINSTORM]
