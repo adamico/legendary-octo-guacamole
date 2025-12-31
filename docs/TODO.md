@@ -2,15 +2,12 @@
 
 ## Next
 
-- add powerups  [BRAINSTORM]
-- add key using mechanics [BRAINSTORM]
-- add chests (locked and unlocked) as room features [BRAINSTORM]
+- add genetic mutation system (powerups that modify the mechanics) [BRAINSTORM]
 - add locked treasure room for powerups [BRAINSTORM]
 - add shop room with items [BRAINSTORM]
+- add boss room with special enemy [BRAINSTORM]
 
 ## Bugs
-
-- dasher colliding with obstacles should be stunned (like they do when colliding with solid tiles)
 
 ## Architecture
 
@@ -26,27 +23,19 @@
 
 ## Combat & Mechanics
 
+## UI
+
 - allow showing the fullmap with a keyboard shortcut [BRAINSTORM]
 
 ## AI & Enemies
 
-- add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
-- make skull harder to kill (faster) [BRAINSTORM]
+- make skulls faster (faster) [BRAINSTORM]
 
 ## World & Level Design
 
 - add room floor patterns to avoid having floors that are too random [BRAINSTORM]
-- add boss room with special enemy [BRAINSTORM]
 - solid map tiles should have configurable y collision level [BRAINSTORM]
 - add secret rooms [BRAINSTORM]
-
-## Items & Powerups
-
-- expand health recovery mechanics [BRAINSTORM]
-  - [ ] Skill-based: Perfect Dodge (restore HP on last-second dodge), Multi-Kill bonus
-  - [ ] Room-based: Speed Clear bonus, No-Hit bonus
-  - [ ] Risk/Reward: Skull Conversion (killing pressure skull drops big heart), Low-HP desperation buff
-  - [ ] Mechanical: Boomerang shots (recover HP on catch), Magnetic Hearts
 
 ## Balance Tuning (Research)
 
@@ -65,6 +54,8 @@
 - improve the game over screen [BRAINSTORM]
 - add a credits screen [BRAINSTORM]
 - add a special screen or player effect when shooting an egg which damages the player (to show the cost of the shot) [BRAINSTORM]
+- chest drops should have a popup animation [BRAINSTORM]
+- add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
 
 ## Audio
 
