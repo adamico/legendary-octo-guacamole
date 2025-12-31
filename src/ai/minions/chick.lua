@@ -13,6 +13,10 @@ local Emotions = require("src/systems/emotions")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local DungeonManager = require("src/world/dungeon_manager")
 
+-- Configuration: How long to try reaching an unreachable target before giving up
+local MAX_CHASE_STUCK_FRAMES = 60      -- ~1 second at 60fps
+local UNREACHABLE_BLACKLIST_TIME = 5.0 -- Seconds to blacklist an unreachable enemy
+
 -- Target painting: enemy hit by player becomes priority target for all chicks
 local painted_target = nil
 
@@ -72,6 +76,7 @@ end
 
 --- Find nearest enemy within vision range (current room only)
 --- OPTIMIZED: Uses squared distances, takes pre-fetched room bounds
+--- Skips enemies that are temporarily blacklisted as unreachable
 --- @param entity table - The chick
 --- @param world table - ECS world
 --- @param room_bounds table|nil - Pre-fetched room bounds
@@ -84,8 +89,20 @@ local function find_nearest_enemy(entity, world, room_bounds)
 
    local ex, ey = entity.x, entity.y
 
+   -- Initialize blacklist if needed
+   entity.unreachable_blacklist = entity.unreachable_blacklist or {}
+
+   -- Clean up expired blacklist entries
+   local now = t()
+   for enemy, expire_time in pairs(entity.unreachable_blacklist) do
+      if expire_time < now then
+         entity.unreachable_blacklist[enemy] = nil
+      end
+   end
+
    -- Target painting: If painted target exists and is alive, prioritize it
    if painted_target and painted_target.hp and painted_target.hp > 0 then
+      -- Don't skip painted target even if blacklisted (player specifically marked it)
       local dx = painted_target.x - ex
       local dy = painted_target.y - ey
       local dist_sq = dx * dx + dy * dy
@@ -99,6 +116,11 @@ local function find_nearest_enemy(entity, world, room_bounds)
    end
 
    world.sys("enemy", function(enemy)
+      -- Skip blacklisted enemies (temporarily unreachable)
+      if entity.unreachable_blacklist[enemy] then
+         return
+      end
+
       -- Skip if enemy is outside current room bounds (padded by 1 tile to include walls)
       if room_bounds then
          local etx = flr(enemy.x / 16)
@@ -391,7 +413,44 @@ local function chick_ai(entity, world)
       local target = entity.chase_target
       if target then
          local thb = HitboxUtils.get_hitbox(target)
-         PathFollow.toward(entity, thb.x + thb.w / 2, thb.y + thb.h / 2, entity.chase_speed_mult, room)
+         local tx, ty = thb.x + thb.w / 2, thb.y + thb.h / 2
+
+         -- Calculate distance to target
+         local hb = HitboxUtils.get_hitbox(entity)
+         local ex, ey = hb.x + hb.w / 2, hb.y + hb.h / 2
+         local chase_dx, chase_dy = tx - ex, ty - ey
+         local chase_dist = sqrt(chase_dx * chase_dx + chase_dy * chase_dy)
+
+         -- Use direct movement when close (within ~3 tiles), pathfinding when far
+         local DIRECT_CHASE_DIST = 48
+         if chase_dist < DIRECT_CHASE_DIST then
+            -- Close enough - use direct Chase (no pathfinding needed)
+            Chase.toward(entity, tx, ty, entity.chase_speed_mult)
+            entity.chase_stuck_frames = 0 -- Reset stuck counter when using direct movement
+         else
+            -- Far away - use A* pathfinding
+            PathFollow.toward(entity, tx, ty, entity.chase_speed_mult, room)
+
+            -- Stuck detection: if no valid path for too long, abandon this target
+            local has_path = PathFollow.has_path(entity)
+            if not has_path then
+               entity.chase_stuck_frames = (entity.chase_stuck_frames or 0) + 1
+               -- Wander while stuck (don't just stand still)
+               Wander.update(entity)
+               if entity.chase_stuck_frames >= MAX_CHASE_STUCK_FRAMES then
+                  -- Can't reach target, blacklist and wander
+                  entity.unreachable_blacklist = entity.unreachable_blacklist or {}
+                  entity.unreachable_blacklist[target] = t() + UNREACHABLE_BLACKLIST_TIME
+                  PathFollow.clear_path(entity)
+                  fsm:lose_target()
+                  entity.chase_target = nil
+                  entity.chase_stuck_frames = 0
+                  Wander.reset(entity) -- Pick new wander direction
+               end
+            else
+               entity.chase_stuck_frames = 0 -- Reset counter when path exists
+            end
+         end
       else
          PathFollow.clear_path(entity)
          Wander.update(entity)
@@ -420,19 +479,48 @@ local function chick_ai(entity, world)
    end
 end
 
+-- Track active chicks for blacklist clearing (set during update)
+local active_chicks = {}
+
 -- Module exports (AI function + target painting utilities)
 return {
-   update = chick_ai,
+   update = function(entity, world)
+      -- Track this chick for blacklist clearing
+      active_chicks[entity] = true
+      return chick_ai(entity, world)
+   end,
    -- Paint a target for all chicks to prioritize
+   -- Also clears the enemy from all chick blacklists so they retry reaching it
    paint_target = function(enemy)
+      -- Clear outline from previous target
+      if painted_target and painted_target ~= enemy then
+         painted_target.outline_color = nil
+      end
       painted_target = enemy
+      -- Add orange outline to show painted status
+      if enemy then
+         enemy.outline_color = 9 -- Orange/yolk color
+         -- Clear this enemy from all chick blacklists
+         for chick, _ in pairs(active_chicks) do
+            if chick.unreachable_blacklist then
+               chick.unreachable_blacklist[enemy] = nil
+            end
+         end
+      end
    end,
    -- Clear the painted target (called on room transition or target death)
    clear_target = function()
+      if painted_target then
+         painted_target.outline_color = nil
+      end
       painted_target = nil
    end,
    -- Get current painted target (for debugging)
    get_painted_target = function()
       return painted_target
+   end,
+   -- Clear active chicks tracking (call on room transition)
+   clear_active_chicks = function()
+      active_chicks = {}
    end,
 }

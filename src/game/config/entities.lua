@@ -327,7 +327,7 @@ return {
          hp_drain_rate = 60,    -- Frames between each 1 HP loss (60 = 1 HP/second)
          food_seek_range = 120, -- Range to detect yolk splats
          food_heal_amount = 5,  -- HP restored per yolk splat eaten
-         vision_range = 300,    -- Range to detect and chase enemies (300 = ~19 tiles)
+         vision_range = 160,    -- Range to detect and chase enemies (160 = ~10 tiles)
          chase_speed_mult = 2,  -- Speed multiplier when chasing (1.2 = 120%)
          attack_damage = 3,     -- Damage per attack
          attack_cooldown = 30,  -- Frames between attacks (60 = 1 attack/second)

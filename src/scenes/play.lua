@@ -27,6 +27,13 @@ function Play:enteredState()
    world = eggs() -- MUST re-initialize world on every entry for Restart to work
    Systems.init_extended_palette()
    Systems.init_spotlight()
+
+   -- Initialize level seed for reproducible dungeon generation
+   local seed = GameState.level_seed or flr(time() * 1000)
+   srand(seed)
+   GameState.current_seed = seed
+   Log.info("Level seed: "..seed)
+
    DungeonManager.init()
 
    -- Spawn player at center of start room (World Pixels)
@@ -121,6 +128,8 @@ function Play:enteredState()
             "coins: "..tostring(player.coins),
             "keys: "..tostring(player.keys),
             "bombs: "..tostring(player.bombs),
+            "[== level ==]",
+            "seed: "..tostring(GameState.current_seed),
          }
       end)
    add(debugui.elements, stats_group)
@@ -261,9 +270,54 @@ function Play:draw()
    if GameState.debug.show_hitboxes then
       Systems.draw_hitboxes(world)
    end
-   -- if GameState.debug.show_grid then
-   --    RoomRenderer.draw_debug_grid(current_room)
-   -- end
+
+   -- Pathfinding Debug: Show chick paths and targets
+   if GameState.debug.show_pathfinding then
+      local PathFollow = require("src/ai/primitives/path_follow")
+      local HitboxUtils = require("src/utils/hitbox_utils")
+      world.sys("minion", function(e)
+         if e.minion_type == "Chick" then
+            -- Draw current path (green if exists)
+            PathFollow.debug_draw(e, 11) -- Green path
+
+            -- Draw FSM state above chick
+            local state_name = e.chick_fsm and e.chick_fsm.current or "none"
+            print(state_name, e.x - 16, e.y - 32, 7) -- White state name (higher up)
+
+            -- Draw attack range circle (light blue - melee range)
+            local attack_range = e.attack_range or 20
+            circ(e.x + 8, e.y + 8, attack_range, 12) -- Light blue attack range
+
+            -- Draw line to chase target
+            if e.chase_target then
+               local hb = HitboxUtils.get_hitbox(e)
+               local ex, ey = hb.x + hb.w / 2, hb.y + hb.h / 2
+               local thb = HitboxUtils.get_hitbox(e.chase_target)
+               local tx, ty = thb.x + thb.w / 2, thb.y + thb.h / 2
+
+               -- Calculate distance
+               local dx, dy = tx - ex, ty - ey
+               local dist = sqrt(dx * dx + dy * dy)
+
+               -- Check if using direct fallback (no valid path)
+               local has_path = e.path_state and e.path_state.path and #e.path_state.path > 0
+               if has_path then
+                  line(ex, ey, tx, ty, 11)              -- Green = has path
+                  circfill(tx, ty, 4, 11)               -- Target circle
+               else
+                  line(ex, ey, tx, ty, 8)               -- Red = NO PATH (direct fallback!)
+                  circfill(tx, ty, 4, 8)                -- Red target
+                  print("NO PATH", ex - 16, ey - 16, 8) -- Alert text
+               end
+
+               -- Show distance vs attack range
+               local in_range = dist < attack_range
+               local range_text = string.format("d:%.0f/%.0f", dist, attack_range)
+               print(range_text, ex - 20, ey - 32, in_range and 11 or 8)
+            end
+         end
+      end)()
+   end
 
    -- Reset camera for global UI
    camera()

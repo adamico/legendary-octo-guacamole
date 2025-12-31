@@ -19,7 +19,19 @@ local cache_room_key = nil
 -- OPTIMIZATION: Cache failed pathfinding attempts (tile coords -> expiry time)
 -- This prevents repeated expensive A* calls for unreachable destinations
 local failed_path_cache = {}
-local FAILED_CACHE_TTL = 5.0 -- Seconds before retrying a failed path - INCREASED from 2
+local FAILED_CACHE_TTL = 1.0 -- Reduced from 5s - retry failed paths more frequently
+
+-- Debug logging rate limiter (avoid terminal spam)
+local DEBUG_LOG_INTERVAL = 1.0 -- Seconds between log messages
+local last_log_time = 0
+
+local function log_trace_limited(msg)
+   local now = t()
+   if now - last_log_time >= DEBUG_LOG_INTERVAL then
+      Log.trace(msg)
+      last_log_time = now
+   end
+end
 
 --- Clear the walkability cache (call on room transitions)
 function Pathfinder.clear_cache()
@@ -55,8 +67,8 @@ function Pathfinder.is_walkable(tx, ty, room)
       return false
    end
 
-   -- Check for pit tiles
-   if tile == PIT_TILE then
+   -- Check for pit tiles (by ID or by sprite flag)
+   if tile == PIT_TILE or fget(tile, FEATURE_FLAG_PIT) then
       walkability_cache[key] = false
       return false
    end
@@ -80,6 +92,7 @@ function Pathfinder.is_walkable(tx, ty, room)
    end
 
    -- Check for dynamic obstacles (rocks, destructibles) in room
+   -- NOTE: We do NOT cache these results because obstacles can be destroyed mid-game
    if room and room.obstacle_entities then
       for _, obs in ipairs(room.obstacle_entities) do
          if not obs.destroyed then
@@ -88,8 +101,7 @@ function Pathfinder.is_walkable(tx, ty, room)
             local obs_ty = flr(obs.y / GRID_SIZE)
             -- Also check +1 tile in each direction for larger obstacles
             if tx == obs_tx and ty == obs_ty then
-               walkability_cache[key] = false
-               return false
+               return false -- Don't cache - obstacle may be destroyed later
             end
             -- Check if obstacle spans multiple tiles (use hitbox if available)
             local obs_w = obs.width or GRID_SIZE
@@ -97,8 +109,7 @@ function Pathfinder.is_walkable(tx, ty, room)
             local obs_tx2 = flr((obs.x + obs_w - 1) / GRID_SIZE)
             local obs_ty2 = flr((obs.y + obs_h - 1) / GRID_SIZE)
             if tx >= obs_tx and tx <= obs_tx2 and ty >= obs_ty and ty <= obs_ty2 then
-               walkability_cache[key] = false
-               return false
+               return false -- Don't cache - obstacle may be destroyed later
             end
          end
       end
@@ -155,8 +166,10 @@ function Pathfinder.find_path(start_x, start_y, goal_x, goal_y, room)
    if not Pathfinder.is_walkable(sx, sy, room) then
       local nsx, nsy = nudge_to_walkable(sx, sy, room)
       if nsx then
+         log_trace_limited("Pathfinder: nudged start from ("..sx..","..sy..") to ("..nsx..","..nsy..")")
          sx, sy = nsx, nsy
       else
+         log_trace_limited("Pathfinder: NO PATH - start tile ("..sx..","..sy..") is unwalkable and no nudge found")
          return false -- No valid start found
       end
    end
@@ -165,8 +178,10 @@ function Pathfinder.find_path(start_x, start_y, goal_x, goal_y, room)
    if not Pathfinder.is_walkable(gx, gy, room) then
       local ngx, ngy = nudge_to_walkable(gx, gy, room)
       if ngx then
+         log_trace_limited("Pathfinder: nudged goal from ("..gx..","..gy..") to ("..ngx..","..ngy..")")
          gx, gy = ngx, ngy
       else
+         log_trace_limited("Pathfinder: NO PATH - goal tile ("..gx..","..gy..") is unwalkable and no nudge found")
          return false -- No valid goal found
       end
    end
@@ -180,12 +195,14 @@ function Pathfinder.find_path(start_x, start_y, goal_x, goal_y, room)
    local cache_key = sx..","..sy..">"..gx..","..gy
    local cached_failure = failed_path_cache[cache_key]
    if cached_failure and cached_failure > t() then
+      log_trace_limited("Pathfinder: NO PATH - cached failure ("..
+         cache_key.."), TTL="..string.format("%.1f", cached_failure - t()).."s")
       return false -- Still within TTL, skip pathfinding
    end
 
    -- Calculate bounded search area (only search tiles near start/goal)
    -- Balance: larger margin finds more paths, smaller is faster
-   local SEARCH_MARGIN = 12
+   local SEARCH_MARGIN = 20 -- Increased from 12 to allow paths around larger obstacles
    local min_x = min(sx, gx) - SEARCH_MARGIN
    local max_x = max(sx, gx) + SEARCH_MARGIN
    local min_y = min(sy, gy) - SEARCH_MARGIN
@@ -214,6 +231,7 @@ function Pathfinder.find_path(start_x, start_y, goal_x, goal_y, room)
    if not tile_path then
       -- OPTIMIZATION: Cache failed attempt to avoid retrying too soon
       failed_path_cache[cache_key] = t() + FAILED_CACHE_TTL
+      log_trace_limited("Pathfinder: NO PATH - A* failed from ("..sx..","..sy..") to ("..gx..","..gy..")")
       return false
    end
 

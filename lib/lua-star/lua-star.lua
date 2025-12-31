@@ -7,7 +7,13 @@
 local module = {}
 
 -- OPTIMIZATION: Maximum nodes to explore before giving up (balanced for performance vs capability)
-local MAX_NODES = 100
+local MAX_NODES = 500 -- Increased from 300 to handle heavily obstructed rooms
+
+-- Track explored nodes for debugging
+local last_explored_count = 0
+function module:getLastExploredCount()
+   return last_explored_count
+end
 
 --- Clears all cached paths.
 function module:clearCached()
@@ -103,6 +109,7 @@ function module:find(width, height, start, goal, positionIsOpenFunc, useCache, e
    while #open > 0 do
       nodes_explored = nodes_explored + 1
       if nodes_explored > MAX_NODES then
+         last_explored_count = nodes_explored
          return false
       end
 

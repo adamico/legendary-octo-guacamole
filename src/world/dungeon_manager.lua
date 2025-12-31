@@ -209,7 +209,7 @@ function DungeonManager.carve_room_floor(room)
    end
 end
 
--- Phase 2: Place map-based obstacles (e.g. pits)
+-- Phase 2: Place map-based obstacles (e.g. pits) and pre-generate obstacle data
 function DungeonManager.place_room_obstacles(room)
    if not room.layout or not room.layout.grid then return end
 
@@ -218,11 +218,21 @@ function DungeonManager.place_room_obstacles(room)
    -- Use get_all_features for precise cell_pattern placement
    local features = RoomLayouts.get_all_features(room.layout, floor_rect.x1, floor_rect.y1)
 
+   -- Pre-generate obstacle data with deterministic sprite selection (while RNG is seeded)
+   room.obstacle_data = {}
+
    for _, f in ipairs(features) do
       if f.feature == "pit" then
          mset(f.tx, f.ty, PIT_TILE)
+      elseif f.feature == "rock" then
+         -- Pre-select sprite during generation for seed determinism
+         local sprite = ROCK_TILES[flr(rnd(#ROCK_TILES)) + 1]
+         add(room.obstacle_data, {feature = "rock", tx = f.tx, ty = f.ty, sprite = sprite})
+      elseif f.feature == "destructible" then
+         -- Pre-select sprite during generation for seed determinism
+         local sprite = DESTRUCTIBLE_TILES[flr(rnd(#DESTRUCTIBLE_TILES)) + 1]
+         add(room.obstacle_data, {feature = "destructible", tx = f.tx, ty = f.ty, sprite = sprite})
       end
-      -- Rocks and destructibles are now entities spawned in setup_room
    end
 
    DungeonManager.apply_door_sprites(room)
@@ -421,28 +431,23 @@ function DungeonManager.setup_room(room, player, world)
    Systems.Spawner.populate(room, player)
 
    -- Spawn obstacles (Rocks, Destructibles) if not already spawned
-   if not room.obstacles_spawned and room.layout and room.layout.grid then
+   -- Uses pre-generated obstacle_data from dungeon generation for seed determinism
+   if not room.obstacles_spawned and room.obstacle_data then
       local Entities = require("src/entities")
-      local floor_rect = room:get_inner_bounds()
       local rocks_count = 0
       local dest_count = 0
 
       -- Initialize obstacle entity tracking for this room
       room.obstacle_entities = room.obstacle_entities or {}
 
-      -- Use get_all_features for precise cell_pattern placement
-      local features = RoomLayouts.get_all_features(room.layout, floor_rect.x1, floor_rect.y1)
-
-      for _, f in ipairs(features) do
+      for _, f in ipairs(room.obstacle_data) do
          local wx, wy = f.tx * GRID_SIZE - 4, f.ty * GRID_SIZE - 4
          local entity = nil
          if f.feature == "rock" then
-            local sprite = ROCK_TILES[flr(rnd(#ROCK_TILES)) + 1]
-            entity = Entities.spawn_obstacle(world, wx, wy, "Rock", sprite)
+            entity = Entities.spawn_obstacle(world, wx, wy, "Rock", f.sprite)
             rocks_count += 1
          elseif f.feature == "destructible" then
-            local sprite = DESTRUCTIBLE_TILES[flr(rnd(#DESTRUCTIBLE_TILES)) + 1]
-            entity = Entities.spawn_obstacle(world, wx, wy, "Destructible", sprite)
+            entity = Entities.spawn_obstacle(world, wx, wy, "Destructible", f.sprite)
             dest_count += 1
          end
          if entity then
@@ -502,7 +507,7 @@ end
 --- @param px number Pixel X
 --- @param py number Pixel Y
 --- @param room table|nil Optional room object to check layout features
---- @return number, number (New valid pixel coordinates, centered in tile)
+--- @return number|nil, number|nil (New valid pixel coordinates, or nil if no valid tile found)
 function DungeonManager.snap_to_nearest_floor(px, py, room)
    local cx = flr(px / GRID_SIZE)
    local cy = flr(py / GRID_SIZE)
@@ -534,40 +539,43 @@ function DungeonManager.snap_to_nearest_floor(px, py, room)
       radius = radius + 1
    end
 
-   return px, py -- Fallback to original if nothing found
+   return nil, nil -- Fallback: no valid tile found, let caller handle
 end
 
---- Check if a tile is a valid spawn location (floor, no pit/obstacle)
+--- Check if a tile is a valid spawn location (floor, no pit/obstacle, within room)
 function DungeonManager.is_valid_spawn_tile(tx, ty, room)
-   -- 1. Check bounds
+   -- 1. Check map bounds
    if tx < 0 or tx >= EXT_MAP_W or ty < 0 or ty >= EXT_MAP_H then return false end
 
-   -- 2. Check if floor tile
+   -- 2. Check room inner bounds (must be provided for spawn checks)
+   if room then
+      local floor_rect = room:get_inner_bounds()
+      if tx < floor_rect.x1 or tx > floor_rect.x2 or
+         ty < floor_rect.y1 or ty > floor_rect.y2 then
+         return false
+      end
+   end
+
+   -- 3. Check if floor tile
    if not DungeonManager.is_floor_tile(tx, ty) then return false end
 
-   -- 3. Check for map features (Pits)
+   -- 4. Check for map features (Pits)
    local tile = mget(tx, ty)
    if tile == PIT_TILE then return false end
    if fget(tile, FEATURE_FLAG_PIT) then return false end
 
-   -- 4. Check for layout features (Rocks/Destructibles) if room provided
+   -- 5. Check for layout features (Rocks/Destructibles) if room provided
    if room and room.layout and room.layout.grid then
       local RoomLayouts = require("src/world/room_layouts")
       local floor_rect = room:get_inner_bounds()
-      -- tx, ty are world coordinates. Convert to room-relative.
       local room_w = floor_rect.x2 - floor_rect.x1 + 1
       local room_h = floor_rect.y2 - floor_rect.y1 + 1
+      local gx = tx - floor_rect.x1
+      local gy = ty - floor_rect.y1
 
-      -- Only check inside the room's floor area
-      if tx >= floor_rect.x1 and tx <= floor_rect.x2 and
-         ty >= floor_rect.y1 and ty <= floor_rect.y2 then
-         local gx = tx - floor_rect.x1
-         local gy = ty - floor_rect.y1
-
-         local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
-         if feature == "rock" or feature == "destructible" or feature == "pit" then
-            return false
-         end
+      local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
+      if feature == "rock" or feature == "destructible" or feature == "pit" then
+         return false
       end
    end
 

@@ -196,6 +196,7 @@ function Physics.z_axis(world)
                   -- Spawns a health pickup equal to the drain heal amount
 
                   local sx, sy = DungeonManager.snap_to_nearest_floor(entity.x, entity.y, DungeonManager.current_room)
+                  if not sx then sx, sy = entity.x, entity.y end  -- Fall back to original position
                   Entities.spawn_health_pickup(world, sx, sy, drain_heal)
                end
             end

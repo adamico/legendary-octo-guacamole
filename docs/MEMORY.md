@@ -20,6 +20,20 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Level Seed for Reproducible Dungeons**:
+  - Added `level_seed` and `current_seed` fields to `GameState` in `game_state.lua`.
+  - Set seed with `srand()` before `DungeonManager.init()` in `play.lua`.
+  - If `level_seed` is nil (default), a random seed is generated from `time() * 1000`.
+  - Seed is logged to console and displayed in F1 debug UI for easy copy/paste when reproducing bugs.
+- **Fixed Chick AI Pathfinding Issues**:
+  - **Stuck Detection & Recovery**: Chicks now abandon unreachable targets after ~1 second of failed pathfinding (`MAX_CHASE_STUCK_FRAMES = 60`). While stuck, they wander randomly instead of standing still.
+  - **Path Smoothing**: Added `has_line_of_sight()` function in `path_follow.lua`. Entities now skip intermediate waypoints and move directly to the target (or furthest visible waypoint), eliminating zig-zag movement.
+  - **Hybrid Chase Movement**: When within 48 pixels of target, use direct `Chase.toward()` instead of pathfinding. This prevents the attack-knockback-wander cycle where chicks would back off after each hit.
+  - **Debug Visualization**: Added `show_pathfinding` flag in `game_state.lua` with FSM state display, attack range circles, and path/distance visualization.
+- **Fixed Wave Pattern Spawning Outside Room Bounds**:
+  - **Problem**: Skulker enemies from wave patterns (e.g., "ambush") were spawning outside the room or on pit tiles when the layout (e.g., "corridor_vertical") had pit tiles restricting the walkable area.
+  - **Root Cause**: `DungeonManager.is_valid_spawn_tile()` didn't check room inner bounds, so `snap_to_nearest_floor()` could return positions that were technically floor tiles but outside the room's walkable area.
+  - **Fix**: Added explicit room inner bounds check in `is_valid_spawn_tile()`. Now checks: (1) map bounds, (2) room inner bounds when room provided, (3) floor tile, (4) pit/feature flags. The spawner skips enemies when nudge finds no valid position.
 - **Cleanup**:
   - **Removed Chick AI Debug Logging**: Cleaned up `Log.trace` statements used for debugging Dasher detection and selection in `chick.lua`.
 - **Implemented Sticky Yolk & Face-Hugger Combat Mechanics**:

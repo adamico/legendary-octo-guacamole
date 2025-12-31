@@ -140,6 +140,7 @@ local function projectile_vs_enemy(projectile, enemy)
       end
       -- Spawn health pickup (blood glob)
       local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y + spawn_z, DungeonManager.current_room)
+      if not sx then sx, sy = spawn_x, spawn_y + spawn_z end -- Fall back to original position
       Entities.spawn_health_pickup(world, sx, sy, leech_heal)
    end
    world.del(projectile)

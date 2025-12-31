@@ -15,7 +15,7 @@ local WAYPOINT_RADIUS = 8      -- Distance to consider waypoint reached
 local STUCK_THRESHOLD = 5      -- Frames without progress before re-pathing
 local STUCK_DIST_THRESHOLD = 2 -- Minimum movement per frame to not be "stuck"
 local DIRECT_MOVE_DIST = 80    -- Use direct movement if target within this distance (5 tiles) - INCREASED from 64
-local MAX_PATH_LENGTH = 30     -- Allow longer paths for navigating around obstacles - INCREASED from 15
+local MAX_PATH_LENGTH = 50     -- Increased from 30 to handle paths across large rooms
 local MAX_PATHS_PER_FRAME = 1  -- Maximum A* calculations per frame (frame budget) - REDUCED from 2
 
 -- Entity counter for staggering (distributes pathfinding across frames)
@@ -28,6 +28,38 @@ local last_frame_time = 0
 --- Reset the frame budget counter (call once per frame from main update)
 function PathFollow.reset_frame_budget()
    paths_this_frame = 0
+end
+
+--- Check if there's a clear line-of-sight between two points (no solid tiles in the way)
+--- Uses Bresenham-style stepping along the line
+--- @param x1 number Start X (pixels)
+--- @param y1 number Start Y (pixels)
+--- @param x2 number End X (pixels)
+--- @param y2 number End Y (pixels)
+--- @param room table|nil Room for obstacle checks
+--- @return boolean True if path is clear
+local function has_line_of_sight(x1, y1, x2, y2, room)
+   local dx = x2 - x1
+   local dy = y2 - y1
+   local dist = sqrt(dx * dx + dy * dy)
+   if dist < 8 then return true end -- Very close, assume clear
+
+   -- Step along the line in 8-pixel increments
+   local steps = ceil(dist / 8)
+   local step_x = dx / steps
+   local step_y = dy / steps
+
+   for i = 1, steps do
+      local px = x1 + step_x * i
+      local py = y1 + step_y * i
+      local tx, ty = flr(px / 16), flr(py / 16)
+
+      if not Pathfinder.is_walkable(tx, ty, room) then
+         return false
+      end
+   end
+
+   return true
 end
 
 --- Initialize pathfinding state on an entity
@@ -178,6 +210,39 @@ function PathFollow.toward(entity, target_x, target_y, speed_mult, room)
       return dist_to_target
    end
 
+   -- PATH SMOOTHING: Try to skip ahead to a further waypoint if we have line-of-sight
+   -- Check waypoints from furthest to nearest, use the furthest one we can see
+   local best_waypoint_idx = state.path_index
+   for i = #state.path, state.path_index + 1, -1 do
+      local future_wp = state.path[i]
+      if has_line_of_sight(ex, ey, future_wp.x, future_wp.y, room) then
+         best_waypoint_idx = i
+         break -- Found furthest visible waypoint
+      end
+   end
+
+   -- Also check if we can move directly to the final target
+   if has_line_of_sight(ex, ey, target_x, target_y, room) then
+      -- Direct path to target is clear! Skip all waypoints
+      dx = target_x - ex
+      dy = target_y - ey
+      local direct_dist = sqrt(dx * dx + dy * dy)
+      if direct_dist > 0 then
+         entity.vel_x = (dx / direct_dist) * speed
+         entity.vel_y = (dy / direct_dist) * speed
+         entity.dir_x = sgn(dx)
+         entity.dir_y = sgn(dy)
+         entity.current_direction = EntityUtils.get_direction_name(dx, dy, entity.current_direction)
+      end
+      return dist_to_target
+   end
+
+   -- Update waypoint to the best (furthest visible) one
+   if best_waypoint_idx > state.path_index then
+      state.path_index = best_waypoint_idx
+   end
+   waypoint = state.path[state.path_index]
+
    -- Calculate direction to waypoint
    local wx = waypoint.x - ex
    local wy = waypoint.y - ey
@@ -219,6 +284,16 @@ function PathFollow.debug_draw(entity, color)
    color = color or 11
    local path = entity.path_state.path
    local idx = entity.path_state.path_index or 1
+
+   if #path == 0 or idx > #path then return end
+
+   -- Draw line from entity to first waypoint
+   local first_wp = path[idx]
+   if first_wp then
+      local ex = entity.x + (entity.width or 16) / 2
+      local ey = entity.y + (entity.height or 16) / 2
+      line(ex, ey, first_wp.x, first_wp.y, color)
+   end
 
    -- Draw remaining path segments
    for i = idx, #path - 1 do

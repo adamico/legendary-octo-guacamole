@@ -4,13 +4,18 @@
 local GameState = {
    debug = {
       show_hitboxes = false,
-      show_grid = false, -- Debug: show tile grid overlay
+      show_grid = false,        -- Debug: show tile grid overlay
+      show_pathfinding = false, -- Debug: show chick AI paths and targets
    },
    cheats = {
       noclip = false,
       godmode = false,
       free_attacks = false, -- Removes shot/melee costs and activation conditions
    },
+   -- Level seed for reproducible dungeon generation (nil = random)
+   level_seed = nil,
+   -- The actual seed used for the current level (set at generation time)
+   current_seed = nil,
 }
 
 return GameState
