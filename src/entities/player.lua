@@ -1,97 +1,152 @@
--- Player entity factory
+-- Player entity factory (picobloc version)
 local GameConstants = require("src/game/game_config")
-local EntityUtils = require("src/utils/entity_utils")
 
 local Player = {}
 
 function Player.spawn(world, x, y)
-    local player = {
-        type = "Player",
-        x = x,
-        y = y,
-        width = 16,
-        height = 16,
-        -- Per-direction hitboxes (uses entity.hitboxes[direction] lookup in HitboxUtils)
-        hitboxes = GameConstants.Player.hitboxes,
-        shadow_offset_y = GameConstants.Player.shadow_offset_y or 0,
-        shadow_offset_x = GameConstants.Player.shadow_offset_x or 0,
-        shadow_offsets_y = GameConstants.Player.shadow_offsets_y,
-        shadow_offsets_x = GameConstants.Player.shadow_offsets_x,
-        shadow_width = GameConstants.Player.shadow_width,
-        shadow_height = GameConstants.Player.shadow_height,
-        shadow_widths = GameConstants.Player.shadow_widths,
-        shadow_heights = GameConstants.Player.shadow_heights,
-        -- Movement properties (BoI-style: instant response, almost no slide)
-        accel = 1.2,
-        max_speed = GameConstants.Player.max_speed,
-        friction = 0.5,
-        vel_x = 0,
-        vel_y = 0,
-        sub_x = 0,
-        sub_y = 0,
-        dir_x = 0,
-        dir_y = 1, -- Default facing down
-        sprite_index = GameConstants.Player.sprite_index_offsets.down,
-        -- Health components
-        hp = GameConstants.Player.max_health,
-        max_hp = GameConstants.Player.max_health,
-        max_hp_to_shot_cost_ratio = GameConstants.Player.max_hp_to_shot_cost_ratio,
+   local cfg = GameConstants.Player
 
-        -- Calculated properties (removed to ensure dynamic calculation)
-        -- shot_cost is calculated by systems based on max_hp * ratio
-        recovery_percent = GameConstants.Player.recovery_percent,
-        regen_rate = GameConstants.Player.regen_rate,
-        regen_delay = GameConstants.Player.regen_delay,
-        time_since_shot = 0,
-        overflow_hp = 0,
-        shoot_cooldown = 0,
-        -- Combat Stats
-        shot_speed = GameConstants.Player.shot_speed,
-        max_hp_to_damage_ratio = GameConstants.Player.max_hp_to_damage_ratio,
-        knockback = GameConstants.Player.base_knockback,
-        range = GameConstants.Player.range,
-        fire_rate = GameConstants.Player.fire_rate,
-        -- Egg outcome stats (single roll with 3 equal outcomes)
-        impact_damage = GameConstants.Player.impact_damage,
-        drain_damage = GameConstants.Player.drain_damage,
-        drain_heal = GameConstants.Player.drain_heal,
-        hatch_time = GameConstants.Player.hatch_time,
-        vampiric_heal = GameConstants.Player.vampiric_heal,
+   local id = world:add_entity({
+      -- Identity tags (use `true` shorthand)
+      player = true,
+      controllable = true,
+      sprite = true,
+      middleground = true,
+      spotlight = true,
 
-        melee_cooldown = 0,
-        melee_cost = GameConstants.Player.melee_cost,
-        melee_bonus_damage = 0,         -- Bonus flat damage for melee
-        invuln_timer = 0,               -- Frames of invulnerability remaining after taking damage
-        invulnerability_duration = 120, -- Default duration (can be upgraded)
+      -- Type identifier
+      type = {value = "Player"},
 
-        -- Inventory
-        coins = GameConstants.Player.coins,
-        keys = GameConstants.Player.keys,
-        bombs = GameConstants.Player.bombs,
-        -- XP/Leveling
-        xp = GameConstants.Player.starting_xp,
-        level = GameConstants.Player.starting_level,
-        xp_to_next_level = GameConstants.Player.base_xp_to_level,
-        -- Shooter system properties
-        health_as_ammo = true, -- Shooting costs HP
-        projectile_type = "Egg",
-        projectile_origin_x = GameConstants.Player.projectile_origin_x or 0,
-        projectile_origin_y = GameConstants.Player.projectile_origin_y or 0,
-        projectile_origin_z = GameConstants.Player.projectile_origin_z or 0,
-        shoot_cooldown_duration = GameConstants.Player.fire_rate,
-        -- Health regen properties
-        regen_trigger_field = "time_since_shot", -- Trigger for regen
-        overflow_banking = true,                 -- Bank overflow HP
-        -- Visual properties
-        outline_color = GameConstants.Player.outline_color,
-        sort_offset_y = GameConstants.Player.sort_offset_y,
-    }
+      -- Transform
+      position = {x = x, y = y},
+      size = {width = cfg.width, height = cfg.height},
 
-    -- Create entity with shadow tag (shadow auto-spawned)
-    return EntityUtils.spawn_entity(
-        world,
-        "player,controllable,map_collidable,collidable,velocity,acceleration,health,shooter,health_regen,timers,drawable,animatable,spotlight,sprite,shadow,middleground",
-        player)
+      -- Movement
+      acceleration = {
+         accel = 1.2,
+         friction = 0.5,
+         max_speed = cfg.max_speed,
+      },
+      velocity = {
+         vel_x = 0,
+         vel_y = 0,
+         sub_x = 0,
+         sub_y = 0,
+      },
+      direction = {
+         dir_x = 0,
+         dir_y = 1, -- Default facing down
+      },
+
+      -- Collision
+      collidable = {
+         hitboxes = cfg.hitboxes,
+         map_collidable = true,
+      },
+
+      -- Health
+      health = {
+         hp = cfg.max_health,
+         max_hp = cfg.max_health,
+         overflow_hp = 0,
+         overflow_banking = true,
+      },
+      health_regen = {
+         regen_rate = cfg.regen_rate,
+         regen_delay = cfg.regen_delay,
+         regen_trigger_field = "time_since_shot",
+      },
+
+      -- Timers (REFACTOR: duplicates some fields)
+      timers = {
+         shoot_cooldown = 0,
+         invuln_timer = 0,
+         hp_drain_timer = 0,
+      },
+
+      -- Combat: Shooter
+      shooter = {
+         max_hp_to_shot_cost_ratio = cfg.max_hp_to_shot_cost_ratio,
+         max_hp_to_damage_ratio = cfg.max_hp_to_damage_ratio,
+         shoot_cooldown = 0,
+         shot_speed = cfg.shot_speed,
+         time_since_shot = 0,
+         fire_rate = cfg.fire_rate,
+         impact_damage = cfg.dud_damage or 3,
+         knockback = cfg.base_knockback,
+         range = cfg.range,
+         drain_damage = cfg.leech_damage or 5,
+         drain_heal = cfg.leech_heal or 5,
+         recovery_percent = cfg.recovery_percent,
+         hatch_time = cfg.hatch_time,
+         health_as_ammo = true,
+         projectile_type = "Egg",
+         projectile_origin_x = cfg.projectile_origin_x or 0,
+         projectile_origin_y = cfg.projectile_origin_y or 0,
+         projectile_origin_z = cfg.projectile_origin_z or 0,
+         shoot_cooldown_duration = cfg.fire_rate,
+      },
+
+      -- Combat: Melee
+      melee = {
+         melee_cooldown = 0,
+         melee_cost = cfg.melee_cost,
+         melee_bonus_damage = 0,
+         vampiric_heal = cfg.vampiric_heal or 0.3,
+      },
+
+      -- Combat: Invulnerability
+      invulnerability = {
+         invuln_timer = 0,
+         invulnerability_duration = cfg.invulnerable_time or 120,
+      },
+
+      -- Inventory
+      inventory = {
+         coins = cfg.coins,
+         keys = cfg.keys,
+         bombs = cfg.bombs,
+      },
+
+      -- XP/Leveling
+      xp = {
+         xp = cfg.starting_xp,
+         level = cfg.starting_level,
+         xp_to_next_level = cfg.base_xp_to_level,
+      },
+
+      -- Visuals: Shadow
+      shadow = {
+         shadow_offset_x = cfg.shadow_offset_x or 0,
+         shadow_offset_y = cfg.shadow_offset_y or 0,
+         shadow_width = cfg.shadow_width,
+         shadow_height = cfg.shadow_height,
+         shadow_offsets_x = cfg.shadow_offsets_x,
+         shadow_offsets_y = cfg.shadow_offsets_y,
+         shadow_widths = cfg.shadow_widths,
+         shadow_heights = cfg.shadow_heights,
+      },
+
+      -- Visuals: Drawable
+      drawable = {
+         outline_color = cfg.outline_color,
+         sort_offset_y = cfg.sort_offset_y,
+         sprite_index = cfg.sprite_index_offsets.down,
+         flip_x = false,
+         flip_y = false,
+      },
+
+      -- Visuals: Animation
+      animatable = {
+         animations = cfg.animations,
+         sprite_index_offsets = cfg.sprite_index_offsets,
+      },
+   })
+
+   -- TODO: Shadow rendering should query entities with position + shadow components.
+   -- No separate shadow entity needed with picobloc.
+
+   return id
 end
 
 return Player

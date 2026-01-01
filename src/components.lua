@@ -1,10 +1,8 @@
 return function(world)
    -- Identity/query tags (empty components for filtering)
-   world:component("player", {})
-   world:component("controllable", {})
-   world:component("sprite", {})
+   world:tag("player", "controllable", "sprite", "middleground", "spotlight")
 
-   world:component("type", {type = "value"})
+   world:component("type", {value = "value"})
    world:component("position", {x = "f64", y = "f64"})
    world:component("size", {width = "f64", height = "f64"})
    world:component("acceleration", {
@@ -85,9 +83,6 @@ return function(world)
       level = "u64",
       xp_to_next_level = "u64",
    })
-   world:component("spotlight", {
-      spotlight = "value", -- Boolean or config
-   })
    world:component("shadow", {
       shadow_offset_x = "f64",
       shadow_offset_y = "f64",
@@ -99,11 +94,7 @@ return function(world)
       shadow_widths = "value",
       shadow_heights = "value",
    })
-   world:component("middleground", {
-      middleground = "value", -- Boolean
-   })
    world:component("drawable", {
-      drawable = "value",      -- Boolean
       outline_color = "value", -- Palette index
       sort_offset_y = "f64",
       sprite_index = "u64",
@@ -111,7 +102,6 @@ return function(world)
       flip_y = "value", -- Boolean
    })
    world:component("animatable", {
-      animatable = "value",           -- Boolean
       animations = "value",           -- Complex animation config table
       sprite_index_offsets = "value", -- Offset table
    })
