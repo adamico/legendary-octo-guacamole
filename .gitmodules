@@ -7,3 +7,6 @@
 [submodule "lib/beholder.lua"]
 	path = lib/beholder.lua
 	url = https://github.com/kikito/beholder.lua
+[submodule "lib/picobloc"]
+	path = lib/picobloc
+	url = https://github.com/adamico/picobloc.git
