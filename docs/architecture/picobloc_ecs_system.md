@@ -1,0 +1,142 @@
+# Picobloc ECS System
+
+## Why?
+
+The eggs.p8 ECS system shows performance limits with many entities. Picobloc leverages Picotron's userdata and batch GFX features for better performance.
+
+## Architecture
+
+### Component Definition
+
+Components are defined in `src/components.lua` using typed fields:
+
+```lua
+world:component("position", {x = "f64", y = "f64"})
+world:component("velocity", {vel_x = "f64", vel_y = "f64"})
+world:component("shadow", {
+   shadow_offset_x = "f64",
+   shadow_offsets_x = "value",  -- Tables use "value" type
+})
+```
+
+**Field types:**
+
+- `f64`, `u64`, `i64` - Numeric types stored in userdata
+- `value` - Lua tables/booleans stored in plain tables
+
+### Tag Components
+
+Tags are empty components for filtering:
+
+```lua
+world:tag("player", "controllable", "sprite", "middleground")
+```
+
+### Entity Creation
+
+Entities use nested component structure:
+
+```lua
+local id = world:add_entity({
+   player = true,  -- Tag shorthand
+   position = {x = 100, y = 100},
+   shadow = {
+      shadow_width = 12,
+      shadow_offsets_y = {down = 2, up = -1},  -- Per-direction config
+   },
+})
+```
+
+### Querying
+
+Systems use `world:query()` with component lists:
+
+```lua
+-- Required + optional components
+world:query({'position', 'shadow', 'direction?'}, function(ids, pos, shadow, dir)
+   for i = ids.first, ids.last do
+      local x = pos.x[i]
+      local offsets = shadow.shadow_offsets_y[i]  -- Access "value" fields
+   end
+end)
+```
+
+**Query modifiers:**
+
+- `component` - Required
+- `component?` - Optional (may be nil)
+- `!component` - Exclude entities with this component
+
+## Migrated Systems
+
+| System | Status | Query |
+|--------|--------|-------|
+| Shadows | ✅ Done | `position`, `shadow`, `size`, `direction?` |
+| Player | ✅ Done | Uses all player components |
+
+## Key Differences from Eggs
+
+| Eggs | Picobloc |
+|------|----------|
+| `world.sys("tag1,tag2", fn)` | `world:query({'comp1', 'comp2'}, fn)` |
+| `entity.property` | `component.field[index]` |
+| String tags | Typed components |
+| Entity tables | Entity IDs + buffers |
+
+## Migration Master Plan
+
+### Phase 1: Foundation ✅
+
+- [x] Define player specific components in `src/components.lua`
+- [ ] Define other entity specific components in `src/components.lua`
+- [x] Add `world:tag()` shorthand to picobloc
+- [ ] Check if `world:tag()` is used in picobloc queries
+- [ ] Migrate other entities to picobloc
+- [x] Migrate Player entity to picobloc
+
+### Phase 2: Visual Systems
+
+- [x] **Shadows** - Query `position + shadow + size`
+- [ ] **Rendering** - Y-sorted entity drawing
+- [ ] **Animation** - Sprite state machine
+- [ ] **Lighting** - Spotlight effects
+- [ ] **Floating Text** - Damage/heal numbers
+
+### Phase 3: Core Systems
+
+- [ ] **Physics** - Movement, velocity, acceleration
+- [ ] **Collision** - Spatial grid, entity-entity, entity-map
+- [ ] **Timers** - Cooldowns, invulnerability
+
+### Phase 4: Combat Systems
+
+- [ ] **Shooter** - Projectile spawning
+- [ ] **Melee** - Hitbox spawning
+- [ ] **Effects** - Knockback, stun, slow
+
+### Phase 5: Entity Factories
+
+- [ ] **Enemy** - Skulker, Shooter, Dasher, Skull
+- [ ] **Projectile** - Egg, EnemyBullet
+- [ ] **Pickup** - Health, Coin, Key, Bomb, XP
+- [ ] **Minion** - Chick
+- [ ] **Obstacle** - Rock, Destructible, Chest
+- [ ] **Bomb/Explosion**
+
+### Phase 6: AI & Spawning
+
+- [ ] **AI dispatch** - Enemy behavior FSMs
+- [ ] **Spawner** - Wave patterns, room population
+
+### Phase 7: Cleanup
+
+- [ ] Remove eggs.p8 dependency
+- [ ] Delete `src/entities/shadow.lua` (no longer needed)
+- [ ] Update all `world.sys()` → `world:query()`
+
+## Files
+
+- [picobloc.lua](file:///home/kc00l/game_dev/pizak/lib/picobloc/picobloc.lua) - Library
+- [components.lua](file:///home/kc00l/game_dev/pizak/src/components.lua) - Component definitions
+- [player.lua](file:///home/kc00l/game_dev/pizak/src/entities/player.lua) - Example entity
+- [shadows.lua](file:///home/kc00l/game_dev/pizak/src/systems/shadows.lua) - Migrated system
