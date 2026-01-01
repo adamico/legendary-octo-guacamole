@@ -1,66 +1,84 @@
 -- Floating Text System: displays damage/heal numbers above entities
 local GameConstants = require("src/game/game_config")
+local TextUtils = require("src/utils/text_utils")
 
 local FloatingText = {}
 
 -- Active floating text entries
 local active_texts = {}
 
--- Configuration defaults (can be overridden via GameConstants.FloatingText)
+-- Configuration defaults
+-- See src/game/config/effects.lua for the actual configuration.
 local function get_config()
-   return GameConstants.FloatingText or {
-      rise_speed = 0.5,   -- Pixels per frame to rise
-      duration = 45,      -- Frames before fade out
-      fade_duration = 15, -- Frames for fade out (part of total duration)
-      damage_color = 8,   -- Red for damage
-      heal_color = 11,    -- Green for healing
-      outline_color = 0,  -- Black outline
-      offset_y = -8,      -- Initial vertical offset from entity top
-      spread = 8,         -- Horizontal spread for multiple texts
-   }
+   return GameConstants.FloatingText
 end
 
--- Spawn a floating text at an entity's position
--- @param x, y: world position (center of entity recommended)
--- @param amount: number to display (positive for heal, negative for damage)
--- @param text_type: "damage" or "heal" (optional, auto-detected from amount if omitted)
-function FloatingText.spawn(x, y, amount, text_type)
+--- Spawn a floating text at an entity's position
+---
+--- @param x, y: world position (center of entity recommended)
+--- @param amount: number or string to display
+--- @param text_type: "damage", "heal", or "pickup" (optional, auto-detected from amount if omitted)
+--- @param sprite_index: optional sprite index to display before the text
+function FloatingText.spawn(x, y, amount, text_type, sprite_index)
    local config = get_config()
 
    -- Determine type from amount if not specified
    if not text_type then
-      text_type = amount < 0 and "damage" or "heal"
+      text_type = (type(amount) == "number" and amount < 0) and "damage" or "heal"
    end
 
    -- Determine color based on type
    local color = config[text_type.."_color"] or (text_type == "damage" and config.damage_color) or config.heal_color
 
-   -- Format amount (always show absolute value as integer, type determines color)
-   local display_amount = flr(abs(amount))
-   local text = tostring(display_amount)
+   -- Format amount
+   local text
+   if type(amount) == "number" then
+      local display_amount = flr(abs(amount))
+      -- For pickups with sprites, show "+n" format
+      if sprite_index then
+         text = "+"..tostring(display_amount)
+      else
+         text = tostring(display_amount)
+      end
+   else
+      text = tostring(amount)
+   end
 
    -- Add slight random horizontal offset to prevent overlap
    local offset_x = (rnd(1) - 0.5) * config.spread
 
+   -- Check for nearby active texts and stagger Y position to prevent overlap
+   local base_y = y + config.offset_y
+   local stagger_y = 0
+   local stagger_amount = 10 -- Vertical spacing between stacked texts
+
+   for _, existing in ipairs(active_texts) do
+      -- Check if existing text is at similar position (within spread range)
+      if abs(existing.x - (x + offset_x)) < 16 and abs(existing.y - base_y - stagger_y) < stagger_amount then
+         stagger_y = stagger_y - stagger_amount
+      end
+   end
+
    local entry = {
       x = x + offset_x,
-      y = y + config.offset_y,
+      y = base_y + stagger_y,
       text = text,
       color = color,
       timer = config.duration,
       rise_speed = config.rise_speed,
       outline_color = config.outline_color,
       fade_start = config.duration - config.fade_duration,
+      sprite_index = sprite_index, -- optional sprite to draw
    }
 
    table.insert(active_texts, entry)
 end
 
 -- Convenience function to spawn damage text at an entity
-function FloatingText.spawn_at_entity(entity, amount, text_type)
+function FloatingText.spawn_at_entity(entity, amount, text_type, sprite_index)
    local cx = entity.x + (entity.width or 16) / 2
    local cy = entity.y
-   FloatingText.spawn(cx, cy, amount, text_type)
+   FloatingText.spawn(cx, cy, amount, text_type, sprite_index)
 end
 
 -- Update all active floating texts (call once per frame)
@@ -81,6 +99,8 @@ end
 
 -- Draw all active floating texts (call during draw phase)
 function FloatingText.draw()
+   local config = get_config()
+
    for _, entry in ipairs(active_texts) do
       -- Calculate alpha based on remaining time (for fade effect)
       local alpha = 1
@@ -90,7 +110,7 @@ function FloatingText.draw()
       end
 
       -- Center the text horizontally
-      local text_width = #entry.text * 4 -- Approximate character width
+      local text_width = #entry.text * 4    -- Approximate character width
       local draw_x = entry.x - text_width / 2
       local draw_y = entry.y
 
@@ -100,8 +120,21 @@ function FloatingText.draw()
       if alpha < 0.5 and (t() * 30) % 2 < 1 then
          -- Skip drawing every other frame during fade for blink effect
       else
-         local TextUtils = require("src/utils/text_utils")
-         TextUtils.print_outlined(entry.text, draw_x, draw_y, entry.color, entry.outline_color)
+         -- If we have a sprite, draw it first (8x8 scaled to fit)
+         local sprite_width = 0
+         if entry.sprite_index then
+            sprite_width = config.icon_size + 2    -- sprite + small gap
+
+            local ix = draw_x + (config.icon_offset_x or -4)
+            local iy = draw_y + (config.icon_offset_y or -1)
+            local isize = config.icon_size or 8
+
+            -- Use sspr to scale 16x16 sprite down to target size
+            -- sspr(s, sx, sy, sw, sh, dx, dy, dw, dh)
+            sspr(entry.sprite_index, 0, 0, 16, 16, ix, iy, isize, isize)
+         end
+
+         TextUtils.print_outlined(entry.text, draw_x + sprite_width - 4, draw_y, entry.color, entry.outline_color)
       end
    end
 end

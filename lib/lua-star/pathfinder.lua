@@ -45,11 +45,17 @@ end
 --- @param tx number Tile X
 --- @param ty number Tile Y
 --- @param room table|nil Optional room for obstacle checks
+--- @param is_goal_tile boolean|nil If true, skip all walkability checks (entity exists there so it's reachable)
 --- @return boolean
-function Pathfinder.is_walkable(tx, ty, room)
-   -- Bounds check
+function Pathfinder.is_walkable(tx, ty, room, is_goal_tile)
+   -- Bounds check (always required)
    if tx < 0 or tx >= MAP_W or ty < 0 or ty >= MAP_H then
       return false
+   end
+
+   -- Goal tiles skip all walkability checks - if an entity is at that position, it's reachable
+   if is_goal_tile then
+      return true
    end
 
    -- Check cache first
@@ -96,19 +102,11 @@ function Pathfinder.is_walkable(tx, ty, room)
    if room and room.obstacle_entities then
       for _, obs in ipairs(room.obstacle_entities) do
          if not obs.destroyed then
-            -- Check if this tile contains an obstacle by comparing tile coordinates
-            local obs_tx = flr(obs.x / GRID_SIZE)
-            local obs_ty = flr(obs.y / GRID_SIZE)
-            -- Also check +1 tile in each direction for larger obstacles
+            -- Use stored tile coordinates if available (fixes pixel offset mismatch)
+            -- Fall back to pixel calculation for backwards compatibility
+            local obs_tx = obs.tile_x or flr(obs.x / GRID_SIZE)
+            local obs_ty = obs.tile_y or flr(obs.y / GRID_SIZE)
             if tx == obs_tx and ty == obs_ty then
-               return false -- Don't cache - obstacle may be destroyed later
-            end
-            -- Check if obstacle spans multiple tiles (use hitbox if available)
-            local obs_w = obs.width or GRID_SIZE
-            local obs_h = obs.height or GRID_SIZE
-            local obs_tx2 = flr((obs.x + obs_w - 1) / GRID_SIZE)
-            local obs_ty2 = flr((obs.y + obs_h - 1) / GRID_SIZE)
-            if tx >= obs_tx and tx <= obs_tx2 and ty >= obs_ty and ty <= obs_ty2 then
                return false -- Don't cache - obstacle may be destroyed later
             end
          end
@@ -163,7 +161,8 @@ function Pathfinder.find_path(start_x, start_y, goal_x, goal_y, room)
    local gx, gy = Pathfinder.pixel_to_tile(goal_x, goal_y)
 
    -- Quick check: if start is unwalkable, try to nudge
-   if not Pathfinder.is_walkable(sx, sy, room) then
+   -- Use is_goal_tile=true since if an entity is at that position, it's valid
+   if not Pathfinder.is_walkable(sx, sy, room, true) then
       local nsx, nsy = nudge_to_walkable(sx, sy, room)
       if nsx then
          log_trace_limited("Pathfinder: nudged start from ("..sx..","..sy..") to ("..nsx..","..nsy..")")
@@ -175,7 +174,9 @@ function Pathfinder.find_path(start_x, start_y, goal_x, goal_y, room)
    end
 
    -- Quick check: if goal is unwalkable, try to nudge
-   if not Pathfinder.is_walkable(gx, gy, room) then
+   -- Use is_goal_tile=true since if an entity is at that position, it's reachable
+   -- This skips all walkability checks (walls, pits, obstacles) for the goal tile
+   if not Pathfinder.is_walkable(gx, gy, room, true) then
       local ngx, ngy = nudge_to_walkable(gx, gy, room)
       if ngx then
          log_trace_limited("Pathfinder: nudged goal from ("..gx..","..gy..") to ("..ngx..","..ngy..")")

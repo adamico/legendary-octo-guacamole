@@ -189,16 +189,12 @@ function PathFollow.toward(entity, target_x, target_y, speed_mult, room)
    state.last_x = ex
    state.last_y = ey
 
-   -- If no valid path, fall back to direct movement
+   -- If no valid path, stop movement and let caller handle (e.g., wander, give up)
+   -- Previously this fell back to direct movement, but that caused entities to walk
+   -- into pits/walls when A* correctly determined no path exists
    if not state.path or #state.path == 0 then
-      -- Direct movement (will likely hit walls but better than nothing)
-      if dist_to_target > 0 then
-         entity.vel_x = (dx / dist_to_target) * speed * 0.5 -- Slower when no path
-         entity.vel_y = (dy / dist_to_target) * speed * 0.5
-         entity.dir_x = sgn(dx)
-         entity.dir_y = sgn(dy)
-         entity.current_direction = EntityUtils.get_direction_name(dx, dy, entity.current_direction)
-      end
+      entity.vel_x = 0
+      entity.vel_y = 0
       return dist_to_target
    end
 
@@ -308,5 +304,8 @@ function PathFollow.debug_draw(entity, color)
       circfill(p.x, p.y, 2, color)
    end
 end
+
+-- Export line-of-sight check for external use (e.g., chick AI direct chase)
+PathFollow.has_line_of_sight = has_line_of_sight
 
 return PathFollow

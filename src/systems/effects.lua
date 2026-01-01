@@ -66,11 +66,12 @@ function Effects.spawn_particles(x, y, ptype, count)
     -- that move, fade, and self-destruct
 end
 
--- Spawn a temporary visual effect sprite at position
--- @param world - ECS world
--- @param x, y - spawn position
--- @param sprite_index - sprite to display
--- @param lifespan - frames before removal (default 15)
+--- Spawn a temporary visual effect sprite at position
+---
+--- @param world - ECS world
+--- @param x, y - spawn position
+--- @param sprite_index - sprite to display
+--- @param lifespan - frames before removal (default 15)
 function Effects.spawn_visual_effect(world, x, y, sprite_index, lifespan)
     lifespan = lifespan or 15
     local effect = {
@@ -116,11 +117,12 @@ function Effects.apply_knockback(source, target, strength)
     target.knockback_vel_y = dy * strength
 end
 
--- Apply stun and slow debuff to target entity ("Sticky Yolk" effect)
--- @param target Entity to debuff (must have velocity for movement)
--- @param stun_frames Frames of complete movement stop (~0.2s = 12)
--- @param slow_frames Frames of reduced speed (~1s = 60)
--- @param slow_factor Speed multiplier during slow (0.5 = 50% speed)
+--- Apply stun and slow debuff to target entity ("Sticky Yolk" effect)
+---
+--- @param target Entity to debuff (must have velocity for movement)
+--- @param stun_frames Frames of complete movement stop (~0.2s = 12)
+--- @param slow_frames Frames of reduced speed (~1s = 60)
+--- @param slow_factor Speed multiplier during slow (0.5 = 50% speed)
 function Effects.apply_sticky_yolk(target, stun_frames, slow_frames, slow_factor)
     target.stun_timer = stun_frames or 12
     target.slow_timer = slow_frames or 60

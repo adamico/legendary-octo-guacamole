@@ -97,19 +97,45 @@ local function open_chest(chest, player)
    local cx = chest.x + chest.width / 2
    local cy = chest.y + chest.height / 2
 
-   -- Spawn pickups in a spray pattern
+   -- Track spawned positions to avoid overlap
+   local spawned_positions = {}
+   local MIN_SEPARATION = 14 -- Minimum distance between spawned items
+
    for i = 1, loot_count do
       local loot_type = pick_loot(CHEST_LOOT)
-      -- Spread pickups in a circle pattern with some randomness
-      local angle = (i / loot_count) * 6.28 + rnd(0.5) - 0.25
-      local dist = 12 + rnd(8)
-      local spawn_x = cx + cos(angle) * dist - 8
-      local spawn_y = cy + sin(angle) * dist - 8
+
+      -- Spread pickups in a circle pattern with consistent angles
+      local angle = (i / loot_count) * 6.28
+      local base_dist = 16 + (i - 1) * 4 -- Stagger distances: 16, 20, 24, etc.
+      local spawn_x = cx + cos(angle) * base_dist - 8
+      local spawn_y = cy + sin(angle) * base_dist - 8
 
       -- Snap to floor to avoid pits
       local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y, DungeonManager.current_room)
-      if sx then spawn_x, spawn_y = sx, sy end
+      if sx then
+         spawn_x, spawn_y = sx, sy
+      else
+         -- Fallback to chest center if no valid floor found
+         spawn_x, spawn_y = cx - 8, cy - 8
+      end
 
+      -- Check for overlap with previously spawned items and nudge if needed
+      for _, pos in ipairs(spawned_positions) do
+         local dx, dy = spawn_x - pos.x, spawn_y - pos.y
+         local dist = sqrt(dx * dx + dy * dy)
+         if dist < MIN_SEPARATION and dist > 0 then
+            -- Nudge away from existing item
+            local nudge = (MIN_SEPARATION - dist) / dist
+            spawn_x = spawn_x + dx * nudge
+            spawn_y = spawn_y + dy * nudge
+         elseif dist == 0 then
+            -- Exactly same position, offset randomly
+            spawn_x = spawn_x + rnd(MIN_SEPARATION) - MIN_SEPARATION / 2
+            spawn_y = spawn_y + rnd(MIN_SEPARATION) - MIN_SEPARATION / 2
+         end
+      end
+
+      table.insert(spawned_positions, {x = spawn_x, y = spawn_y})
       Entities.spawn_pickup(world, spawn_x, spawn_y, loot_type)
    end
 
@@ -181,9 +207,16 @@ local function push_out_enemy(enemy, obstacle)
    if world.msk(enemy).flying then return end
    push_out(enemy, obstacle)
 
-   -- Special case: Dasher stunning on obstacle collision
-   if enemy.enemy_type == "Dasher" and enemy.dasher_fsm and enemy.dasher_fsm:is("dash") then
-      enemy.dasher_collision = true
+   -- Special case: Dasher behavior on obstacle collision
+   if enemy.enemy_type == "Dasher" and enemy.dasher_fsm then
+      if enemy.dasher_fsm:is("dash") then
+         -- Stun when dashing into obstacle
+         enemy.dasher_collision = true
+      elseif enemy.dasher_fsm:is("patrol") then
+         -- Treat obstacle like a wall during patrol so Dasher can change direction
+         -- This prevents Dashers from getting stuck against obstacles
+         enemy.hit_wall = true
+      end
    end
 end
 
@@ -325,20 +358,12 @@ function ObstacleHandlers.register(handlers)
       destroy_destructible(destructible, explosion)
    end
 
-   -- Explosion vs Chest (bombs can open chests)
+   -- Explosion vs Chest: Do nothing (bombs should not destroy chests)
    handlers.entity["Explosion,Chest"] = function(explosion, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player)
-      end
+      -- Intentionally empty: bombs don't affect chests
    end
    handlers.entity["Explosion,LockedChest"] = function(explosion, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player) -- Still requires key
-      end
+      -- Intentionally empty: bombs don't affect locked chests
    end
 
    -- Explosion vs Rock (bombs are the only way to destroy rocks)
@@ -355,13 +380,19 @@ function ObstacleHandlers.register(handlers)
       push_out(player, shop_item)
 
       local price = shop_item.price or 10
-      if (player.coins or 0) < price then
+
+      -- Check if infinite inventory cheat is active (free purchases)
+      local free_purchase = GameState.cheats.infinite_inventory
+
+      if not free_purchase and (player.coins or 0) < price then
          -- Not enough coins - silently reject
          return
       end
 
-      -- Deduct coins
-      player.coins = (player.coins or 0) - price
+      -- Deduct coins (unless using infinite inventory cheat)
+      if not free_purchase then
+         player.coins = (player.coins or 0) - price
+      end
       shop_item.purchased = true
 
       -- Apply item effect
@@ -391,7 +422,7 @@ function ObstacleHandlers.register(handlers)
    for _, type1 in ipairs(pickup_types) do
       for _, type2 in ipairs(pickup_types) do
          handlers.entity[type1..","..type2] = function(p1, p2)
-            -- Simple push: move p1 away from p2
+            -- Push pickups apart to prevent stacking
             local dx = p1.x - p2.x
             local dy = p1.y - p2.y
             local dist = sqrt(dx * dx + dy * dy)
@@ -399,7 +430,7 @@ function ObstacleHandlers.register(handlers)
                dx, dy = rnd() - 0.5, rnd() - 0.5
                dist = 1
             end
-            local push_dist = 2
+            local push_dist = 4 -- Increased from 2 for faster separation
             p1.x = p1.x + (dx / dist) * push_dist
             p1.y = p1.y + (dy / dist) * push_dist
          end

@@ -26,6 +26,7 @@ LayoutData.FEATURE_LEGEND = {
    ["C"] = "chest",        -- Normal chest (drops 1-3 pickups)
    ["L"] = "locked_chest", -- Locked chest (requires key, drops 2-6 pickups)
    ["S"] = "shop_item",    -- Shop item pedestal (purchasable)
+   ["N"] = "no_spawn",     -- No enemy spawn zone (walkable, blocks spawns)
 }
 
 -- Cell pattern position offsets within 3×2 cell
@@ -138,14 +139,14 @@ LayoutData.Layouts = {
       floor_pattern = "random",
       cell_pattern = {
          "br", "f", "bl",
-         "f", "f", "f",
+         "f", 16, "f",
          "tr", "f", "tl",
       },
       grid = {
          ".........",
          ".........",
          "...RRR...",
-         "...RRR...",
+         "...RLR...",
          "...RRR...",
          ".........",
          ".........",
@@ -180,7 +181,7 @@ LayoutData.Layouts = {
       cell_pattern = {
          56,
          "br", "f", "bl",
-         "f", 16, "f",
+         "f", "f", 16, "f", "f",
          "tr", "f", "tl",
          7,
       },
@@ -188,7 +189,7 @@ LayoutData.Layouts = {
          ".........",
          "....P....",
          "...PPP...",
-         "..R.C.R..",
+         "..RNCNR..",
          "...PPP...",
          "....P....",
          ".........",
@@ -223,7 +224,7 @@ LayoutData.Layouts = {
       cell_pattern = {
          56, 56, 56,
          36, "f", "f", "f", 9,
-         36, 16, 9,
+         36, "f", 16, "f", 9,
          36, "f", "f", "f", 9,
          7, 7, 7,
       },
@@ -231,7 +232,7 @@ LayoutData.Layouts = {
          ".........",
          "...RRR...",
          "..RPPPR..",
-         "..R.L.R..",
+         "..RNLNR..",
          "..RPPPR..",
          "...RRR...",
          ".........",
@@ -245,18 +246,18 @@ LayoutData.Layouts = {
       cell_pattern = {
          "tl", "tr",
          "bm",
-         "tm", "tm",
+         "tm", "f", "tm",
          "f", 16, "f",
-         "bm", "bm",
+         "bm", "f", "bm",
          "tm",
          "bl", "br"
       },
       grid = {
          ".R.....R.",
          "....R....",
-         "...R.R...",
+         "...RNR...",
          "...RCR...",
-         "...R.R...",
+         "...RNR...",
          "....R....",
          ".R.....R.",
       }

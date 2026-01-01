@@ -50,10 +50,30 @@ function HealthBar.draw(player)
    local base_hearts = ceil(max_hp / hp_per_heart)
    local overheal_hearts = ceil(overheal / hp_per_heart)
 
+   -- Wrapping Constants
+   local MAX_PER_ROW = config.max_per_row or 10
+   local row = 0
+   local col = 0
+
+   -- Helper to calculate position and advance counters
+   local function get_pos_and_advance()
+      -- Calculate position based on current row/col
+      local heart_x = x + (col * spacing)
+      local heart_y = y + (row * spacing)
+
+      -- Advance counters
+      col = col + 1
+      if col >= MAX_PER_ROW then
+         col = 0
+         row = row + 1
+      end
+
+      return heart_x, heart_y
+   end
+
    -- Draw Base Hearts
    for i = 0, base_hearts - 1 do
-      local heart_x = x + (i * spacing)
-      local heart_y = y
+      local heart_x, heart_y = get_pos_and_advance()
 
       local hp_in_heart = min(hp_per_heart, max(0, current_hp - (i * hp_per_heart)))
 
@@ -72,10 +92,8 @@ function HealthBar.draw(player)
    end
 
    -- Draw Overheal Hearts (Blue)
-   local start_x = x + (base_hearts * spacing)
    for i = 0, overheal_hearts - 1 do
-      local heart_x = start_x + (i * spacing)
-      local heart_y = y
+      local heart_x, heart_y = get_pos_and_advance()
 
       local hp_in_heart = min(hp_per_heart, max(0, overheal - (i * hp_per_heart)))
 

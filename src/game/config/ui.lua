@@ -23,13 +23,14 @@ return {
          color = 8, -- Red
       },
       health_bar = {
-         x = 24,
+         x = 30,                  -- Centered in left half (240px wide): (240 - 10*18)/2 = 30
          y = 7,
          heart_sprite = 42,       -- Full Heart
          half_heart_sprite = 43,  -- Half Heart
          empty_heart_sprite = 56, -- Empty Heart
          heart_size = 16,         -- 16x16 sprite
          heart_spacing = 18,      -- 16 + 2px gap
+         max_per_row = 10,        -- Max 10 hearts per row (~180px width)
          -- Heart sprite base colors (in luminance order): 7, 8, 24, 2
          -- Each palette maps: {color_for_7, color_for_8, color_for_24, color_for_2}
          colors = {

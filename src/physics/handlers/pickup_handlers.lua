@@ -12,19 +12,19 @@ local PickupEffects = {}
 PickupEffects.coin = function(player, pickup)
    local amount = pickup.amount or 1
    player.coins = (player.coins or 0) + amount
-   FloatingText.spawn_at_entity(player, amount, "pickup")
+   FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
 end
 
 PickupEffects.key = function(player, pickup)
    local amount = pickup.amount or 1
    player.keys = (player.keys or 0) + amount
-   FloatingText.spawn_at_entity(player, amount, "pickup")
+   FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
 end
 
 PickupEffects.bomb = function(player, pickup)
    local amount = pickup.amount or 1
    player.bombs = (player.bombs or 0) + amount
-   FloatingText.spawn_at_entity(player, amount, "pickup")
+   FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
 end
 
 PickupEffects.health = function(player, pickup)
@@ -36,7 +36,7 @@ PickupEffects.health = function(player, pickup)
       player.hp = player.max_hp
    end
 
-   FloatingText.spawn_at_entity(player, heal_amount, "heal")
+   FloatingText.spawn_at_entity(player, heal_amount, "heal", pickup.sprite_index)
 end
 
 PickupEffects.xp = function(player, pickup)

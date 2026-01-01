@@ -513,6 +513,9 @@ function DungeonManager.setup_room(room, player, world)
          end
          if entity then
             entity.room_key = room.grid_x..","..room.grid_y
+            -- Store original tile coordinates for pathfinder (pixel offset doesn't affect this)
+            entity.tile_x = f.tx
+            entity.tile_y = f.ty
             add(room.obstacle_entities, entity)
          end
       end
@@ -638,7 +641,7 @@ function DungeonManager.is_valid_spawn_tile(tx, ty, room)
 
       local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
       if feature == "rock" or feature == "destructible" or feature == "pit"
-         or feature == "chest" or feature == "locked_chest" then
+         or feature == "chest" or feature == "locked_chest" or feature == "no_spawn" then
          return false
       end
    end

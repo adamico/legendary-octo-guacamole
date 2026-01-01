@@ -20,6 +20,25 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Start of Session**: Fixed various gameplay bugs including chest spawning mechanics, bomb interactions, and visual feedback.
+  - **Chest Loot Improvements**:
+    - Implemented smart spawning for chest loot: items now check for valid floor tiles (avoiding pits) and stagger their positions to prevent overlapping with each other.
+    - Chests (and locked chests) are now immune to bomb explosions (fixed in `Bomber.destroy_obstacles_in_radius`).
+  - **Visual Enhancements**:
+    - **Pickup Floating Text**: Collecting items now shows a scaled-down 8x8 icon alongside the amount (e.g., `[Coin Icon] +1`).
+    - **Text Stacking**: Floating texts now stagger vertically if they spawn near existing texts, preventing unreadable overlap.
+- **Fixed Four Gameplay Bugs**:
+  - **Chest Loot Spawn Distance**: Items from chests now spawn within 12px of the chest center (was 12-20px + random offset). If `snap_to_nearest_floor` moves an item too far, it's clamped back to max distance.
+  - **Dasher Obstacle Detection**: Dashers in patrol state now set `hit_wall = true` when pushed out of obstacles, allowing them to change direction instead of getting stuck repeatedly against rocks/destructibles.
+  - **Bombs No Longer Destroy Chests**: Removed `Explosion,Chest` and `Explosion,LockedChest` handlers - explosions now have no effect on chests.
+  - **Infinite Inventory Cheat Shop Fix**: The `infinite_inventory` cheat now allows free shop purchases by skipping the coin check and deduction.
+- **Fixed Chick Pathfinding Across Pits**:
+  - **Problem**: Chicks would walk into pits when pathfinding failed - the fallback direct movement ignored walkability, and direct chase mode bypassed pathfinding entirely.
+  - **Fix 1**: Removed direct movement fallback in `PathFollow.toward()` when no path exists. Now sets velocity to 0 instead of walking toward target.
+  - **Fix 2**: Added line-of-sight check to direct chase - chicks only use direct movement when close AND there's no pit/obstacle between them. Exported `PathFollow.has_line_of_sight()` for this purpose.
+  - **Fix 3**: When no path to enemy exists, chicks now return to the player (instead of wandering) and clear their blacklist to allow retargeting from new position.
+  - **Fix 4**: Added `is_goal_tile` parameter to `Pathfinder.is_walkable()`. Both start AND goal tiles now skip ALL walkability checks since if an entity exists at that position, it's reachable.
+  - **Fix 5**: Fixed obstacle tile coordinate mismatch. Rocks were spawned with -4px offset causing wrong tiles to be marked as blocked. Now stores `tile_x`/`tile_y` on obstacle entities.
 - **Implemented Shop Room with Purchasable Items**:
   - **Layout**: Created `shop_layout` in `room_layout_data.lua` with 3 purchasable item pedestals using `"S"` (shop_item) feature.
   - **Entity**: Added `ShopItem` obstacle entity in `entities.lua` with sprite 58, hitbox 12x10 offset 2,6.

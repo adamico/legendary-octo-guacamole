@@ -95,7 +95,7 @@ function Spawner.populate(room, player)
 
             local feature = RoomLayouts.get_feature_at(room.layout, gx, gy, room_w, room_h)
             if feature == "rock" or feature == "destructible" or feature == "pit"
-               or feature == "chest" or feature == "locked_chest" then
+               or feature == "chest" or feature == "locked_chest" or feature == "no_spawn" then
                 return false
             end
         end

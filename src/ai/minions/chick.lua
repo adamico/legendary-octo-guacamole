@@ -434,37 +434,43 @@ local function chick_ai(entity, world)
          local thb = HitboxUtils.get_hitbox(target)
          local tx, ty = thb.x + thb.w / 2, thb.y + thb.h / 2
 
-         -- Calculate distance to target
+         -- Get entity center for distance/LOS checks
          local hb = HitboxUtils.get_hitbox(entity)
          local ex, ey = hb.x + hb.w / 2, hb.y + hb.h / 2
          local chase_dx, chase_dy = tx - ex, ty - ey
          local chase_dist = sqrt(chase_dx * chase_dx + chase_dy * chase_dy)
 
-         -- Use direct movement when close (within ~3 tiles), pathfinding when far
+         -- For close targets with clear line-of-sight, use direct chase (no pathfinding overhead)
+         -- This also fixes the "no path" freeze when target is very close
          local DIRECT_CHASE_DIST = 48
-         if chase_dist < DIRECT_CHASE_DIST then
-            -- Close enough - use direct Chase (no pathfinding needed)
+         local has_los = PathFollow.has_line_of_sight(ex, ey, tx, ty, room)
+
+         if chase_dist < DIRECT_CHASE_DIST and has_los then
+            -- Close enough with clear path - use direct Chase
             Chase.toward(entity, tx, ty, entity.chase_speed_mult)
-            entity.chase_stuck_frames = 0 -- Reset stuck counter when using direct movement
+            entity.chase_stuck_frames = 0
          else
-            -- Far away - use A* pathfinding
+            -- Far away or blocked - use A* pathfinding
             PathFollow.toward(entity, tx, ty, entity.chase_speed_mult, room)
 
             -- Stuck detection: if no valid path for too long, abandon this target
             local has_path = PathFollow.has_path(entity)
             if not has_path then
                entity.chase_stuck_frames = (entity.chase_stuck_frames or 0) + 1
-               -- Wander while stuck (don't just stand still)
-               Wander.update(entity)
+               -- Can't reach enemy - try to return to player instead of wandering
+               if player and player_cx then
+                  PathFollow.toward(entity, player_cx, player_cy, entity.chase_speed_mult, room)
+               else
+                  Wander.update(entity)
+               end
                if entity.chase_stuck_frames >= MAX_CHASE_STUCK_FRAMES then
-                  -- Can't reach target, blacklist and wander
-                  entity.unreachable_blacklist = entity.unreachable_blacklist or {}
-                  entity.unreachable_blacklist[target] = t() + UNREACHABLE_BLACKLIST_TIME
+                  -- Can't reach target, give up and return to player
+                  -- Clear blacklist so chick can retarget from new position
+                  entity.unreachable_blacklist = {}
                   PathFollow.clear_path(entity)
                   fsm:lose_target()
                   entity.chase_target = nil
                   entity.chase_stuck_frames = 0
-                  Wander.reset(entity) -- Pick new wander direction
                end
             else
                entity.chase_stuck_frames = 0 -- Reset counter when path exists

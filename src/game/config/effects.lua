@@ -46,10 +46,10 @@ return {
       following = {text = "@", color = 14, duration = 60}, -- pink/flesh "@" when following
       chasing = {text = "🐱", color = 8, duration = 60}, -- red "cat" when chasing enemy
       seeking_food = {text = "😐", color = 13, duration = 60}, -- indigo/blue "neutral" when hungry
-      offset_y = -18, -- Vertical offset above entity
+      offset_y = -18,      -- Vertical offset above entity
       bounce_speed = 0.15, -- Bounce animation speed
-      bounce_height = 2, -- Bounce amplitude in pixels
-      outline_color = 0, -- Black outline for visibility
+      bounce_height = 2,   -- Bounce amplitude in pixels
+      outline_color = 0,   -- Black outline for visibility
    },
    FloatingText = {
       rise_speed = 0.5,   -- Pixels per frame to rise
@@ -61,5 +61,8 @@ return {
       outline_color = 0,  -- Black outline for visibility
       offset_y = -8,      -- Initial vertical offset from entity top
       spread = 8,         -- Horizontal spread for multiple texts
+      icon_offset_x = -4, -- Horizontal offset for the icon relative to text center
+      icon_offset_y = 0,  -- Vertical offset for the icon relative to text baseline
+      icon_size = 8,      -- Target size to draw the icon (e.g. 8x8)
    },
 }

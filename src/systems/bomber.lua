@@ -61,8 +61,14 @@ function Bomber.update(world)
 end
 
 -- Helper: Destroy all obstacles within the explosion radius
+-- NOTE: This explicitly excludes chests from destruction
 function Bomber.destroy_obstacles_in_radius(world, center_x, center_y, radius)
    world.sys("obstacle", function(obstacle)
+      -- Skip chests - bombs should not destroy them
+      if obstacle.is_chest then
+         return
+      end
+
       -- Check if obstacle is within explosion radius
       local ox = obstacle.x + (obstacle.width or 16) / 2
       local oy = obstacle.y + (obstacle.height or 16) / 2

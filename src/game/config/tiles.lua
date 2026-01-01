@@ -40,10 +40,12 @@ PIT_TILE = 85                             -- P: pit (blocks walking, not project
 DESTRUCTIBLE_TILES = {150, 151, 158, 159} -- D: breakable obstacles
 CHEST_TILE = 166                          -- C: normal chest
 LOCKED_CHEST_TILE = 167                   -- L: locked chest
+NO_SPAWN_FEATURE = 87
 
 -- Feature type flags (for collision logic)
 SOLID_FLAG = 0
 FEATURE_FLAG_PIT = 1 -- allows projectiles to pass
+NO_SPAWN_FLAG = 2
 
 -- Collision system constants
 TILE_EDGE_TOLERANCE = 0.001    -- Small buffer to prevent floating-point edge cases
