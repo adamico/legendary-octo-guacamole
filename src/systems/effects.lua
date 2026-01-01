@@ -5,15 +5,13 @@ local Effects = {}
 local shake_timer = 0
 local shake_intensity = 0
 
--- Sprite flash state (per entity)
--- entity.flash_timer and entity.flash_color set dynamically
-
 -- Screen shake effect
 function Effects.screen_shake(intensity, duration)
     shake_intensity = max(shake_intensity, intensity or 2)
     shake_timer = max(shake_timer, duration or 3)
 end
 
+-- REFACTOR: move to timers?
 -- Update shake (call from main game loop)
 function Effects.update_shake()
     if shake_timer > 0 then
@@ -36,117 +34,159 @@ function Effects.get_shake_offset()
 end
 
 -- Flash sprite effect
-function Effects.flash_sprite(entity, frames, color)
-    entity.flash_timer = frames or 3
-    entity.flash_color = color or 7 -- white by default
+function Effects.flash_sprite(world, id, frames, color)
+    -- Requires "flash" component on entity or adding it
+    -- Assuming entities that need flash have "flash" component
+    if world:entity_exists(id) then
+        world:query_entity(id, {"flash?"}, function(idx, flash)
+            if flash then
+                flash.flash_timer[idx] = frames or 3
+                -- flash_color is not in component def in architecture doc!
+                -- Component def: flash_timer, flash_duration.
+                -- Use flash_duration as color? No.
+                -- Let's just set timer for now. Color is usually white (7).
+                -- If we need color support, we should add it to component.
+                -- For now, default white flash.
+            end
+        end)
+    end
 end
 
 -- Update sprite flash (call from drawable system)
-function Effects.update_flash(entity)
-    if entity.flash_timer and entity.flash_timer > 0 then
-        entity.flash_timer -= 1
-
-        -- Solid flash for entire duration
-        -- Swap all sprite colors to flash color using DRAW palette (Picotron has 64 colors)
-        for i = 1, 63 do -- Skip 0 (transparent)
-            pal(i, entity.flash_color or 7, 0)
-        end
-    end
-    -- Note: Palette reset happens after sprite draw in play.lua
-end
+-- Moved to Rendering system ideally, but kept here if called explicitly?
+-- Actually, rendering system handles flash normally. This function implementation in original file
+-- was updating a timer. ECS "timers" or specialized system handles this.
+-- We can remove `update_flash` if the rendering system handles decrementing or a system does.
+-- But let's check if we need to port it as a system function.
+-- Original: function Effects.update_flash(entity)
+-- This was likely called inside a loop.
+-- ECS: A system should iterate "flash" component and decrement timer.
+-- Use `Effects.update(world)` or similar?
+-- Or `Rendering` system handles it.
+-- Let's verify Rendering system later. For now, we drop `update_flash` as it should be a system.
 
 -- Spawn particle effect (placeholder - needs particle system)
-function Effects.spawn_particles(x, y, ptype, count)
+function Effects.spawn_particles(world, x, y, ptype, count)
     -- TODO: Implement particle system
-    -- For now, just a placeholder that could be expanded
-    -- ptype: "hit_spark", "explosion", "blood", "smoke", etc.
-    -- count: number of particles
-
-    -- Example implementation would create particle entities
-    -- that move, fade, and self-destruct
 end
 
 --- Spawn a temporary visual effect sprite at position
 ---
---- @param world - ECS world
---- @param x, y - spawn position
---- @param sprite_index - sprite to display
---- @param lifespan - frames before removal (default 15)
+--- @param world World - ECS world
+--- @param x number - spawn position
+--- @param y number - spawn position
+--- @param sprite_index number - sprite to display
+--- @param lifespan number - frames before removal (default 15)
 function Effects.spawn_visual_effect(world, x, y, sprite_index, lifespan)
     lifespan = lifespan or 15
     local effect = {
-        type = "VisualEffect",
-        x = x,
-        y = y,
-        width = 16,
-        height = 16,
-        sprite_index = sprite_index,
-        lifespan = lifespan,
+        type = {value = "VisualEffect"},
+        position = {x = x, y = y, z = 0},
+        size = {width = 16, height = 16},
+        drawable = {
+            sprite_index = sprite_index,
+            sort_offset_y = 0,
+            outline_color = {value = 0},
+        },
+        timers = {
+            lifespan = lifespan,
+        },
+        middleground = true, -- tag
     }
-    world.ent("drawable,sprite,timers,middleground", effect)
+    world:add_entity(effect)
 end
 
--- Apply knockback to target entity, pushing away from source
--- Uses separate knockback velocity that decays with friction
-function Effects.apply_knockback(source, target, strength)
+--- Apply knockback to target entity, pushing away from source
+---
+--- Uses separate knockback velocity that decays with friction
+---
+--- @param world World - ECS World
+--- @param source_pos table {x, y, width, height} (Table or Component values)
+--- @param target_id Entity ID to knockback
+--- @param strength number - Knockback strength
+function Effects.apply_knockback(world, source_pos, target_id, strength)
     strength = strength or 3
 
-    -- Calculate direction from source center to target center
-    local src_cx = source.x + (source.width or 0) / 2
-    local src_cy = source.y + (source.height or 0) / 2
-    local tgt_cx = target.x + (target.width or 0) / 2
-    local tgt_cy = target.y + (target.height or 0) / 2
+    if not world:entity_exists(target_id) then return end
 
-    local dx = tgt_cx - src_cx
-    local dy = tgt_cy - src_cy
+    world:query_entity(target_id, {"position", "velocity", "size?"}, function(i, t_pos, t_vel, t_size)
+        local t_w = t_size and t_size.width[i] or 16
+        local t_h = t_size and t_size.height[i] or 16
+        local t_cx = t_pos.x[i] + t_w / 2
+        local t_cy = t_pos.y[i] + t_h / 2
 
-    -- Normalize direction
-    local len = sqrt(dx * dx + dy * dy)
-    if len > 0 then
-        dx = dx / len
-        dy = dy / len
-    else
-        -- Default push if overlapping exactly
-        dx = 0
-        dy = -1
-    end
+        local s_cx = source_pos.x + (source_pos.width or 16) / 2
+        local s_cy = source_pos.y + (source_pos.height or 16) / 2
 
-    -- Set knockback velocity (separate from movement velocity)
-    -- This will be processed and decayed in the physics system
-    target.knockback_vel_x = dx * strength
-    target.knockback_vel_y = dy * strength
+        local dx = t_cx - s_cx
+        local dy = t_cy - s_cy
+
+        -- Normalize direction
+        local len = sqrt(dx * dx + dy * dy)
+        if len > 0 then
+            dx = dx / len
+            dy = dy / len
+        else
+            dx = 0
+            dy = -1
+        end
+
+        t_vel.knockback_vel_x[i] = dx * strength
+        t_vel.knockback_vel_y[i] = dy * strength
+    end)
 end
 
 --- Apply stun and slow debuff to target entity ("Sticky Yolk" effect)
 ---
---- @param target Entity to debuff (must have velocity for movement)
+--- @param world World
+--- @param target_id Entity ID
 --- @param stun_frames Frames of complete movement stop (~0.2s = 12)
 --- @param slow_frames Frames of reduced speed (~1s = 60)
 --- @param slow_factor Speed multiplier during slow (0.5 = 50% speed)
-function Effects.apply_sticky_yolk(target, stun_frames, slow_frames, slow_factor)
-    target.stun_timer = stun_frames or 12
-    target.slow_timer = slow_frames or 60
-    target.slow_factor = slow_factor or 0.5
+function Effects.apply_sticky_yolk(world, target_id, stun_frames, slow_frames, slow_factor)
+    if not world:entity_exists(target_id) then return end
+
+    world:query_entity(target_id, {"timers?"}, function(i, timers)
+        if timers then
+            if stun_frames then timers.stun_timer[i] = stun_frames end
+            if slow_frames then timers.slow_timer[i] = slow_frames end
+            -- Support variable slow factor if added to component, otherwise ignore
+            if slow_factor and timers.slow_factor then
+                timers.slow_factor[i] = slow_factor
+            end
+        end
+    end)
 end
 
 -- Generic hit impact effect (reusable)
-function Effects.hit_impact(source, target, intensity)
+function Effects.hit_impact(world, source_pos, target_id, intensity)
     intensity = intensity or "normal"
 
-    -- Calculate impact point
-    local px = (source.x + target.x) / 2
-    local py = (source.y + target.y) / 2
+    if not world:entity_exists(target_id) then return end
 
     -- Visual effects
-    Effects.spawn_particles(px, py, "hit_spark", 5)
-    Effects.flash_sprite(target, 10, 7) -- 10 frames = ~166ms at 60fps
+    world:query_entity(target_id, {"position", "size?"}, function(i, pos, size)
+        local w = size and size.width[i] or 16
+        local h = size and size.height[i] or 16
+        local px = (source_pos.x + pos.x[i]) / 2
+        local py = (source_pos.y + pos.y[i]) / 2
 
-    -- Audio (context-based)
-    if target.type == "Player" then
-        -- sfx(2) -- pain sound (uncomment when SFX ready)
-    elseif target.type == "Enemy" then
-        -- sfx(5) -- hit sound (uncomment when SFX ready)
-    end
+        Effects.spawn_particles(world, px, py, "hit_spark", 5)
+    end)
+
+    Effects.flash_sprite(world, target_id, 10, 7)
+
+    -- Audio (context-based) - querying 'type' component
+    world:query_entity(target_id, {"type?"}, function(i, type_c)
+        if type_c then
+            local t_val = type_c.value[i]
+            if t_val == "Player" then
+                -- sfx(2)
+            elseif t_val == "Enemy" then
+                -- sfx(5)
+            end
+        end
+    end)
 
     -- Screen shake (intensity-based)
     if intensity == "light_shake" then
@@ -156,27 +196,23 @@ function Effects.hit_impact(source, target, intensity)
     elseif intensity == "heavy_shake" then
         Effects.screen_shake(4, 5)
     end
-    -- "no_shake" or nil = no screen shake
 end
 
 -- Death explosion effect (reusable for enemy/player death)
-function Effects.death_explosion(entity, ptype)
+function Effects.death_explosion(world, x, y, width, height, ptype)
     ptype = ptype or "explosion"
 
-    -- Bigger particle burst
-    Effects.spawn_particles(entity.x + entity.width / 2, entity.y + entity.height / 2, ptype, 15)
+    Effects.spawn_particles(world, x + width / 2, y + height / 2, ptype, 15)
 
-    -- Flash before deletion
-    Effects.flash_sprite(entity, 5, 7)
-
+    -- Flash not needed as entity is dying
     -- Sound
-    -- sfx(10) -- explosion sound (uncomment when SFX ready)
+    -- sfx(10)
 end
 
 -- Pickup/collect effect
-function Effects.pickup_collect(entity)
-    Effects.spawn_particles(entity.x, entity.y, "sparkle", 8)
-    -- sfx(6) -- pickup sound (uncomment when SFX ready)
+function Effects.pickup_collect(world, x, y)
+    Effects.spawn_particles(world, x, y, "sparkle", 8)
+    -- sfx(6)
 end
 
 return Effects

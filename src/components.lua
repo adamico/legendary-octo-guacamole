@@ -56,8 +56,9 @@ return function(world)
       hp_drain_timer = "u64",
       stun_timer = "u64",
       slow_timer = "u64",
+      slow_factor = "f64", -- Added for variable slow strength
       melee_cooldown = "u64",
-      lifespan = "u64", -- For temporary entities like explosions/hitboxes
+      lifespan = "u64",    -- For temporary entities like explosions/hitboxes
    })
    world:component("shooter", {
       max_hp_to_shot_cost_ratio = "f64",
@@ -117,6 +118,7 @@ return function(world)
       sprite_index = "u64",
       flip_x = "value", -- Boolean
       flip_y = "value", -- Boolean
+      rotation = "f64", -- Rotation angle (0, 90, 180, 270)
       -- Composite sprite support
       sprite_top = "u64",
       sprite_bottom = "u64",

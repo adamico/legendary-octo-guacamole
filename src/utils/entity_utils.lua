@@ -88,15 +88,15 @@ end
 -- @param entity_data - entity property table
 -- @return the created entity
 function Utils.spawn_entity(world, tags, entity_data)
-    local ent = world.ent(tags, entity_data)
-
-    -- Auto-spawn shadow if entity has "shadow" tag
-    if tags:find("shadow") then
-        local Shadow = require("src/entities/shadow")
-        Shadow.spawn(world, ent)
+    -- Parse tags string into map for ECS
+    local tag_list = split(tags, ",")
+    for _, tag in ipairs(tag_list) do
+        entity_data[tag] = true
     end
 
-    return ent
+    local id = world:add_entity(entity_data)
+
+    return id
 end
 
 return Utils

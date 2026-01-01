@@ -1,6 +1,6 @@
 -- Rendering system: core entity drawing (Picobloc ECS)
 local qsort = require("lib/qsort")
-local GameConstants = require("src/game/game_config")
+local Rotator = require("src/systems/sprite_rotator")
 
 local Rendering = {}
 
@@ -104,7 +104,6 @@ function Rendering.draw_one(i, pos, drawable, size, flash, animatable, enemy_ai,
       return
    end
 
-   -- Composite Check
    local s_top = drawable.sprite_top and drawable.sprite_top[i]
    local s_bot = drawable.sprite_bottom and drawable.sprite_bottom[i]
 
@@ -112,8 +111,15 @@ function Rendering.draw_one(i, pos, drawable, size, flash, animatable, enemy_ai,
       local split = drawable.split_row and drawable.split_row[i]
       draw_outlined_composite(s_top, s_bot, sx, sy, w, h, split, outline, flip_x, flip_y)
    else
-      -- Normal Draw
+      -- Normal Draw with Rotation Support
       local sprite = drawable.sprite_index[i]
+      local rotation = drawable.rotation and drawable.rotation[i] or 0
+
+      -- Apply rotation if needed (returns Userdata or original sprite index)
+      if rotation ~= 0 then
+         sprite = Rotator.get(sprite, rotation)
+      end
+
       if outline then
          draw_outlined(sprite, sx, sy, outline, flip_x, flip_y)
       else

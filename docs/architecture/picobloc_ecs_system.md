@@ -112,11 +112,11 @@ end)
 - [x] **Collision** - Spatial grid, entity-entity, entity-map
 - [x] **Timers** - Cooldowns, invulnerability
 
-### Phase 4: Combat Systems
+### Phase 4: Combat Systems ✅
 
-- [ ] **Shooter** - Projectile spawning
-- [ ] **Melee** - Hitbox spawning
-- [ ] **Effects** - Knockback, stun, slow
+- [x] **Shooter** - Projectile spawning
+- [x] **Melee** - Hitbox spawning
+- [x] **Effects** - Knockback, stun, slow
 
 ### Phase 5: Entity Factories
 

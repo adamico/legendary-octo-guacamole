@@ -148,7 +148,7 @@ end
 
 function Collision.resolve_all(world)
     for _, entity in ipairs(Collision.active_proxies) do
-        Collision.resolve_entities(entity)
+        Collision.resolve_entities(world, entity)
     end
 end
 
@@ -162,8 +162,9 @@ end
 
 --- Resolve collisions between entities
 ---
+--- @param world World
 --- @param entity1 Entity
-function Collision.resolve_entities(entity1)
+function Collision.resolve_entities(world, entity1)
     if not current_grid then return end
 
     -- Query nearby entities (spatial partitioning optimization)
@@ -177,7 +178,8 @@ function Collision.resolve_entities(entity1)
         local hb = get_hitbox(entity1)
         p_end_x = hb.x + hb.w / 2
         p_end_y = hb.y + hb.h / 2
-        p_start_x = p_end_x - (entity1.vel_x or 0)
+        p_start_x = p_end_x - (entity1.vel_x or 0) -- Use previous pos if available?
+        -- Simplified backward projection
         p_start_y = p_end_y - (entity1.vel_y or 0)
     end
 
@@ -215,7 +217,7 @@ function Collision.resolve_entities(entity1)
                 local handler = Collision.CollisionHandlers.entity[key]
 
                 if handler then
-                    handler(entity1, entity2)
+                    handler(world, entity1, entity2)
                 end
             end
         end

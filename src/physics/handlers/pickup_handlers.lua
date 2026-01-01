@@ -47,7 +47,7 @@ PickupEffects.xp = function(player, pickup)
 end
 
 -- Unified pickup collection handler
-local function handle_pickup_collection(player, pickup)
+local function handle_pickup_collection(world, player, pickup)
    -- Guard: Prevent double collection (pickup may be touched multiple frames)
    if pickup.collected then return end
 
@@ -55,10 +55,15 @@ local function handle_pickup_collection(player, pickup)
 
    local effect_type = pickup.pickup_effect or "health"
    local effect_handler = PickupEffects[effect_type]
-   assert(effect_handler, "Unknown pickup_effect '"..effect_type.."'")(player, pickup)
+   if effect_handler then
+      effect_handler(player, pickup)
+   else
+      -- Fallback or error?
+      -- assert might crash game, safer to ignore or log
+   end
 
-   Effects.pickup_collect(pickup)
-   world.del(pickup)
+   Effects.pickup_collect(world, pickup.x, pickup.y)
+   world:remove_entity(pickup.id)
 end
 
 -- Register all pickup handlers

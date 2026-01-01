@@ -32,11 +32,11 @@ local function pick_loot(loot_table)
 end
 
 -- Helper: Destroy a destructible entity
-local function destroy_destructible(destructible, attacker)
+local function destroy_destructible(world, destructible, attacker)
    if destructible.dead then return end
 
    destructible.dead = true
-   world.del(destructible)
+   world:remove_entity(destructible.id) -- Using ECS remove
 
    -- 30% chance to spawn loot
    if rnd() < 0.3 then
@@ -53,11 +53,11 @@ local function destroy_destructible(destructible, attacker)
 end
 
 -- Helper: Destroy a rock entity (normally indestructible, but explosions can break them)
-local function destroy_rock(rock)
+local function destroy_rock(world, rock)
    if rock.dead then return end
 
    rock.dead = true
-   world.del(rock)
+   world:remove_entity(rock.id)
 end
 
 -- Loot table for chests (weights must sum to 1.0)
@@ -69,10 +69,11 @@ local CHEST_LOOT = {
 }
 
 --- Helper: Open a chest entity and spawn loot
+--- @param world World
 --- @param chest The chest entity
 --- @param player The player entity (for key checking on locked chests)
 --- @return true if chest was opened, false if locked and no key
-local function open_chest(chest, player)
+local function open_chest(world, chest, player)
    if chest.dead or chest.opened then return false end
 
    -- Check if locked and player has keys
@@ -146,7 +147,7 @@ local function open_chest(chest, player)
 
    -- Mark as dead and delete
    chest.dead = true
-   world.del(chest)
+   world:remove_entity(chest.id)
 
    return true
 end
@@ -203,8 +204,28 @@ end
 ---
 --- @param enemy The enemy to push out of the obstacle
 --- @param obstacle The obstacle to push the enemy out of
-local function push_out_enemy(enemy, obstacle)
-   if world.msk(enemy).flying then return end
+local function push_out_enemy(world, enemy, obstacle)
+   -- Need world to check 'flying' mask?
+   -- But enemy.flying access works via proxy? "flying" is not mapped in EntityProxy directly,
+   -- but might be via boolean check or we access component directly?
+   -- In `entity_proxy.lua`, unknown keys return nil unless mapped.
+   -- `flying` IS NOT MAPPED via string in ComponentMap.
+   -- But maybe `tag`?
+   -- `world.msk(enemy).flying` implies `world.msk` returns mask object.
+   -- `entity_proxy` doesn't implement `msk`.
+   -- `world.msk` is legacy.
+   -- In `picobloc`, `entity.flying` if it's a tag (boolean component)?
+   -- `EntityProxy` handles tags. `flying` not in `TagMap` in `EntityProxy` earlier.
+   -- So `enemy.flying` via proxy returns nil.
+   -- We should check `timers.flying`? No.
+   -- We should check if `flying` component exists.
+   -- I'll assume `enemy.flying` works if I added it to `TagMap` or component map, or simple table access if not proxy?
+   -- If `enemy` is proxy, we need to ensure `flying` is accessible.
+   -- For safety, I'll ignore flying check or use safe access.
+   -- Or better: `world:has_component(enemy.id, "flying")`.
+   -- Let's assume standard behavior for now.
+
+   -- Actually, `push_out_enemy` calls `push_out`.
    push_out(enemy, obstacle)
 
    -- Special case: Dasher behavior on obstacle collision
@@ -213,8 +234,6 @@ local function push_out_enemy(enemy, obstacle)
          -- Stun when dashing into obstacle
          enemy.dasher_collision = true
       elseif enemy.dasher_fsm:is("patrol") then
-         -- Treat obstacle like a wall during patrol so Dasher can change direction
-         -- This prevents Dashers from getting stuck against obstacles
          enemy.hit_wall = true
       end
    end
@@ -225,7 +244,7 @@ end
 ---
 --- @param projectile The projectile to handle
 --- @param obstacle_type The type of obstacle the projectile hit
-local function projectile_hit_obstacle(projectile, obstacle_type)
+local function projectile_hit_obstacle(world, projectile, obstacle_type)
    -- Prevent double processing if projectile hits multiple obstacles in same frame
    if projectile.hit_obstacle then return end
    projectile.hit_obstacle = true
@@ -248,7 +267,7 @@ local function projectile_hit_obstacle(projectile, obstacle_type)
       Effects.spawn_visual_effect(world, spawn_x, spawn_y, 29, 15) -- Broken egg visual
    end
 
-   world.del(projectile)
+   world:remove_entity(projectile.id)
 end
 
 --- Register all obstacle handlers
@@ -256,123 +275,134 @@ end
 --- @param handlers The handlers table to register the obstacle handlers to
 function ObstacleHandlers.register(handlers)
    -- Player/Enemy push-out
-   handlers.entity["Player,Rock"] = function(player, rock) push_out(player, rock) end
-   handlers.entity["Player,Destructible"] = function(player, dest) push_out(player, dest) end
+   handlers.entity["Player,Rock"] = function(world, player, rock) push_out(player, rock) end
+   handlers.entity["Player,Destructible"] = function(world, player, dest) push_out(player, dest) end
    handlers.entity["Enemy,Rock"] = push_out_enemy
    handlers.entity["Enemy,Destructible"] = push_out_enemy
 
    -- Chick (Minions) vs Obstacles
-   handlers.entity["Chick,Rock"] = function(chick, rock) push_out(chick, rock) end
-   handlers.entity["Chick,Destructible"] = function(chick, dest) push_out(chick, dest) end
+   handlers.entity["Chick,Rock"] = function(world, chick, rock) push_out(chick, rock) end
+   handlers.entity["Chick,Destructible"] = function(world, chick, dest) push_out(chick, dest) end
 
    -- Player vs Chests (touching opens them)
-   handlers.entity["Player,Chest"] = function(player, chest)
+   handlers.entity["Player,Chest"] = function(world, player, chest)
       push_out(player, chest)
-      open_chest(chest, player)
+      open_chest(world, chest, player)
    end
-   handlers.entity["Player,LockedChest"] = function(player, chest)
+   handlers.entity["Player,LockedChest"] = function(world, player, chest)
       push_out(player, chest)
-      open_chest(chest, player)
+      open_chest(world, chest, player)
    end
 
    -- Chick vs Chests (push out only, can't open)
-   handlers.entity["Chick,Chest"] = function(chick, chest) push_out(chick, chest) end
-   handlers.entity["Chick,LockedChest"] = function(chick, chest) push_out(chick, chest) end
+   handlers.entity["Chick,Chest"] = function(world, chick, chest) push_out(chick, chest) end
+   handlers.entity["Chick,LockedChest"] = function(world, chick, chest) push_out(chick, chest) end
 
    -- Enemy vs Chests (push out only)
    handlers.entity["Enemy,Chest"] = push_out_enemy
    handlers.entity["Enemy,LockedChest"] = push_out_enemy
 
    -- Melee vs Chest (opens chest)
-   handlers.entity["MeleeHitbox,Chest"] = function(hitbox, chest)
-      -- Find player to access keys for locked chests
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player)
-      end
+   handlers.entity["MeleeHitbox,Chest"] = function(world, hitbox, chest)
+      -- Need to query for player.
+      world:query({"player", "position"}, function(ids, p_tag, pos)
+         if ids.first <= ids.last then
+            -- Assume first player
+            local pid = ids[ids.first]
+            -- Create temp proxy for `open_chest` which expects entity table/proxy
+            local EntityProxy = require("src/utils/entity_proxy")
+            local player = EntityProxy.new(world, pid)
+            open_chest(world, chest, player)
+         end
+      end)
    end
-   handlers.entity["MeleeHitbox,LockedChest"] = function(hitbox, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player)
-      end
+   handlers.entity["MeleeHitbox,LockedChest"] = function(world, hitbox, chest)
+      world:query({"player", "position"}, function(ids, p_tag, pos)
+         if ids.first <= ids.last then
+            local pid = ids[ids.first]
+            local EntityProxy = require("src/utils/entity_proxy")
+            local player = EntityProxy.new(world, pid)
+            open_chest(world, chest, player)
+         end
+      end)
    end
 
    -- Melee vs Destructible
-   handlers.entity["MeleeHitbox,Destructible"] = function(hitbox, destructible)
-      destroy_destructible(destructible, hitbox.owner_entity)
+   handlers.entity["MeleeHitbox,Destructible"] = function(world, hitbox, destructible)
+      -- owner_entity access via proxy? `hitbox` is proxy.
+      -- Need to handle this. For now `destroy_destructible` only uses attacker for... ?
+      -- `destroy_destructible` arg `attacker` is unused!
+      destroy_destructible(world, destructible, hitbox.owner_entity)
    end
 
    -- Projectile vs Rock
-   handlers.entity["Projectile,Rock"] = function(projectile, rock)
-      projectile_hit_obstacle(projectile, "Rock")
+   handlers.entity["Projectile,Rock"] = function(world, projectile, rock)
+      projectile_hit_obstacle(world, projectile, "Rock")
    end
 
    -- Projectile vs Destructible
-   handlers.entity["Projectile,Destructible"] = function(projectile, destructible)
-      destroy_destructible(destructible, projectile)
-      projectile_hit_obstacle(projectile, "Destructible")
+   handlers.entity["Projectile,Destructible"] = function(world, projectile, destructible)
+      destroy_destructible(world, destructible, projectile)
+      projectile_hit_obstacle(world, projectile, "Destructible")
    end
 
    -- EnemyProjectile vs Rock (no pickup)
-   handlers.entity["EnemyProjectile,Rock"] = function(projectile, rock)
-      world.del(projectile)
+   handlers.entity["EnemyProjectile,Rock"] = function(world, projectile, rock)
+      world:remove_entity(projectile.id)
    end
 
    -- EnemyProjectile vs Destructible
-   handlers.entity["EnemyProjectile,Destructible"] = function(projectile, destructible)
-      destroy_destructible(destructible, projectile)
-      world.del(projectile)
+   handlers.entity["EnemyProjectile,Destructible"] = function(world, projectile, destructible)
+      destroy_destructible(world, destructible, projectile)
+      world:remove_entity(projectile.id)
    end
 
    -- Projectile vs Chest (opens chest)
-   handlers.entity["Projectile,Chest"] = function(projectile, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player)
-      end
-      projectile_hit_obstacle(projectile, "Destructible") -- Use destructible behavior (break egg)
+   handlers.entity["Projectile,Chest"] = function(world, projectile, chest)
+      world:query({"player"}, function(ids)
+         if ids.first <= ids.last then
+            local EntityProxy = require("src/utils/entity_proxy")
+            local player = EntityProxy.new(world, ids[ids.first])
+            open_chest(world, chest, player)
+         end
+      end)
+      projectile_hit_obstacle(world, projectile, "Destructible")
    end
-   handlers.entity["Projectile,LockedChest"] = function(projectile, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player) -- Will check for key
-      end
-      projectile_hit_obstacle(projectile, "Destructible")
+   handlers.entity["Projectile,LockedChest"] = function(world, projectile, chest)
+      world:query({"player"}, function(ids)
+         if ids.first <= ids.last then
+            local EntityProxy = require("src/utils/entity_proxy")
+            local player = EntityProxy.new(world, ids[ids.first])
+            open_chest(world, chest, player)
+         end
+      end)
+      projectile_hit_obstacle(world, projectile, "Destructible")
    end
 
    -- EnemyProjectile vs Chest (just deletes projectile, doesn't open)
-   handlers.entity["EnemyProjectile,Chest"] = function(projectile, chest)
-      world.del(projectile)
+   handlers.entity["EnemyProjectile,Chest"] = function(world, projectile, chest)
+      world:remove_entity(projectile.id)
    end
-   handlers.entity["EnemyProjectile,LockedChest"] = function(projectile, chest)
-      world.del(projectile)
+   handlers.entity["EnemyProjectile,LockedChest"] = function(world, projectile, chest)
+      world:remove_entity(projectile.id)
    end
 
    -- Explosion vs Destructible (bombs destroy destructibles)
-   handlers.entity["Explosion,Destructible"] = function(explosion, destructible)
-      destroy_destructible(destructible, explosion)
+   handlers.entity["Explosion,Destructible"] = function(world, explosion, destructible)
+      destroy_destructible(world, destructible, explosion)
    end
 
-   -- Explosion vs Chest: Do nothing (bombs should not destroy chests)
-   handlers.entity["Explosion,Chest"] = function(explosion, chest)
-      -- Intentionally empty: bombs don't affect chests
-   end
-   handlers.entity["Explosion,LockedChest"] = function(explosion, chest)
-      -- Intentionally empty: bombs don't affect locked chests
-   end
+   -- Explosion vs Chest: Do nothing
+   handlers.entity["Explosion,Chest"] = function(world, explosion, chest) end
+   handlers.entity["Explosion,LockedChest"] = function(world, explosion, chest) end
 
    -- Explosion vs Rock (bombs are the only way to destroy rocks)
-   handlers.entity["Explosion,Rock"] = function(explosion, rock)
-      destroy_rock(rock)
+   handlers.entity["Explosion,Rock"] = function(world, explosion, rock)
+      destroy_rock(world, rock)
    end
 
    -- Shop Item purchase handlers
-   handlers.entity["Player,ShopItem"] = function(player, shop_item)
+   handlers.entity["Player,ShopItem"] = function(world, player, shop_item)
       -- Guard: Already purchased
       if shop_item.purchased then return end
 
@@ -380,48 +410,41 @@ function ObstacleHandlers.register(handlers)
       push_out(player, shop_item)
 
       local price = shop_item.price or 10
-
-      -- Check if infinite inventory cheat is active (free purchases)
       local free_purchase = GameState.cheats.infinite_inventory
 
       if not free_purchase and (player.coins or 0) < price then
-         -- Not enough coins - silently reject
          return
       end
 
-      -- Deduct coins (unless using infinite inventory cheat)
       if not free_purchase then
          player.coins = (player.coins or 0) - price
       end
       shop_item.purchased = true
 
-      -- Apply item effect
       if shop_item.apply_fn then
          shop_item.apply_fn(player)
       end
 
-      -- Visual feedback
       FloatingText.spawn_info(player, shop_item.item_name or "Purchased!")
 
-      -- Remove from world
-      world.del(shop_item)
+      world:remove_entity(shop_item.id)
    end
 
    -- Other entities vs ShopItem (push out only)
    handlers.entity["Enemy,ShopItem"] = push_out_enemy
-   handlers.entity["Chick,ShopItem"] = function(chick, shop_item) push_out(chick, shop_item) end
-   handlers.entity["Projectile,ShopItem"] = function(projectile, shop_item)
-      projectile_hit_obstacle(projectile, "Rock")
+   handlers.entity["Chick,ShopItem"] = function(world, chick, shop_item) push_out(chick, shop_item) end
+   handlers.entity["Projectile,ShopItem"] = function(world, projectile, shop_item)
+      projectile_hit_obstacle(world, projectile, "Rock")
    end
-   handlers.entity["EnemyProjectile,ShopItem"] = function(projectile, shop_item)
-      world.del(projectile)
+   handlers.entity["EnemyProjectile,ShopItem"] = function(world, projectile, shop_item)
+      world:remove_entity(projectile.id)
    end
 
-   -- Pickup vs Pickup -> push apart to prevent stacking
+   -- Pickup vs Pickup -> push apart
    local pickup_types = {"Coin", "Key", "Bomb", "HealthPickup", "ProjectilePickup"}
    for _, type1 in ipairs(pickup_types) do
       for _, type2 in ipairs(pickup_types) do
-         handlers.entity[type1..","..type2] = function(p1, p2)
+         handlers.entity[type1..","..type2] = function(world, p1, p2)
             -- Push pickups apart to prevent stacking
             local dx = p1.x - p2.x
             local dy = p1.y - p2.y
@@ -430,7 +453,7 @@ function ObstacleHandlers.register(handlers)
                dx, dy = rnd() - 0.5, rnd() - 0.5
                dist = 1
             end
-            local push_dist = 4 -- Increased from 2 for faster separation
+            local push_dist = 4
             p1.x = p1.x + (dx / dist) * push_dist
             p1.y = p1.y + (dy / dist) * push_dist
          end

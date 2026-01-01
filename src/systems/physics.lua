@@ -188,8 +188,8 @@ function Physics.z_axis(world)
                   -- Handle impact
                   -- Requires spawning entities etc.
                   -- Defer destruction to world.del(ids[i])?
-                  -- picobloc deletion: world:del_entity(ids[i])
-                  world:del_entity(ids[i])
+                  -- picobloc deletion: world:remove_entity(ids[i])
+                  world:remove_entity(ids[i])
 
                   -- Spawning logic for egg hatching omitted for brevity in this chunk
                   -- Should extract to specific handler or system later
