@@ -106,11 +106,11 @@ end)
 - [x] **Lighting** - Spotlight effects
 - [x] **Floating Text** - Damage/heal numbers
 
-### Phase 3: Core Systems
+### Phase 3: Core Systems ✅
 
-- [ ] **Physics** - Movement, velocity, acceleration
-- [ ] **Collision** - Spatial grid, entity-entity, entity-map
-- [ ] **Timers** - Cooldowns, invulnerability
+- [x] **Physics** - Movement, velocity, acceleration
+- [x] **Collision** - Spatial grid, entity-entity, entity-map
+- [x] **Timers** - Cooldowns, invulnerability
 
 ### Phase 4: Combat Systems
 

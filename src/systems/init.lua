@@ -24,8 +24,10 @@ local Systems = {}
 -- Collision systems (from PhysicsCore aggregator)
 Systems.CollisionHandlers = PhysicsCore.Handlers
 Systems.resolve_entities = PhysicsCore.resolve_entities
+Systems.resolve_all = PhysicsCore.resolve_all
 Systems.update_spatial_grid = PhysicsCore.update_spatial_grid
 Systems.resolve_map = PhysicsCore.resolve_map
+Systems.resolve_map_all = PhysicsCore.resolve_map_all
 
 -- Input (from top-level module)
 Systems.read_input = Input.read_input

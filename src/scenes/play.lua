@@ -216,9 +216,7 @@ function Play:update()
    Systems.acceleration(world)
    Systems.z_axis(world)
    Systems.knockback_pre(world) -- Add knockback to velocity before collision
-   world.sys("map_collidable,velocity", function(e)
-      Systems.resolve_map(e, current_room, camera_manager)
-   end)()
+   Systems.resolve_map_all(world, current_room, camera_manager)
    Systems.velocity(world)
    Systems.knockback_post(world) -- Decay knockback after movement
 
@@ -233,9 +231,7 @@ function Play:update()
 
    -- Resolve Entity Collisions (Optimized with single grid build)
    Systems.update_spatial_grid(world)
-   world.sys("collidable,velocity", Systems.resolve_entities)()
-   world.sys("collidable,player", Systems.resolve_entities)()       -- Ensure player checks even if idle
-   world.sys("collidable,melee_hitbox", Systems.resolve_entities)() -- Melee hitbox vs Enemy collision
+   Systems.resolve_all(world)
 
    -- Timers & Health (self-iterating)
    Systems.health_regen(world)

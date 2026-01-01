@@ -13,7 +13,9 @@ Physics.Handlers = Handlers
 
 -- Re-export common functions for convenience
 Physics.resolve_entities = Collision.resolve_entities
+Physics.resolve_all = Collision.resolve_all
 Physics.update_spatial_grid = Collision.update_spatial_grid
 Physics.resolve_map = Collision.resolve_map
+Physics.resolve_map_all = Collision.resolve_map_all
 
 return Physics

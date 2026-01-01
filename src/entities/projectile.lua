@@ -54,8 +54,9 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
             owner = config.owner or "player",
         },
 
-        -- Transform
-        position = {x = x, y = y},
+        -- Z-axis physics
+        -- Migrated from projectile_physics to core components
+        position = {x = x, y = y, z = initial_z},
         size = {width = config.width or 16, height = config.height or 16},
         direction = {
             dir_x = dx,
@@ -66,8 +67,21 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         velocity = {
             vel_x = dx * speed,
             vel_y = dy * speed,
+            vel_z = 0,
             sub_x = 0,
             sub_y = 0,
+        },
+
+        acceleration = {
+            accel = 0,
+            friction = 0,
+            max_speed = 0,
+            gravity_z = gravity_z,
+        },
+
+        lifetime = {
+            age = 0,
+            max_age = max_age,
         },
 
         -- Collision
@@ -79,15 +93,6 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
                 oy = config.hitbox_offset_y or 4,
             },
             map_collidable = tag_set.map_collidable or false,
-        },
-
-        -- Z-axis physics
-        projectile_physics = {
-            z = initial_z,
-            vel_z = 0,
-            gravity_z = gravity_z,
-            age = 0,
-            max_age = max_age,
         },
 
         -- Combat

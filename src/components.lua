@@ -14,10 +14,14 @@ return function(world)
       accel = "f64",
       friction = "f64",
       max_speed = "f64",
+      gravity_z = "f64", -- Migrated from projectile_physics
    })
    world:component("velocity", {
       vel_x = "f64",
       vel_y = "f64",
+      vel_z = "f64", -- Migrated from projectile_physics
+      knockback_vel_x = "f64",
+      knockback_vel_y = "f64",
       sub_x = "f64",
       sub_y = "f64",
    })
@@ -25,6 +29,10 @@ return function(world)
       dir_x = "f64",
       dir_y = "f64",
       facing = "value", -- String: "up", "down", "left", "right"
+   })
+   world:component("lifetime", {
+      age = "u64",     -- Migrated from projectile_physics
+      max_age = "u64", -- Migrated from projectile_physics
    })
    world:component("collidable", {
       hitboxes = "value",       -- Table of per-direction hitboxes
@@ -41,11 +49,15 @@ return function(world)
       regen_delay = "u64",
       regen_trigger_field = "value", -- String name of field
    })
-   -- PRUNE: timers component - fields duplicated in shooter/invulnerability
+   -- Updated timers component with migrated/missing fields
    world:component("timers", {
-      shoot_cooldown = "u64", -- PRUNE: duplicated in shooter.shoot_cooldown
-      invuln_timer = "u64",   -- PRUNE: duplicated in invulnerability.invuln_timer
-      hp_drain_timer = "u64", -- PRUNE: move to hp_drain component
+      shoot_cooldown = "u64",
+      invuln_timer = "u64",
+      hp_drain_timer = "u64",
+      stun_timer = "u64",
+      slow_timer = "u64",
+      melee_cooldown = "u64",
+      lifespan = "u64", -- For temporary entities like explosions/hitboxes
    })
    world:component("shooter", {
       max_hp_to_shot_cost_ratio = "f64",
@@ -184,14 +196,7 @@ return function(world)
    world:component("projectile_type", {
       value = "value", -- String: "Egg", "EnemyBullet"
    })
-   -- REFACTOR: Migrate fields to core components and delete this component
-   world:component("projectile_physics", {
-      z = "f64",         -- REFACTOR: move to position.z
-      vel_z = "f64",     -- REFACTOR: move to velocity.vel_z
-      gravity_z = "f64", -- REFACTOR: move to acceleration.gravity_z
-      age = "u64",       -- REFACTOR: move to new "lifetime" component
-      max_age = "u64",   -- REFACTOR: move to new "lifetime" component
-   })
+
    -- PRUNE: projectile_owner - could use tags "player_projectile" / "enemy_projectile"
    world:component("projectile_owner", {
       owner = "value", -- "player" or "enemy"

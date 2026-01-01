@@ -132,23 +132,39 @@ end
 ---
 --- @param world The ECS world instance
 function Collision.update_spatial_grid(world)
+    local EntityProxy = require("src/utils/entity_proxy")
     current_grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
-    world.sys("collidable", function(e)
-        current_grid:add(e, get_hitbox)
-    end)()
+    Collision.active_proxies = {}
+
+    world:query({"collidable", "position", "size", "type"}, function(ids, collidable, pos, size, type_c)
+        for i = ids.first, ids.last do
+            local id = ids[i]
+            local proxy = EntityProxy.new(world, id)
+            current_grid:add(proxy, get_hitbox)
+            table.insert(Collision.active_proxies, proxy)
+        end
+    end)
+end
+
+function Collision.resolve_all(world)
+    for _, entity in ipairs(Collision.active_proxies) do
+        Collision.resolve_entities(entity)
+    end
+end
+
+function Collision.resolve_map_all(world, room, camera_manager)
+    for _, entity in ipairs(Collision.active_proxies) do
+        if entity.map_collidable then
+            Collision.resolve_map(entity, room, camera_manager)
+        end
+    end
 end
 
 --- Resolve collisions between entities
 ---
 --- @param entity1 Entity
 function Collision.resolve_entities(entity1)
-    if not current_grid then
-        -- Fallback if update_spatial_grid wasn't called, but better to call it explicitly
-        current_grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
-        world.sys("collidable", function(e)
-            current_grid:add(e, get_hitbox)
-        end)()
-    end
+    if not current_grid then return end
 
     -- Query nearby entities (spatial partitioning optimization)
     local nearby = current_grid:get_nearby(entity1, get_hitbox)
@@ -158,9 +174,6 @@ function Collision.resolve_entities(entity1)
        entity1.type == "ProjectilePickup"
     local p_start_x, p_start_y, p_end_x, p_end_y
     if is_projectile and (abs(entity1.vel_x or 0) > 4 or abs(entity1.vel_y or 0) > 4) then
-        -- Only strictly needed for fast moving objects, but let's be safe
-        -- "Previous" position is roughly current - velocity
-        -- (Assuming this runs AFTER velocity application, which it does in play.lua)
         local hb = get_hitbox(entity1)
         p_end_x = hb.x + hb.w / 2
         p_end_y = hb.y + hb.h / 2
@@ -238,7 +251,7 @@ function Collision.resolve_map(entity, room, camera_manager)
         local cx = x + vox + (axis == "x" and move or 0)
         local cy = y + voy + (axis == "y" and move or 0)
 
-        local stx, sty, stile = find_solid_tile(cx, cy, w, h, entity, room)
+        local stx, sty, stile = find_solid_tile(cx, cy, w, h, entity)
         if stx then
             if handler then handler(entity, cx, cy, stx, sty, stile, room) end
 
