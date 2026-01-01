@@ -143,9 +143,6 @@ function Player.spawn(world, x, y)
       },
    })
 
-   -- TODO: Shadow rendering should query entities with position + shadow components.
-   -- No separate shadow entity needed with picobloc.
-
    return id
 end
 
