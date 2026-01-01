@@ -1,4 +1,41 @@
 local machine = require("lib/lua-state-machine/statemachine")
+
+--- @class RoomBounds
+--- @field x number
+--- @field y number
+--- @field w number
+--- @field h number
+
+--- @class RoomLifecycle
+--- @field is fun(self: RoomLifecycle, state: string): boolean
+--- @field enter fun(self: RoomLifecycle)
+--- @field spawn fun(self: RoomLifecycle)
+--- @field clear fun(self: RoomLifecycle)
+
+--- @class RoomDoor
+--- @field sprite number
+--- @field direction string
+
+--- @class Room
+--- @field tiles RoomBounds
+--- @field pixels RoomBounds
+--- @field enemy_positions table<integer, {x: number, y: number, type: string}>
+--- @field lifecycle RoomLifecycle
+--- @field doors? table<string, RoomDoor>
+--- @field combat_timer? number
+--- @field skull_timer? number
+--- @field skull_spawned? boolean
+--- @field skull_entity? EntityID
+--- @field room_type? string
+--- @field layout? {name: string, grid: string[]}
+--- @field contents_config? {wave_pattern?: table, enemies?: table}
+--- @field spawn_timer? number
+--- @field shop_items? table
+--- @field get_bounds fun(self: Room): {x1: number, y1: number, x2: number, y2: number}
+--- @field get_inner_bounds fun(self: Room): {x1: number, y1: number, x2: number, y2: number}
+--- @field get_center_tile fun(self: Room): {tx: number, ty: number}
+--- @field get_door_tile fun(self: Room, direction: string): {tx: number, ty: number}|nil
+
 local Room = Class("Room")
 
 function Room:initialize(tx, ty, w, h, is_safe)

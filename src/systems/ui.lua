@@ -1,6 +1,7 @@
 -- UI system: health bars, debug visualization
 
 local HitboxUtils = require("src/utils/hitbox_utils")
+local EntityProxy = require("src/utils/entity_proxy")
 
 local UI = {}
 
@@ -109,17 +110,32 @@ end
 -- Draw health bars for all entities with health
 -- @param world - ECS world
 function UI.draw_health_bars(world)
-   world.sys("health", draw_health_bar)()
+   world:query({"health", "position", "size?", "type?"}, function(ids, health, pos, size, type)
+      for i = ids.first, ids.last do
+         local e = EntityProxy.new(world, ids[i])
+         draw_health_bar(e)
+      end
+   end)
 end
 
 -- Draw debug hitboxes for all collidable entities
 -- @param world - ECS world
 function UI.draw_hitboxes(world)
-   world.sys("collidable", draw_hitbox)()
+   world:query({"collidable", "position"}, function(ids, collidable, pos)
+      for i = ids.first, ids.last do
+         local e = EntityProxy.new(world, ids[i])
+         draw_hitbox(e)
+      end
+   end)
 end
 
 function UI.draw_aim_lines(world)
-   world.sys("aiming", draw_aim_line)()
+   world:query({"shooter", "position", "player"}, function(ids, shooter, pos)
+      for i = ids.first, ids.last do
+         local e = EntityProxy.new(world, ids[i])
+         draw_aim_line(e)
+      end
+   end)
 end
 
 return UI

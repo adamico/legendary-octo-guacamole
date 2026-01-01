@@ -132,11 +132,11 @@ end)
 - [x] **AI dispatch** - Enemy behavior FSMs (using EntityProxy)
 - [x] **Spawner** - Wave patterns, room population (player ID passed directly)
 
-### Phase 7: Cleanup
+### Phase 7: Cleanup ✅
 
-- [ ] Remove eggs.p8 dependency
+- [x] Remove eggs.p8 dependency
 - [x] Delete `src/entities/shadow.lua` (no longer needed)
-- [ ] Update all `world.sys()` → `world:query()`
+- [x] Update all `world.sys()` → `world:query()`
 
 ## Files
 

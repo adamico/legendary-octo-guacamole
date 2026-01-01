@@ -6,6 +6,10 @@ local Spawner = {}
 
 Spawner.indicator_sprite = SPAWNER_INDICATOR_SPRITE
 
+--- Update spawner logic for a specific room
+--- @param world ECSWorld - picobloc World
+--- @param room Room - current room
+--- @param player_id EntityID - player entity ID
 function Spawner.update(world, room, player_id)
     -- Regular enemy spawning (room is in spawning state)
     if room and room.lifecycle:is("spawning") then
@@ -31,15 +35,8 @@ function Spawner.update(world, room, player_id)
     end
 end
 
--- Draw methods unchanged... (elided/kept same by user usually, but here I'm only replacing functions I need to)
--- Wait, replace_file_content replaces a block.
--- I need to be careful not to delete drawing instructions if I'm replacing a huge chunk.
--- `Spawner.update` is at top. `spawn_skull` is at bottom.
--- I should probably do two replacements or one if contiguous. They are not contiguous.
-
--- Let's stick to replacing `Spawner.update` first.
-
-
+--- Draw spawner indicator for a specific room
+--- @param room Room - current room
 function Spawner.draw(room)
     if not room or not room.lifecycle:is("spawning") then return end
 
@@ -51,7 +48,10 @@ function Spawner.draw(room)
     end
 end
 
--- Check if space is free for spawning
+--- Check if space is free for spawning
+--- @param room Room - current room
+--- @param x number - x position
+--- @param y number - y position
 function Spawner.is_free_space(room, x, y)
     for _, pos in ipairs(room.enemy_positions) do
         local dx = x - pos.x
@@ -61,8 +61,9 @@ function Spawner.is_free_space(room, x, y)
     return true
 end
 
--- Populate room with enemies based on configuration
--- config: { wave_pattern = pattern } or legacy { enemies = { count, types } }
+--- Populate room with enemies based on configuration
+--- @param room Room - current room
+--- @param player EntityProxy - player entity
 function Spawner.populate(room, player)
     -- Early exit if not in populated state or no config
     if not room or not room.lifecycle:is("populated") or not room.contents_config then return end
@@ -167,7 +168,6 @@ function Spawner.populate(room, player)
             room.spawn_timer = 60
             return
         end
-        Log.info("Pattern "..tostring(pattern.name).." failed to find valid positions, falling back to random")
     end
 
     -- Random spawning (Fallback or primary if no pattern)
@@ -216,9 +216,11 @@ function Spawner.populate(room, player)
 
         -- Check if valid floor position
         local nx, ny = nudge_to_valid(rx, ry, etype)
-        if not nx then
+        if not nx or not ny then
             goto continue
         end
+        --- @cast nx number
+        --- @cast ny number
 
         -- Check distance from player
         local dx = nx - player.x
@@ -236,7 +238,11 @@ function Spawner.populate(room, player)
     end
 end
 
--- Spawn skull at farthest corner from player (outside screen)
+--- Spawn skull at farthest corner from player (outside screen)
+--- @param world ECSWorld - picobloc World
+--- @param room Room - current room
+--- @param player_id EntityID - player entity ID
+--- @param ignore_health_check boolean - whether to ignore player health check
 function Spawner.spawn_skull(world, room, player_id, ignore_health_check)
     if not room then return false end
 

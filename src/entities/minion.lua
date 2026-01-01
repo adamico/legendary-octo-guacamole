@@ -6,7 +6,7 @@ local EntityUtils = require("src/utils/entity_utils")
 local Minion = {}
 
 -- Spawn a minion at position
---- @param world World - picobloc World
+--- @param world ECSWorld - picobloc World
 --- @param x number - spawn x position
 --- @param y number - spawn y position
 --- @param minion_type string - type key in GameConstants.Minion (default: "Chick")
@@ -131,6 +131,11 @@ function Minion.spawn(world, x, y, minion_type, instance_data)
    -- Copy all parsed tags into entity
    for tag, _ in pairs(tag_set) do
       entity[tag] = true
+   end
+
+   -- Chicks can display emotions (not YolkSplat or Egg)
+   if minion_type == "Chick" then
+      entity.emotional = true
    end
 
    local id = world:add_entity(entity)

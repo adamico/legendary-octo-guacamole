@@ -1,11 +1,12 @@
 -- Emotions system: displays visual indicators above enemies based on AI state
 local GameConstants = require("src/game/game_config")
+local EntityProxy = require("src/utils/entity_proxy")
 
 local Emotions = {}
 
--- Set an emotion on an entity
--- @param entity: the entity to set the emotion on
--- @param emotion_type: "alert", "confused", or "idle"
+--- Set an emotion on an entity
+--- @param entity EntityProxy - the entity to set the emotion on
+--- @param emotion_type string - "alert", "confused", or "idle"
 function Emotions.set(entity, emotion_type)
     local config = GameConstants.Emotions[emotion_type]
     if not config then return end
@@ -33,8 +34,11 @@ function Emotions.update(world)
         end
     end
 
-    world.sys("enemy", update_emotion)()
-    world.sys("minion", update_emotion)()
+    world:query({"emotional"}, function(ids)
+        for i = ids.first, ids.last do
+            update_emotion(EntityProxy.new(world, ids[i]))
+        end
+    end)
 end
 
 -- Draw emotion indicators above entities using print with p8scii controls
@@ -64,8 +68,11 @@ function Emotions.draw(world)
         TextUtils.print_outlined(config.text, cx, final_cy, config.color, outline_col)
     end
 
-    world.sys("enemy", draw_emotion)()
-    world.sys("minion", draw_emotion)()
+    world:query({"emotional"}, function(ids)
+        for i = ids.first, ids.last do
+            draw_emotion(EntityProxy.new(world, ids[i]))
+        end
+    end)
 end
 
 return Emotions

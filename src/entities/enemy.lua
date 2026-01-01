@@ -6,11 +6,11 @@ local EntityUtils = require("src/utils/entity_utils")
 local Enemy = {}
 
 -- Unified spawn function using Type Object pattern
---- @param world World - picobloc World
+--- @param world ECSWorld - picobloc World
 --- @param x number - spawn x position
 --- @param y number - spawn y position
---- @param enemy_type string - type key in GameConstants.Enemy (default: "Skulker")
---- @param instance_data table - optional table with instance-specific overrides
+--- @param enemy_type? string - type key in GameConstants.Enemy (default: "Skulker")
+--- @param instance_data? table - optional table with instance-specific overrides
 function Enemy.spawn(world, x, y, enemy_type, instance_data)
     enemy_type = enemy_type or "Skulker"
     instance_data = instance_data or {}
@@ -135,6 +135,9 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
     for tag, _ in pairs(tag_set) do
         entity[tag] = true
     end
+
+    -- All enemies can display emotions
+    entity.emotional = true
 
     -- Add shooter component if tagged (requires full component data)
     if tag_set.shooter then

@@ -1,7 +1,7 @@
 return function(world)
    -- Identity/query tags (empty components for filtering)
    world:tag(
-      "background", "chest", "controllable", "destructible", "enemy",
+      "background", "chest", "controllable", "destructible", "emotional", "enemy",
       "flying", "locked", "middleground", "minion", "obstacle",
       "pickup", "player", "projectile", "shop_item", "skull",
       "spotlight", "sprite", "static", "world_obj", "yolk_splat"

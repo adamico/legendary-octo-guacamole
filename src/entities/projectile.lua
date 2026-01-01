@@ -6,13 +6,13 @@ local EntityUtils = require("src/utils/entity_utils")
 local Projectile = {}
 
 -- Unified spawn function using Type Object pattern
---- @param world World - picobloc World
+--- @param world ECSWorld - picobloc World
 --- @param x number - spawn x position
 --- @param y number - spawn y position
 --- @param dx number - direction x component (normalized)
 --- @param dy number - direction y component (normalized)
 --- @param projectile_type string - type key in GameConstants.Projectile (default: "Egg")
---- @param instance_data table - optional table with instance-specific overrides
+--- @param instance_data? table - optional table with instance-specific overrides
 function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     projectile_type = projectile_type or "Egg"
     instance_data = instance_data or {}
@@ -55,7 +55,6 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         },
 
         -- Z-axis physics
-        -- Migrated from projectile_physics to core components
         position = {x = x, y = y, z = initial_z},
         size = {width = config.width or 16, height = config.height or 16},
         direction = {

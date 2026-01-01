@@ -20,6 +20,16 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Completed Phase 7: Cleanup (eggs.p8 removal)**:
+  - **Deleted** `lib/eggs.p8/` directory entirely.
+  - **Refactored 11 files** from eggs.p8 API (`world.sys()`, `world.del()`) to picobloc API (`world:query()`, `world:remove_entity()`):
+    - `play.lua`, `input.lua`, `bomber.lua`, `dungeon_manager.lua`, `lifecycle/init.lua`, `health_regen.lua`, `ui.lua`, `hud.lua`, `emotions.lua`, `map_handlers.lua`, `death_handlers.lua`
+  - **Updated** `ARCHITECTURE.md` to reference picobloc instead of eggs.
+  - **Removed** erroneous `sys` field from picobloc ECSWorld type annotation.
+  - **Input module** now stores `shoot_dir` in module state for shooter system access.
+  - **Marked Phase 7 complete** in `picobloc_ecs_system.md`.
+  - **Future optimization**: emotions.lua could use a shared `emotional` tag for enemy/minion to simplify dual queries.
+
 - **Migrated Combat Systems to Picobloc ECS (Phase 4)**:
   - **ECS Migration**:
     - **`Shooter.update`**: Refactored to use `world:query()` for input handling and cooldowns. Updated `Entities.spawn_projectile` to be compatible.

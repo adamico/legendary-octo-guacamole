@@ -4,8 +4,7 @@ local Shadows = {}
 local EntityUtils = require("src/utils/entity_utils")
 
 --- Draw shadows for all entities with position + shadow + size components
---- @param world World - picobloc World
-
+--- @param world ECSWorld - picobloc World
 function Shadows.draw(world)
    -- Query entities with all required components
    -- size is needed for hitbox-based shadow positioning

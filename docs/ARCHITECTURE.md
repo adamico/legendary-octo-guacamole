@@ -20,7 +20,7 @@ graph TB
     end
     
     subgraph ECS Core
-        eggs["eggs (ECS Library)"]
+        picobloc["picobloc (ECS Library)"]
         World
     end
     
@@ -42,8 +42,8 @@ graph TB
     end
     
     main.lua --> SceneManager
-    Play --> eggs
-    eggs --> World
+    Play --> picobloc
+    picobloc --> World
     World --> Systems
     World --> Entities
 ```
@@ -89,7 +89,7 @@ drive/src/
 
 ## ECS Architecture
 
-Uses the **eggs** library. The `world` object manages entities (data) and systems (logic).
+Uses the **picobloc** library. The `world` object manages entities (data) and systems (logic).
 
 ### Entities
 

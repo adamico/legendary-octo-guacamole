@@ -69,12 +69,12 @@ DeathHandlers.Enemy = function(world, entity)
 
    Entities.spawn_pickup(world, xp_x, xp_y, "DNAStrand", {xp_amount = xp_value})
 
-   world.del(entity)
+   world:remove_entity(entity.id)
 end
 
 DeathHandlers.default = function(world, entity)
    Log.trace("Entity died: "..(entity.type or "Unknown"))
-   world.del(entity)
+   world:remove_entity(entity.id)
 end
 
 return DeathHandlers

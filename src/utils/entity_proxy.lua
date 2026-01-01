@@ -86,6 +86,14 @@
 --- @field pickup boolean
 --- @field obstacle boolean
 --- @field minion boolean
+--- @field bomb_cooldown number Transient field for bomber system cooldown
+--- @field explosion_radius number Transient field for bomber system explosion radius
+--- @field is_chest boolean Transient field for chest system
+--- @field purchased boolean Transient field for shop system
+--- @field price number Transient field for shop system
+--- @field item_name string Transient field for shop system
+--- @field emotion_timer number Transient field for emotions system
+--- @field emotion_phase number Transient field for emotions system
 local EntityProxy = {}
 EntityProxy.__index = EntityProxy
 

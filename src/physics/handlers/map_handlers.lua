@@ -26,7 +26,7 @@ function MapHandlers.register(handlers)
 
       -- Check for Pit (Silent sink)
       if fget(tile, FEATURE_FLAG_PIT) then
-         world.del(projectile)
+         world:remove_entity(projectile.id)
          return
       end
 
@@ -41,11 +41,11 @@ function MapHandlers.register(handlers)
          yolk_slow_factor = GameConstants.Player.yolk_slow_factor,
       })
 
-      world.del(projectile)
+      world:remove_entity(projectile.id)
    end
 
    handlers.map["EnemyProjectile"] = function(projectile)
-      world.del(projectile)
+      world:remove_entity(projectile.id)
    end
 
    handlers.map["Enemy"] = function(enemy)

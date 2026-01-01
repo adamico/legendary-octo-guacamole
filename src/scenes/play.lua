@@ -11,6 +11,7 @@ local Wander = require("src/ai/primitives/wander")
 local AI = require("src/ai")
 local AIDebug = require("src/systems/ai_debug")
 local Leveling = require("src/utils/leveling")
+local EntityProxy = require("src/utils/entity_proxy")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -63,18 +64,28 @@ function Play:enteredState()
       camera_manager:set_room(current_room)
       DungeonManager.setup_room(current_room, player, world)
       Minimap.visit(current_room) -- Mark new room as visited
-      world.sys("projectile", function(e) world.del(e) end)()
-      world.sys("pickup", function(e) world.del(e) end)()
-      world.sys("skull", function(e) world.del(e) end)()
+      -- Remove projectiles, pickups, skulls from previous room
+      world:query({"projectile"}, function(ids)
+         for i = ids.first, ids.last do world:remove_entity(ids[i]) end
+      end)
+      world:query({"pickup"}, function(ids)
+         for i = ids.first, ids.last do world:remove_entity(ids[i]) end
+      end)
+      world:query({"skull"}, function(ids)
+         for i = ids.first, ids.last do world:remove_entity(ids[i]) end
+      end)
       -- Teleport minions to player in new room
-      world.sys("minion", function(e)
-         e.x = player.x
-         e.y = player.y
-         if e.chick_fsm then
-            -- Reset behavior
-            Wander.reset(e)
+      world:query({"minion", "position"}, function(ids, pos)
+         for i = ids.first, ids.last do
+            pos.x[i] = player.x
+            pos.y[i] = player.y
+            -- Reset behavior if chick
+            local e = EntityProxy.new(world, ids[i])
+            if e.chick_fsm then
+               Wander.reset(e)
+            end
          end
-      end)()
+      end)
       Systems.FloatingText.clear()
       AI.ChickAI.clear_target() -- Clear painted target from previous room
    end)
@@ -205,7 +216,7 @@ function Play:update()
    DungeonManager.check_room_clear(current_room, world)
 
    -- Input
-   world.sys("controllable", Systems.read_input)()
+   Systems.read_input(world)
 
    -- Melee (health-gated attack)
    Systems.melee(world)

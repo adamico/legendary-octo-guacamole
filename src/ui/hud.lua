@@ -1,5 +1,6 @@
 local GameConstants = require("src/game/game_config")
 local Rendering = require("src/systems/rendering")
+local EntityProxy = require("src/utils/entity_proxy")
 
 local Hud = {}
 
@@ -40,26 +41,31 @@ end
 -- Draw shop item price tags (called in world-space before camera reset)
 -- @param shop_world - The ECS world to query for shop items
 function Hud.draw_shop_prices(shop_world)
-   shop_world.sys("shop_item,drawable", function(item)
-      if item.purchased then return end
+   shop_world:query({"shop_item", "drawable", "position"}, function(ids, shop_item, drawable, pos)
+      for i = ids.first, ids.last do
+         local item = EntityProxy.new(shop_world, ids[i])
+         if item.purchased then goto continue end
 
-      local price = item.price or 10
-      local price_str = "$"..price
-      local text_x = item.x + 8 - #price_str * 2 -- Center text (each char ~4px)
-      local text_y = item.y + 18                 -- Below the item
+         local price = item.price or 10
+         local price_str = "$"..price
+         local text_x = pos.x[i] + 8 - #price_str * 2 -- Center text (each char ~4px)
+         local text_y = pos.y[i] + 18                 -- Below the item
 
-      -- Draw price with shadow
-      print(price_str, text_x + 1, text_y + 1, 0) -- Shadow
-      print(price_str, text_x, text_y, 10)        -- Yellow text
+         -- Draw price with shadow
+         print(price_str, text_x + 1, text_y + 1, 0) -- Shadow
+         print(price_str, text_x, text_y, 10)        -- Yellow text
 
-      -- Draw item name above
-      if item.item_name then
-         local name_x = item.x + 8 - #item.item_name * 2
-         local name_y = item.y - 8
-         print(item.item_name, name_x + 1, name_y + 1, 0) -- Shadow
-         print(item.item_name, name_x, name_y, 7)         -- White text
+         -- Draw item name above
+         if item.item_name then
+            local name_x = pos.x[i] + 8 - #item.item_name * 2
+            local name_y = pos.y[i] - 8
+            print(item.item_name, name_x + 1, name_y + 1, 0) -- Shadow
+            print(item.item_name, name_x, name_y, 7)         -- White text
+         end
+
+         ::continue::
       end
-   end)()
+   end)
 end
 
 return Hud

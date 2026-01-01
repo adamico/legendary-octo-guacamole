@@ -27,7 +27,7 @@ local function draw_heart_sprite(x, y, type, config, colors)
       sprite = config.empty_heart_sprite or config.heart_sprite
    end
 
-   spr(sprite, x, y, false, false, 2, 2)
+   spr(sprite, x, y)
 
    pal()
 end
