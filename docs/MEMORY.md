@@ -20,6 +20,20 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Shop Room with Purchasable Items**:
+  - **Layout**: Created `shop_layout` in `room_layout_data.lua` with 3 purchasable item pedestals using `"S"` (shop_item) feature.
+  - **Entity**: Added `ShopItem` obstacle entity in `entities.lua` with sprite 58, hitbox 12x10 offset 2,6.
+  - **Shop Items Config**: Created `src/game/config/shop_items.lua` with 6 purchasable items:
+    - Heart Container ($15): +20 Max HP
+    - Speed Boots ($10): +0.3 Speed
+    - Bomb Pack ($5): +3 Bombs
+    - Key Ring ($8): +2 Keys
+    - Rapid Fire ($12): Fire Rate +25%
+    - Long Range ($10): Range +40
+  - **Purchase Logic**: Added `Player,ShopItem` handler in `obstacle_handlers.lua` - checks coins, applies effect, shows floating text, removes item.
+  - **Price Display**: Added `Hud.draw_shop_prices()` in `hud.lua` to render item names and prices in world-space.
+  - **Integration**: Updated `dungeon_manager.lua` to pre-select random shop items during generation and spawn ShopItem entities on room entry.
+  - **Collision Layer**: Added `ShopItem = CollisionLayers.OBSTACLE` to `collision.lua`.
 - **Reorganized Debug UI**:
   - **Groups**: Divided the F1 debug panel into logical "Cheats" and "Debug" sections using headers.
   - **Toggles**: Added interactive toggles for `show_grid`, `show_combat_timer`, and `show_pathfinding` alongside existing toggles.

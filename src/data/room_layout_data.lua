@@ -25,6 +25,7 @@ LayoutData.FEATURE_LEGEND = {
    ["W"] = "wall",         -- Interior wall (solid)
    ["C"] = "chest",        -- Normal chest (drops 1-3 pickups)
    ["L"] = "locked_chest", -- Locked chest (requires key, drops 2-6 pickups)
+   ["S"] = "shop_item",    -- Shop item pedestal (purchasable)
 }
 
 -- Cell pattern position offsets within 3×2 cell
@@ -71,10 +72,27 @@ LayoutData.CELL_HEIGHT = 2 -- tiles per cell vertically
 LayoutData.Layouts = {
    -- OPEN layouts (used for special rooms)
    open = {
-      room_types = {"start", "boss", "treasure", "shop", "combat"},
+      room_types = {"start", "boss", "treasure", "combat"},
       layout_type = "open",
       floor_pattern = "random",
       grid = nil
+   },
+
+   -- SHOP layout - 3 item pedestals
+   shop_layout = {
+      room_types = {"shop"},
+      layout_type = "shop",
+      floor_pattern = "random",
+      cell_pattern = {"bm", "bm", "bm"},
+      grid = {
+         ".........",
+         ".........",
+         ".........",
+         "..S.S.S..",
+         ".........",
+         ".........",
+         ".........",
+      }
    },
 
    -- COMBAT layouts - variety of obstacle patterns

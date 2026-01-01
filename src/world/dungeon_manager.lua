@@ -3,6 +3,7 @@ local Events = require("src/game/events")
 local RoomLayouts = require("src/world/room_layouts")
 local FloorPatterns = require("src/world/floor_patterns")
 local WavePatterns = require("src/world/wave_patterns")
+local ShopItems = require("src/game/config/shop_items")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles
@@ -221,6 +222,18 @@ function DungeonManager.place_room_obstacles(room)
    -- Pre-generate obstacle data with deterministic sprite selection (while RNG is seeded)
    room.obstacle_data = {}
 
+   -- For shop rooms, pre-select which items will be sold
+   local shop_items_selected = nil
+   if room.room_type == "shop" then
+      -- Count how many shop_item features are in the layout
+      local shop_count = 0
+      for _, f in ipairs(features) do
+         if f.feature == "shop_item" then shop_count += 1 end
+      end
+      shop_items_selected = ShopItems.pick_random_items(shop_count)
+   end
+   local shop_item_index = 1
+
    for _, f in ipairs(features) do
       if f.feature == "pit" then
          mset(f.tx, f.ty, PIT_TILE)
@@ -238,6 +251,23 @@ function DungeonManager.place_room_obstacles(room)
       elseif f.feature == "locked_chest" then
          -- Locked chest - sprite is fixed
          add(room.obstacle_data, {feature = "locked_chest", tx = f.tx, ty = f.ty, sprite = LOCKED_CHEST_TILE})
+      elseif f.feature == "shop_item" and shop_items_selected then
+         -- Shop item pedestal - store item data for spawning
+         local item = shop_items_selected[shop_item_index]
+         if item then
+            add(room.obstacle_data, {
+               feature = "shop_item",
+               tx = f.tx,
+               ty = f.ty,
+               sprite = 58, -- Pedestal base sprite
+               item_id = item.id,
+               item_name = item.name,
+               item_sprite = item.sprite,
+               price = item.price,
+               apply_fn = item.apply
+            })
+            shop_item_index += 1
+         end
       end
    end
 
@@ -436,7 +466,7 @@ function DungeonManager.setup_room(room, player, world)
 
    Systems.Spawner.populate(room, player)
 
-   -- Spawn obstacles (Rocks, Destructibles, Chests) if not already spawned
+   -- Spawn obstacles (Rocks, Destructibles, Chests, ShopItems) if not already spawned
    -- Uses pre-generated obstacle_data from dungeon generation for seed determinism
    if not room.obstacles_spawned and room.obstacle_data then
       local Entities = require("src/entities")
@@ -444,6 +474,7 @@ function DungeonManager.setup_room(room, player, world)
       local dest_count = 0
       local chest_count = 0
       local locked_chest_count = 0
+      local shop_item_count = 0
 
       -- Initialize obstacle entity tracking for this room
       room.obstacle_entities = room.obstacle_entities or {}
@@ -451,9 +482,9 @@ function DungeonManager.setup_room(room, player, world)
       for _, f in ipairs(room.obstacle_data) do
          -- Base position: tile coords to pixels
          -- Rocks/Destructibles have hitbox_offset=4, so we offset by -4 to align hitbox with tile
-         -- Chests have hitbox_offset=0, so no offset needed
+         -- Chests/ShopItems have custom offsets, no adjustment needed
          local wx, wy
-         if f.feature == "chest" or f.feature == "locked_chest" then
+         if f.feature == "chest" or f.feature == "locked_chest" or f.feature == "shop_item" then
             wx, wy = f.tx * GRID_SIZE, f.ty * GRID_SIZE
          else
             wx, wy = f.tx * GRID_SIZE - 4, f.ty * GRID_SIZE - 4
@@ -471,6 +502,14 @@ function DungeonManager.setup_room(room, player, world)
          elseif f.feature == "locked_chest" then
             entity = Entities.spawn_obstacle(world, wx, wy, "LockedChest", f.sprite)
             locked_chest_count += 1
+         elseif f.feature == "shop_item" then
+            entity = Entities.spawn_obstacle(world, wx, wy, "ShopItem", f.item_sprite)
+            -- Transfer shop item data from obstacle_data to entity
+            entity.item_id = f.item_id
+            entity.item_name = f.item_name
+            entity.price = f.price
+            entity.apply_fn = f.apply_fn
+            shop_item_count += 1
          end
          if entity then
             entity.room_key = room.grid_x..","..room.grid_y
@@ -479,7 +518,8 @@ function DungeonManager.setup_room(room, player, world)
       end
       Log.info("Spawned obstacles in room ("..
          room.grid_x..","..room.grid_y.."): "..rocks_count.." rocks, "..dest_count..
-         " destructibles, "..chest_count.." chests, "..locked_chest_count.." locked chests")
+         " destructibles, "..chest_count.." chests, "..locked_chest_count..
+         " locked chests, "..shop_item_count.." shop items")
       room.obstacles_spawned = true
    end
 

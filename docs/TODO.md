@@ -3,8 +3,7 @@
 ## Next
 
 - add genetic mutation system (powerups that modify the mechanics) [BRAINSTORM]
-- add locked treasure room for powerups [BRAINSTORM]
-- add shop room with items [BRAINSTORM]
+- add locked bio lab (treasure room) with challenge mechanics [BRAINSTORM]
 - add boss room with special enemy [BRAINSTORM]
 
 ## Bugs
@@ -46,6 +45,7 @@
 
 ## Visuals & Juice
 
+- add icons for levelup choices [BRAINSTORM]
 - add a bouncing effect for the pickup items [BRAINSTORM]
 - separate upper and lower body animations [BRAINSTORM]
 - improve the visuals of the aiming line [BRAINSTORM]

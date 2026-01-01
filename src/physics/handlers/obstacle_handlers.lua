@@ -7,6 +7,7 @@ local GameConstants = require("src/game/game_config")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local Effects = require("src/systems/effects")
 local DungeonManager = require("src/world/dungeon_manager")
+local FloatingText = require("src/systems/floating_text")
 
 local ObstacleHandlers = {}
 
@@ -343,6 +344,46 @@ function ObstacleHandlers.register(handlers)
    -- Explosion vs Rock (bombs are the only way to destroy rocks)
    handlers.entity["Explosion,Rock"] = function(explosion, rock)
       destroy_rock(rock)
+   end
+
+   -- Shop Item purchase handlers
+   handlers.entity["Player,ShopItem"] = function(player, shop_item)
+      -- Guard: Already purchased
+      if shop_item.purchased then return end
+
+      -- Push player out first
+      push_out(player, shop_item)
+
+      local price = shop_item.price or 10
+      if (player.coins or 0) < price then
+         -- Not enough coins - silently reject
+         return
+      end
+
+      -- Deduct coins
+      player.coins = (player.coins or 0) - price
+      shop_item.purchased = true
+
+      -- Apply item effect
+      if shop_item.apply_fn then
+         shop_item.apply_fn(player)
+      end
+
+      -- Visual feedback
+      FloatingText.spawn_at_entity(player, shop_item.item_name or "Purchased!", "pickup")
+
+      -- Remove from world
+      world.del(shop_item)
+   end
+
+   -- Other entities vs ShopItem (push out only)
+   handlers.entity["Enemy,ShopItem"] = push_out_enemy
+   handlers.entity["Chick,ShopItem"] = function(chick, shop_item) push_out(chick, shop_item) end
+   handlers.entity["Projectile,ShopItem"] = function(projectile, shop_item)
+      projectile_hit_obstacle(projectile, "Rock")
+   end
+   handlers.entity["EnemyProjectile,ShopItem"] = function(projectile, shop_item)
+      world.del(projectile)
    end
 
    -- Pickup vs Pickup -> push apart to prevent stacking

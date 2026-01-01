@@ -502,5 +502,20 @@ return {
          loot_max = 6,       -- Maximum pickup drops
          key_cost = 1,       -- Keys required to open
       },
+      ShopItem = {
+         entity_type = "ShopItem",
+         obstacle = true,
+         is_shop_item = true,
+         tags = "obstacle,collidable,drawable,sprite,world_obj,shop_item,middleground,static",
+         width = 16,
+         height = 16,
+         hitbox_width = 12,
+         hitbox_height = 10,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 6,
+         sprite_index = 58, -- Pedestal sprite (item sprite set at spawn)
+         outline_color = nil,
+         -- Item properties set at spawn time: item_id, price, apply_fn, item_name, item_sprite
+      },
    },
 }

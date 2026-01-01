@@ -374,6 +374,11 @@ function Play:draw()
       end)()
    end
 
+   -- Shop Item Price Tags (world-space UI)
+   if current_room and current_room.room_type == "shop" then
+      UI.Hud.draw_shop_prices(world)
+   end
+
    -- Reset camera for global UI
    camera()
 
