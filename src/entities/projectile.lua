@@ -1,18 +1,18 @@
--- Projectile entity factory (Type Object pattern)
+-- Projectile entity factory (picobloc version)
 -- All projectile types are defined as pure data in GameConstants.Projectile
--- This factory simply instantiates entities from their type config
 local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
-local HitboxUtils = require("src/utils/hitbox_utils")
 
 local Projectile = {}
 
 -- Unified spawn function using Type Object pattern
--- @param world - ECS world
--- @param x, y - spawn position
--- @param dx, dy - direction vector (normalized)
--- @param projectile_type - type key in GameConstants.Projectile (default: "Egg")
--- @param instance_data - optional table with instance-specific overrides
+--- @param world World - picobloc World
+--- @param x number - spawn x position
+--- @param y number - spawn y position
+--- @param dx number - direction x component (normalized)
+--- @param dy number - direction y component (normalized)
+--- @param projectile_type string - type key in GameConstants.Projectile (default: "Egg")
+--- @param instance_data table - optional table with instance-specific overrides
 function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     projectile_type = projectile_type or "Egg"
     instance_data = instance_data or {}
@@ -23,78 +23,117 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         return nil
     end
 
+    -- Parse tags from comma-separated config string
+    local tag_set = {}
+    for tag in all(split(config.tags or "", ",")) do
+        tag_set[tag] = true
+    end
+
     local direction = EntityUtils.get_direction_name(dx, dy)
+    local speed = instance_data.speed or config.speed
 
-    -- 1. Base identity and physics state
-    local projectile = {
-        type = config.entity_type or "Projectile",
-        projectile_type = projectile_type,
-        x = x,
-        y = y,
-        direction = direction,
-        dir_x = dx,
-        dir_y = dy,
-        sub_x = 0,
-        sub_y = 0,
+    -- Calculate initial Z and gravity
+    -- REVIEW: can this be refactored with timers?
+    local initial_z = instance_data.z or config.z
+    local max_age = instance_data.lifetime or 60
+    local drop_duration = max_age * 0.25
+    if drop_duration < 1 then drop_duration = 1 end
+    local gravity_z = (-2 * initial_z) / (drop_duration * drop_duration)
+
+    -- Determine sprite index
+    local sprite_index = EntityUtils.get_sprite_index(config, direction)
+
+    -- Build entity with components
+    local entity = {
+        -- Type identifier
+        type = {value = config.entity_type or "Projectile"},
+        projectile_type = {value = projectile_type},
+
+        -- Owner
+        projectile_owner = {
+            owner = config.owner or "player",
+        },
+
+        -- Transform
+        position = {x = x, y = y},
+        size = {width = config.width or 16, height = config.height or 16},
+        direction = {
+            dir_x = dx,
+            dir_y = dy,
+        },
+
+        -- Movement
+        velocity = {
+            vel_x = dx * speed,
+            vel_y = dy * speed,
+            sub_x = 0,
+            sub_y = 0,
+        },
+
+        -- Collision
+        collidable = {
+            hitboxes = config.hitboxes or {
+                w = config.hitbox_width or 8,
+                h = config.hitbox_height or 8,
+                ox = config.hitbox_offset_x or 4,
+                oy = config.hitbox_offset_y or 4,
+            },
+            map_collidable = tag_set.map_collidable or false,
+        },
+
+        -- Z-axis physics
+        projectile_physics = {
+            z = initial_z,
+            vel_z = 0,
+            gravity_z = gravity_z,
+            age = 0,
+            max_age = max_age,
+        },
+
+        -- Combat
+        projectile_combat = {
+            damage = instance_data.damage or config.damage,
+            knockback = instance_data.knockback or config.knockback,
+        },
+
+        -- Visuals: Shadow
+        shadow = {
+            shadow_offset_x = config.shadow_offset_x or 0,
+            shadow_offset_y = config.shadow_offset_y or 0,
+            shadow_width = config.shadow_width or 4,
+            shadow_height = config.shadow_height or 3,
+            shadow_offsets_x = config.shadow_offsets_x,
+            shadow_offsets_y = config.shadow_offsets_y,
+            shadow_widths = config.shadow_widths,
+            shadow_heights = config.shadow_heights,
+        },
+
+        -- Visuals: Drawable
+        drawable = {
+            outline_color = nil,
+            sort_offset_y = 0,
+            sprite_index = sprite_index,
+            flip_x = false,
+            flip_y = false,
+        },
+
+        -- Visuals: Animation
+        animatable = {
+            animations = config.animations,
+            sprite_index_offsets = config.sprite_index_offsets,
+        },
     }
-    -- 2. Bulk copy all non-table values from config (stats, bounds, offsets)
-    for k, v in pairs(config) do
-        if type(v) ~= "table" then
-            projectile[k] = v
-        end
+
+    -- Copy all parsed tags into entity
+    for tag, _ in pairs(tag_set) do
+        entity[tag] = true
     end
 
-    -- 2b. Apply instance-specific overrides EARLY to ensure derived stats (velocity) use correct values
-    for k, v in pairs(instance_data) do
-        projectile[k] = v
-    end
-
-    -- 2c. Recalculate velocity with final speed
-    if projectile.speed then
-        projectile.vel_x = dx * projectile.speed
-        projectile.vel_y = dy * projectile.speed
-    end
-
-    -- 2d. Initialize Z-axis data (simulated height)
-    projectile.z = instance_data.z or projectile.z or 8 -- Default start height
-    projectile.age = 0
-    projectile.max_age = instance_data.lifetime or 60
-    projectile.vel_z = 0 -- Start with no vertical velocity (horizontal flight)
-
-    -- Calculate gravity to drop from z to 0 in the last 25% of lifetime
-    -- T_drop = max_age * 0.25
-    -- 0 = z0 + 0*t + 0.5*g*t^2  => g = -2*z0 / t^2
-    local drop_duration = projectile.max_age * 0.25
-    if drop_duration < 1 then drop_duration = 1 end -- Prevent division by zero
-    projectile.gravity_z = (-2 * projectile.z) / (drop_duration * drop_duration)
-
-    -- 3. Static table references
-    projectile.hitboxes = config.hitboxes
-    projectile.animations = config.animations
-    projectile.palette_swaps = config.palette_swaps
-    projectile.sprite_index_offsets = config.sprite_index_offsets
-    projectile.shadow_offsets_y = config.shadow_offsets_y
-    projectile.shadow_offsets_x = config.shadow_offsets_x
-    projectile.shadow_widths = config.shadow_widths
-    projectile.shadow_heights = config.shadow_heights
-
-    -- 4. Contextual initialization
-    if projectile.sprite_index_offsets and direction then
-        projectile.sprite_index = projectile.sprite_index_offsets[direction]
-    end
-
-    -- 5. Apply instance-specific overrides
-    for k, v in pairs(instance_data) do
-        projectile[k] = v
-    end
-
-    -- 6.Create entity with tags from config
-    return EntityUtils.spawn_entity(world, config.tags, projectile)
+    local id = world:add_entity(entity)
+    return id
 end
 
 -- Spawn projectile from shooter's configured origin point
--- shooter.projectile_origin_x/y are offsets from entity position
--- shooter.projectile_origin_z is the elevation for visual height
 function Projectile.spawn_from_origin(world, shooter, dx, dy, projectile_type, instance_data)
     local projectile_config = GameConstants.Projectile[projectile_type or "Egg"]
 
@@ -103,27 +142,24 @@ function Projectile.spawn_from_origin(world, shooter, dx, dy, projectile_type, i
         origin_x = shooter.x + shooter.projectile_origin_x
         origin_y = shooter.y + (shooter.projectile_origin_y or 0)
     else
-        -- Default to hitbox center (Ground-relative)
-        local hb = HitboxUtils.get_hitbox(shooter)
-        local z = shooter.z or 0
-        origin_x = hb.x + hb.w / 2
-        origin_y = (hb.y + hb.h / 2) + z -- Convert visual Y back to ground Y
+        -- Default to entity center
+        local width = shooter.width or 16
+        local height = shooter.height or 16
+        origin_x = shooter.x + width / 2
+        origin_y = shooter.y + height / 2
     end
 
     -- Offset by half projectile size to center it on origin
     local spawn_x = origin_x - (projectile_config.width / 2)
     local spawn_y = origin_y - (projectile_config.height / 2)
 
-    -- Z elevation for all shots (visual height)
-    -- Default to shooter defined z, or shooter's own z, or 0
+    -- Z elevation
     local projectile_z = shooter.projectile_origin_z or shooter.z or 0
 
     instance_data = instance_data or {}
     instance_data.z = projectile_z
 
-    -- Flag vertical shots (up/down) for different landing behavior
-    -- Vertical: shadow moves toward sprite; Horizontal: sprite moves toward shadow
-    -- Use threshold check in case dx/dy are floats
+    -- Flag vertical shots
     local is_vertical = (abs(dy) > 0.1) and (abs(dx) < 0.1)
     instance_data.vertical_shot = is_vertical
 

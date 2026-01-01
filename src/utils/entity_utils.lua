@@ -58,6 +58,17 @@ function Utils.get_direction_vector(dir_name)
     return 0, 1 -- Default to down
 end
 
+-- Get sprite index based on direction and config
+-- @param config - entity config table with sprite_index and optional sprite_index_offsets
+-- @param direction - optional direction string ("up", "down", "left", "right")
+-- @return sprite index number
+function Utils.get_sprite_index(config, direction)
+    if config.sprite_index_offsets and direction then
+        return config.sprite_index_offsets[direction]
+    end
+    return config.sprite_index or 0
+end
+
 -- Centralized entity spawning with automatic shadow creation
 -- @param world - ECS world
 -- @param tags - comma-separated tag string (include "shadow" for auto shadow creation)

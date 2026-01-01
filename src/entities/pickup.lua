@@ -1,16 +1,16 @@
--- Pickup entity factory (Type Object pattern)
+-- Pickup entity factory (picobloc version)
 -- All pickup types are defined as pure data in GameConstants.Pickup
--- This factory simply instantiates entities from their type config
 local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
 
 local Pickup = {}
 
 -- Unified spawn function using Type Object pattern
--- @param world - ECS world
--- @param x, y - spawn position
--- @param pickup_type - type key in GameConstants.Pickup (e.g., "ProjectilePickup", "HealthPickup")
--- @param instance_data - optional table with instance-specific overrides
+--- @param world World - picobloc World
+--- @param x number - spawn x position
+--- @param y number - spawn y position
+--- @param pickup_type string - type key in GameConstants.Pickup
+--- @param instance_data table - optional table with instance-specific overrides
 function Pickup.spawn(world, x, y, pickup_type, instance_data)
     instance_data = instance_data or {}
 
@@ -20,62 +20,103 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
         return nil
     end
 
+    -- Parse tags from comma-separated config string
+    local tag_set = {}
+    for tag in all(split(config.tags or "", ",")) do
+        tag_set[tag] = true
+    end
+
     local direction = instance_data.direction
 
-    -- 1. Base identity and physics state
-    local pickup = {
-        type = config.entity_type or "Pickup",
-        pickup_type = pickup_type,
-        x = x,
-        y = y,
-        vel_x = 0,
-        vel_y = 0,
-        sub_x = 0,
-        sub_y = 0,
+    -- Determine sprite index
+    local sprite_index = instance_data.sprite_index or EntityUtils.get_sprite_index(config, direction)
+
+    -- Determine hitbox
+    local hitbox = config.hitbox
+    if config.hitbox_from_projectile then
+        hitbox = GameConstants.Projectile.Egg.hitbox
+    end
+    if not hitbox then
+        hitbox = {
+            w = config.hitbox_width or 12,
+            h = config.hitbox_height or 12,
+            ox = config.hitbox_offset_x or 2,
+            oy = config.hitbox_offset_y or 2,
+        }
+    end
+
+    -- Build entity with components
+    local entity = {
+        -- Type identifier
+        type = {value = config.entity_type or "Pickup"},
+        pickup_type = {value = pickup_type},
+
+        -- Transform
+        position = {x = x, y = y},
+        size = {width = config.width or 16, height = config.height or 16},
+
+        -- Optional velocity (for projectile pickups that fall)
+        velocity = {
+            vel_x = 0,
+            vel_y = 0,
+            sub_x = 0,
+            sub_y = 0,
+        },
+
+        -- Collision
+        collidable = {
+            hitboxes = hitbox,
+            map_collidable = tag_set.map_collidable or false,
+        },
+
+        -- Pickup effect
+        pickup_effect = {
+            effect = config.pickup_effect or "health",
+            amount = config.amount or instance_data.amount or 1,
+            recovery_amount = config.recovery_amount or instance_data.recovery_amount or 0,
+            xp_amount = instance_data.xp_amount or 0,
+        },
+
+        -- Visuals: Shadow
+        shadow = {
+            shadow_offset_x = config.shadow_offset_x or 0,
+            shadow_offset_y = config.shadow_offset_y or 0,
+            shadow_width = config.shadow_width or 11,
+            shadow_height = config.shadow_height or 3,
+            shadow_offsets_x = nil,
+            shadow_offsets_y = nil,
+            shadow_widths = nil,
+            shadow_heights = nil,
+        },
+
+        -- Visuals: Drawable
+        drawable = {
+            outline_color = nil,
+            sort_offset_y = 0,
+            sprite_index = sprite_index,
+            flip_x = false,
+            flip_y = false,
+        },
     }
 
-    -- 2. Bulk copy all non-table values from config (stats, bounds, offsets)
-    for k, v in pairs(config) do
-        if type(v) ~= "table" then
-            pickup[k] = v
-        end
+    -- Copy all parsed tags into entity
+    for tag, _ in pairs(tag_set) do
+        entity[tag] = true
     end
 
-    -- 3. Sprite: use instance override, or direction-based lookup, or static sprite
-    if instance_data.sprite_index then
-        pickup.sprite_index = instance_data.sprite_index
-    elseif config.sprite_index_offsets and direction then
-        pickup.sprite_index = config.sprite_index_offsets[direction]
-    else
-        pickup.sprite_index = config.sprite_index or 0
+    -- Add z-axis data for falling pickups
+    if instance_data.z then
+        entity.projectile_physics = {
+            z = instance_data.z,
+            vel_z = 0,
+            gravity_z = -0.1,
+            age = 0,
+            max_age = 9999,
+        }
     end
 
-    -- 4. Hitbox: special handling for projectile-based pickups (uses Egg hitbox)
-    if config.hitbox_from_projectile then
-        pickup.hitbox = GameConstants.Projectile.Egg.hitbox
-    end
-
-    -- 5. Apply instance-specific overrides
-    for k, v in pairs(instance_data) do
-        pickup[k] = v
-    end
-
-    -- 6. Create entity with tags from config
-    return EntityUtils.spawn_entity(world, config.tags, pickup)
-end
-
--- Convenience: Spawn projectile-based pickup (from wall collisions)
-function Pickup.spawn_projectile(world, x, y, dir_x, dir_y, amount, sprite_index, z, vertical_shot)
-    local direction = EntityUtils.get_direction_name(dir_x, dir_y)
-    return Pickup.spawn(world, x, y, "ProjectilePickup", {
-        direction = direction,
-        dir_x = dir_x,
-        dir_y = dir_y,
-        recovery_amount = amount,
-        sprite_index = sprite_index,
-        z = z,                         -- Inherit Z height
-        vertical_shot = vertical_shot, -- Inherit vertical shot flag for drop animation
-    })
+    local id = world:add_entity(entity)
+    return id
 end
 
 -- Convenience: Spawn simple health pickup (from enemy deaths)

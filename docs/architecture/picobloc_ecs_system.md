@@ -88,11 +88,11 @@ end)
 ### Phase 1: Foundation ✅
 
 - [x] Define player specific components in `src/components.lua`
-- [ ] Define other entity specific components in `src/components.lua`
+- [x] Define other entity specific components in `src/components.lua`
 - [x] Add `world:tag()` shorthand to picobloc
-- [ ] Check if `world:tag()` is used in picobloc queries
-- [ ] Migrate other entities to picobloc
+- [x] Verify `world:tag()` works in picobloc queries (tags are queried like components)
 - [x] Migrate Player entity to picobloc
+- [x] Migrate other entities to picobloc (enemy, obstacle, pickup, projectile, minion, bomb, explosion)
 
 ### Phase 2: Visual Systems
 
@@ -116,12 +116,12 @@ end)
 
 ### Phase 5: Entity Factories
 
-- [ ] **Enemy** - Skulker, Shooter, Dasher, Skull
-- [ ] **Projectile** - Egg, EnemyBullet
-- [ ] **Pickup** - Health, Coin, Key, Bomb, XP
-- [ ] **Minion** - Chick
-- [ ] **Obstacle** - Rock, Destructible, Chest
-- [ ] **Bomb/Explosion**
+- [x] **Enemy** - Skulker, Shooter, Dasher, Skull
+- [x] **Projectile** - Egg, EnemyBullet
+- [x] **Pickup** - Health, Coin, Key, Bomb, XP
+- [x] **Minion** - Chick
+- [x] **Obstacle** - Rock, Destructible, Chest
+- [x] **Bomb/Explosion**
 
 ### Phase 6: AI & Spawning
 
@@ -131,7 +131,7 @@ end)
 ### Phase 7: Cleanup
 
 - [ ] Remove eggs.p8 dependency
-- [ ] Delete `src/entities/shadow.lua` (no longer needed)
+- [x] Delete `src/entities/shadow.lua` (no longer needed)
 - [ ] Update all `world.sys()` → `world:query()`
 
 ## Files

@@ -1,6 +1,11 @@
 return function(world)
    -- Identity/query tags (empty components for filtering)
-   world:tag("player", "controllable", "sprite", "middleground", "spotlight")
+   world:tag(
+      "background", "chest", "controllable", "destructible", "enemy",
+      "flying", "locked", "middleground", "minion", "obstacle",
+      "pickup", "player", "projectile", "shop_item", "skull",
+      "spotlight", "sprite", "static", "world_obj", "yolk_splat"
+   )
 
    world:component("type", {value = "value"})
    world:component("position", {x = "f64", y = "f64"})
@@ -35,22 +40,21 @@ return function(world)
       regen_delay = "u64",
       regen_trigger_field = "value", -- String name of field
    })
-   -- REFACTOR: timers duplicates fields from shooter and invulnerability.
-   -- Consider removing this component and querying those directly.
+   -- PRUNE: timers component - fields duplicated in shooter/invulnerability
    world:component("timers", {
-      shoot_cooldown = "u64", -- DUPLICATE: also in shooter
-      invuln_timer = "u64",   -- DUPLICATE: also in invulnerability
-      hp_drain_timer = "u64",
+      shoot_cooldown = "u64", -- PRUNE: duplicated in shooter.shoot_cooldown
+      invuln_timer = "u64",   -- PRUNE: duplicated in invulnerability.invuln_timer
+      hp_drain_timer = "u64", -- PRUNE: move to hp_drain component
    })
    world:component("shooter", {
       max_hp_to_shot_cost_ratio = "f64",
-      max_hp_to_damage_ratio = "f64",
-      shoot_cooldown = "u64", -- DUPLICATE: also in timers
+      max_hp_to_damage_ratio = "f64", -- PRUNE: overlaps with projectile_combat.damage
+      shoot_cooldown = "u64",         -- PRUNE: duplicated in timers.shoot_cooldown
       shot_speed = "f64",
       time_since_shot = "u64",
       fire_rate = "f64",
-      impact_damage = "f64",
-      knockback = "f64",
+      impact_damage = "f64", -- PRUNE: overlaps with projectile_combat.damage
+      knockback = "f64",     -- PRUNE: overlaps with projectile_combat.knockback
       range = "f64",
       drain_damage = "f64",
       drain_heal = "f64",
@@ -70,7 +74,7 @@ return function(world)
       vampiric_heal = "f64",
    })
    world:component("invulnerability", {
-      invuln_timer = "u64", -- DUPLICATE: also in timers
+      invuln_timer = "u64", -- PRUNE: duplicated in timers.invuln_timer
       invulnerability_duration = "u64",
    })
    world:component("inventory", {
@@ -103,6 +107,124 @@ return function(world)
    })
    world:component("animatable", {
       animations = "value",           -- Complex animation config table
-      sprite_index_offsets = "value", -- Offset table
+      sprite_index_offsets = "value", -- PRUNE: could merge into animations
+   })
+
+   ---------------------------------------------------------------------------
+   -- Enemy components
+   ---------------------------------------------------------------------------
+   -- PRUNE: enemy_type - redundant with using `type` component
+   world:component("enemy_type", {
+      value = "value", -- String: "Skulker", "Shooter", "Dasher", "Skull"
+   })
+   world:component("enemy_ai", {
+      fsm = "value",             -- lua-state-machine FSM instance
+      vision_range = "f64",      -- PRUNE: overlaps with minion_ai fields
+      wander_radius = "f64",     -- PRUNE: overlaps with minion_ai fields
+      wander_speed_mult = "f64", -- PRUNE: overlaps with minion_ai fields
+      wander_pause_min = "u64",  -- PRUNE: overlaps with minion_ai fields
+      wander_pause_max = "u64",  -- PRUNE: overlaps with minion_ai fields
+   })
+   world:component("contact_damage", {
+      damage = "f64",
+   })
+   -- PRUNE: enemy_shooter - overlaps with shooter component
+   world:component("enemy_shooter", {
+      shoot_delay = "u64",  -- PRUNE: use shooter.shoot_cooldown_duration
+      is_shooter = "value", -- PRUNE: use shooter tag instead
+   })
+   world:component("dasher", {
+      windup_duration = "u64",
+      stun_duration = "u64",
+      dash_speed_multiplier = "f64",
+   })
+   world:component("drop", {
+      drop_chance = "f64",
+      loot_rolls = "u64",
+      use_diverse_loot = "value", -- Boolean
+      xp_value = "u64",
+   })
+
+   ---------------------------------------------------------------------------
+   -- Projectile components
+   ---------------------------------------------------------------------------
+   -- PRUNE: projectile_type - redundant with using `type` component
+   world:component("projectile_type", {
+      value = "value", -- String: "Egg", "EnemyBullet"
+   })
+   -- REFACTOR: Migrate fields to core components and delete this component
+   world:component("projectile_physics", {
+      z = "f64",         -- REFACTOR: move to position.z
+      vel_z = "f64",     -- REFACTOR: move to velocity.vel_z
+      gravity_z = "f64", -- REFACTOR: move to acceleration.gravity_z
+      age = "u64",       -- REFACTOR: move to new "lifetime" component
+      max_age = "u64",   -- REFACTOR: move to new "lifetime" component
+   })
+   -- PRUNE: projectile_owner - could use tags "player_projectile" / "enemy_projectile"
+   world:component("projectile_owner", {
+      owner = "value", -- "player" or "enemy"
+   })
+   world:component("projectile_combat", {
+      damage = "f64",    -- PRUNE: overlaps with shooter.impact_damage
+      knockback = "f64", -- PRUNE: overlaps with shooter.knockback
+   })
+
+   ---------------------------------------------------------------------------
+   -- Pickup components
+   ---------------------------------------------------------------------------
+   -- PRUNE: pickup_type - redundant with using `type` component
+   world:component("pickup_type", {
+      value = "value", -- String: "HealthPickup", "Coin", "Key", "Bomb", "DNAStrand" -- REVIEW: dynamic?
+   })
+   world:component("pickup_effect", {
+      effect = "value",  -- String: "health", "coin", "key", "bomb", "xp"
+      amount = "u64",    -- PRUNE: overlaps with recovery_amount/xp_amount
+      recovery_amount = "u64",
+      xp_amount = "u64", -- PRUNE: use amount instead
+   })
+
+   ---------------------------------------------------------------------------
+   -- Minion components
+   ---------------------------------------------------------------------------
+   -- PRUNE: minion_type - redundant with using `type` component
+   world:component("minion_type", {
+      value = "value", -- String: "Chick", "YolkSplat", "Egg" -- REVIEW: dynamic?
+   })
+   -- PRUNE: minion_ai has overlapping fields with enemy_ai (fsm, vision, wander)
+   -- Consider a shared "ai" component
+   world:component("minion_ai", {
+      fsm = "value", -- FSM instance
+      food_seek_range = "f64",
+      food_heal_amount = "u64",
+      chase_speed_mult = "f64",
+      attack_damage = "f64",
+      attack_cooldown = "u64",
+      attack_knockback = "f64",
+      attack_range = "f64",
+      follow_trigger_dist = "f64",
+      follow_stop_dist = "f64",
+      follow_speed_mult = "f64",
+   })
+   world:component("hp_drain", {
+      hp_drain_rate = "u64", -- Frames between each 1 HP loss
+      -- PRUNE: add hp_drain_timer here (from timers component)
+   })
+
+   ---------------------------------------------------------------------------
+   -- Obstacle components
+   ---------------------------------------------------------------------------
+   -- PRUNE: obstacle_type - redundant with using `type` component
+   world:component("obstacle_type", {
+      value = "value",       -- String: "Rock", "Destructible", "Chest", etc.
+   })
+   world:component("loot", { -- REVIEW: dynamic?
+      loot_min = "u64",
+      loot_max = "u64",
+      key_cost = "u64",
+   })
+   -- REVIEW: Used for room visibility filtering (obstacles only render in active room)
+   -- Consider if this should be handled differently with picobloc queries
+   world:component("room_key", {
+      value = "value", -- String: "0,0", "1,0", etc.
    })
 end
