@@ -1,6 +1,7 @@
 local GameState = require("src/game/game_state")
 local GameConstants = require("src/game/game_config")
 local World = require("src/world")
+local ECS = require("lib/picobloc/picobloc")
 local Entities = require("src/entities")
 local Systems = require("src/systems")
 local Emotions = require("src/systems/emotions")
@@ -19,14 +20,14 @@ local SceneManager = require("src/scenes/manager")
 
 local Play = SceneManager:addState("Play")
 
-world = eggs()
+world = ECS:new()
 local player
 local camera_manager
 local current_room
 
 function Play:enteredState()
    Log.trace("Entered Play scene")
-   world = eggs() -- MUST re-initialize world on every entry for Restart to work
+   world = ECS:new() -- MUST re-initialize ECS world on every entry for restart to work
    Systems.init_extended_palette()
    Systems.init_spotlight()
 

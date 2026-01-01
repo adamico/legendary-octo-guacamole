@@ -1,4 +1,12 @@
--- World module aggregator
+--- World module aggregator
+--- @class World
+--- @field Room Room
+--- @field DungeonManager DungeonManager
+--- @field RoomRenderer RoomRenderer
+--- @field CameraManager CameraManager
+--- @field WavePatterns WavePatterns
+--- @field RoomLayouts RoomLayouts
+--- @field FloorPatterns FloorPatterns
 local Room = require("src/world/room")
 local DungeonManager = require("src/world/dungeon_manager")
 local RoomRenderer = require("src/world/room_renderer")

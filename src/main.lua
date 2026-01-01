@@ -1,6 +1,5 @@
 include("lib/require.lua")
 include("lib/debugui.lua")
-include("lib/eggs.p8/eggs.lua")
 
 Class = require("lib/middleclass")
 Stateful = require("lib/stateful")
