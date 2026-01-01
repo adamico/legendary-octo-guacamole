@@ -67,7 +67,7 @@ function SeekFood.update(entity, world, range, heal_amount)
             entity.hp = math.min((entity.max_hp or 10), entity.hp + heal_amount)
             -- Spawn heal text or effect
             if FloatingText then
-               FloatingText.spawn_at_entity(entity, heal_amount, "heal")
+               FloatingText.spawn_heal(entity, heal_amount)
             end
          end
          return true -- Busy eating

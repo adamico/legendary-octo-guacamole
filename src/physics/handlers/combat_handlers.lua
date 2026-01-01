@@ -51,7 +51,7 @@ local function melee_vs_enemy(hitbox, enemy)
    local damage = hitbox.melee_damage or 10
    enemy.hp = enemy.hp - damage
    enemy.invuln_timer = 10 -- Brief invulnerability after hit
-   FloatingText.spawn_at_entity(enemy, -damage, "damage")
+   FloatingText.spawn_damage(enemy, -damage)
    Effects.hit_impact(hitbox, enemy)
 
    -- Composite knockback: base player knockback + melee knockback
@@ -64,7 +64,7 @@ local function melee_vs_enemy(hitbox, enemy)
       local heal_percent = owner.vampiric_heal or GameConstants.Player.vampiric_heal or 0.3
       local vampiric_heal = damage * heal_percent
       owner.hp = math.min(owner.hp + vampiric_heal, owner.max_hp)
-      FloatingText.spawn_at_entity(owner, vampiric_heal, "heal")
+      FloatingText.spawn_heal(owner, vampiric_heal)
    end
 end
 
@@ -113,7 +113,7 @@ local function projectile_vs_enemy(projectile, enemy)
       if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
          enemy.hp = enemy.hp - dud_damage
          enemy.invuln_timer = 10
-         FloatingText.spawn_at_entity(enemy, -dud_damage, "damage")
+         FloatingText.spawn_damage(enemy, -dud_damage)
          -- Sticky Yolk: stun + slow instead of knockback
          Effects.apply_sticky_yolk(enemy, stun_dur, slow_dur, slow_factor)
       end
@@ -136,7 +136,7 @@ local function projectile_vs_enemy(projectile, enemy)
       if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
          enemy.hp = enemy.hp - leech_damage
          enemy.invuln_timer = 10
-         FloatingText.spawn_at_entity(enemy, -leech_damage, "damage")
+         FloatingText.spawn_damage(enemy, -leech_damage)
          -- Sticky Yolk: stun + slow instead of knockback
          Effects.apply_sticky_yolk(enemy, stun_dur, slow_dur, slow_factor)
       end
@@ -163,7 +163,7 @@ local function player_vs_enemy(player, enemy)
    damage = math.floor(damage * (player.damage_reduction or 1.0))
    if not GameState.cheats.godmode then
       apply_damage_with_overheal(player, damage)
-      FloatingText.spawn_at_entity(player, -damage, "damage")
+      FloatingText.spawn_damage(player, -damage)
    end
    Effects.hit_impact(enemy, player, "heavy_shake")
    Effects.apply_knockback(enemy, player, 16)
@@ -179,7 +179,7 @@ local function enemy_projectile_vs_player(projectile, player)
    local damage = projectile.damage or 10
    if not GameState.cheats.godmode then
       apply_damage_with_overheal(player, damage)
-      FloatingText.spawn_at_entity(player, -damage, "damage")
+      FloatingText.spawn_damage(player, -damage)
    end
    Effects.hit_impact(projectile, player, "heavy_shake")
    Effects.apply_knockback(projectile, player, 8)
@@ -221,7 +221,7 @@ local function explosion_vs_player(explosion, player)
    local damage = explosion.explosion_damage or 20
    if not GameState.cheats.godmode then
       apply_damage_with_overheal(player, damage)
-      FloatingText.spawn_at_entity(player, -damage, "damage")
+      FloatingText.spawn_damage(player, -damage)
    end
    Effects.hit_impact(explosion, player, "heavy_shake")
    apply_explosion_knockback(explosion, player, 16)
@@ -237,7 +237,7 @@ local function explosion_vs_enemy(explosion, enemy)
    local damage = explosion.explosion_damage or 20
    enemy.hp = enemy.hp - damage
    enemy.invuln_timer = 10
-   FloatingText.spawn_at_entity(enemy, -damage, "damage")
+   FloatingText.spawn_damage(enemy, -damage)
    Effects.hit_impact(explosion, enemy)
    apply_explosion_knockback(explosion, enemy, 12)
 end

@@ -3,6 +3,7 @@
 
 local Effects = require("src/systems/effects")
 local FloatingText = require("src/systems/floating_text")
+local GameConstants = require("src/game/game_config")
 
 local PickupHandlers = {}
 
@@ -12,19 +13,19 @@ local PickupEffects = {}
 PickupEffects.coin = function(player, pickup)
    local amount = pickup.amount or 1
    player.coins = (player.coins or 0) + amount
-   FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
+   FloatingText.spawn_pickup(player, amount, pickup.sprite_index)
 end
 
 PickupEffects.key = function(player, pickup)
    local amount = pickup.amount or 1
    player.keys = (player.keys or 0) + amount
-   FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
+   FloatingText.spawn_pickup(player, amount, pickup.sprite_index)
 end
 
 PickupEffects.bomb = function(player, pickup)
    local amount = pickup.amount or 1
    player.bombs = (player.bombs or 0) + amount
-   FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
+   FloatingText.spawn_pickup(player, amount, pickup.sprite_index)
 end
 
 PickupEffects.health = function(player, pickup)
@@ -36,7 +37,7 @@ PickupEffects.health = function(player, pickup)
       player.hp = player.max_hp
    end
 
-   FloatingText.spawn_at_entity(player, heal_amount, "heal", pickup.sprite_index)
+   FloatingText.spawn_heal(player, heal_amount)
 end
 
 PickupEffects.xp = function(player, pickup)

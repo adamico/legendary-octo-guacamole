@@ -12,6 +12,7 @@ local FloatingText = require("src/systems/floating_text")
 local Emotions = require("src/systems/emotions")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local DungeonManager = require("src/world/dungeon_manager")
+local GameConstants = require("src/game/game_config")
 
 -- Configuration: How long to try reaching an unreachable target before giving up
 local MAX_CHASE_STUCK_FRAMES = 60      -- ~1 second at 60fps
@@ -163,7 +164,7 @@ local function attack_enemy(entity, target, player)
    end
    target.hp = target.hp - damage
    target.invuln_timer = 5 -- Brief invuln
-   FloatingText.spawn_at_entity(target, -damage, "damage")
+   FloatingText.spawn_damage(target, -damage)
 
    -- Knockback the chick away from enemy (recoil)
    local dx = entity.x - target.x

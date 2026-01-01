@@ -401,7 +401,7 @@ function ObstacleHandlers.register(handlers)
       end
 
       -- Visual feedback
-      FloatingText.spawn_at_entity(player, shop_item.item_name or "Purchased!", "pickup")
+      FloatingText.spawn_info(player, shop_item.item_name or "Purchased!")
 
       -- Remove from world
       world.del(shop_item)

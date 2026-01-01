@@ -30,6 +30,7 @@ function Play:enteredState()
    world = ECS:new() -- MUST re-initialize ECS world on every entry for restart to work
    Systems.init_extended_palette()
    Systems.init_spotlight()
+   Systems.FloatingText.set_world(world) -- Initialize FloatingText with proper ECS world
 
    -- Initialize level seed for reproducible dungeon generation
    local seed = GameState.level_seed or flr(time() * 1000)
@@ -245,7 +246,7 @@ function Play:update()
 
    -- Effects
    Systems.Effects.update_shake()
-   Systems.FloatingText.update()
+   Systems.FloatingText.update(world)
 
    -- Leveling (check for level ups after XP collection)
    Leveling.check_level_up(player)
@@ -276,22 +277,21 @@ function Play:draw()
    camera(cam_x, cam_y)
 
    local clip_square
+   local visible_rooms = {}
    if camera_manager:is_scrolling() then
       local old_room = camera_manager.old_room
       local new_room = camera_manager.new_room
 
       -- Set both rooms as visible during transition
-      Systems.set_active_rooms({
-         old_room.grid_x..","..old_room.grid_y,
-         new_room.grid_x..","..new_room.grid_y
-      })
+      visible_rooms[old_room.grid_x..","..old_room.grid_y] = true
+      visible_rooms[new_room.grid_x..","..new_room.grid_y] = true
 
       clip_square = RoomRenderer.draw_scrolling(camera_manager, cam_x, cam_y)
       RoomRenderer.draw_room_features(old_room)
       RoomRenderer.draw_room_features(new_room)
    else
       -- Set only current room as visible
-      Systems.set_active_rooms({current_room.grid_x..","..current_room.grid_y})
+      visible_rooms[current_room.grid_x..","..current_room.grid_y] = true
 
       clip_square = RoomRenderer.draw_exploring(current_room, cam_x, cam_y)
       RoomRenderer.draw_room_features(current_room)
@@ -305,16 +305,15 @@ function Play:draw()
    Systems.lighting(world, clip_square)
 
    -- 1. Background Layer: Shadows, Pickups
-   Systems.draw_shadows(world, clip_square)
-   Systems.draw_layer(world, "background,drawable", false)
+   Systems.draw_shadows(world)
+   Systems.draw_layer(world, "background,drawable", false, visible_rooms)
 
    -- 2. Middleground Layer: Characters (Y-Sorted)
-   Systems.draw_layer(world, "middleground,drawable", true)
+   Systems.draw_layer(world, "middleground,drawable", true, visible_rooms)
    Emotions.draw(world)
-   Systems.FloatingText.draw()
+   Systems.FloatingText.draw(world)
 
    -- 3. Global Effects & Debug
-   Systems.apply_palette_swaps(world)
    Systems.Spawner.draw(current_room)
 
    pal()

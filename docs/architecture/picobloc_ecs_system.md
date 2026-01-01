@@ -72,6 +72,10 @@ end)
 | System | Status | Query |
 |--------|--------|-------|
 | Shadows | ✅ Done | `position`, `shadow`, `size`, `direction?` |
+| Rendering | ✅ Done | `position`, `drawable`, `size?`, ... |
+| Animation | ✅ Done | `drawable`, `animatable`, `direction`, `type` |
+| Lighting | ✅ Done | `position`, `spotlight` |
+| FloatingText | ✅ Done | `position`, `floating_text` |
 | Player | ✅ Done | Uses all player components |
 
 ## Key Differences from Eggs
@@ -94,13 +98,13 @@ end)
 - [x] Migrate Player entity to picobloc
 - [x] Migrate other entities to picobloc (enemy, obstacle, pickup, projectile, minion, bomb, explosion)
 
-### Phase 2: Visual Systems
+### Phase 2: Visual Systems ✅
 
 - [x] **Shadows** - Query `position + shadow + size`
-- [ ] **Rendering** - Y-sorted entity drawing
-- [ ] **Animation** - Sprite state machine
-- [ ] **Lighting** - Spotlight effects
-- [ ] **Floating Text** - Damage/heal numbers
+- [x] **Rendering** - Y-sorted entity drawing
+- [x] **Animation** - Sprite state machine
+- [x] **Lighting** - Spotlight effects
+- [x] **Floating Text** - Damage/heal numbers
 
 ### Phase 3: Core Systems
 

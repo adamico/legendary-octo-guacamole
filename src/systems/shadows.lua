@@ -1,11 +1,12 @@
 -- Shadows system: draw shadows for entities with position + shadow components
 
 local Shadows = {}
+local EntityUtils = require("src/utils/entity_utils")
 
 --- Draw shadows for all entities with position + shadow + size components
 --- @param world World - picobloc World
---- @param clip_square Table - Clipping rectangle {x, y, w, h}
-function Shadows.draw(world, clip_square)
+
+function Shadows.draw(world)
    -- Query entities with all required components
    -- size is needed for hitbox-based shadow positioning
    world:query({"position", "shadow", "size", "direction?"}, function(ids, pos, shadow, size, dir)
@@ -13,16 +14,7 @@ function Shadows.draw(world, clip_square)
          -- Get direction string for per-direction lookups
          local dir_name = nil
          if dir then
-            local dx, dy = dir.dir_x[i], dir.dir_y[i]
-            if dy > 0 then
-               dir_name = "down"
-            elseif dy < 0 then
-               dir_name = "up"
-            elseif dx > 0 then
-               dir_name = "right"
-            elseif dx < 0 then
-               dir_name = "left"
-            end
+            dir_name = EntityUtils.get_direction_name(dir.dir_x[i], dir.dir_y[i])
          end
 
          -- Calculate shadow width (from config or derived from entity size)

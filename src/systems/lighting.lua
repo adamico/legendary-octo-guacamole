@@ -45,27 +45,35 @@ function Lighting.reset_spotlight()
    poke(0x550b, 0x3f)
 end
 
--- Draw spotlight circle for an entity
--- @param entity - Entity with spotlight tag
--- @param clip_square - Clipping rectangle {x, y, w, h}
-local function draw_spotlight_entity(entity, clip_square)
-   local center_x = entity.x + (entity.width or 16) / 2
-   local center_y = entity.y + (entity.height or 16) / 2
-   local radius = entity.spotlight_radius or 48
-
-   clip(clip_square.x, clip_square.y, clip_square.w, clip_square.h)
-   circfill(center_x, center_y, radius, LIGHTING_SPOTLIGHT_COLOR)
-   clip()
-end
-
 -- Update lighting for all spotlight entities
 -- @param world - ECS world
 -- @param clip_square - Clipping rectangle
 function Lighting.update(world, clip_square)
    Lighting.reset_spotlight()
-   world.sys("spotlight", function(entity)
-      draw_spotlight_entity(entity, clip_square)
-   end)()
+
+   clip(clip_square.x, clip_square.y, clip_square.w, clip_square.h)
+
+   world:query({"position", "spotlight", "size?"}, function(ids, pos, spotlight, size)
+      for i = ids.first, ids.last do
+         local width = size and size.width[i] or 16
+         local height = size and size.height[i] or 16
+
+         local x = pos.x[i]
+         local y = pos.y[i]
+         -- Use center of entity
+         local center_x = x + width / 2
+         local center_y = y + height / 2
+
+         local radius = spotlight.radius[i] or 48
+
+         -- Check if color customization is needed (but implementation uses global palette row currently)
+         -- So we stick to drawing with LIGHTING_SPOTLIGHT_COLOR
+
+         circfill(center_x, center_y, radius, LIGHTING_SPOTLIGHT_COLOR)
+      end
+   end)
+
+   clip()
 end
 
 return Lighting

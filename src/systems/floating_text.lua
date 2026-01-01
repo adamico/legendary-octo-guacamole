@@ -1,40 +1,29 @@
--- Floating Text System: displays damage/heal numbers above entities
+-- Floating Text System: displays damage/heal numbers (Picobloc ECS)
 local GameConstants = require("src/game/game_config")
 local TextUtils = require("src/utils/text_utils")
 
 local FloatingText = {}
 
--- Active floating text entries
-local active_texts = {}
+-- Stored reference to ECS world for spawning from callbacks
+local current_world = nil
+
+function FloatingText.set_world(world)
+   current_world = world
+end
 
 -- Configuration defaults
--- See src/game/config/effects.lua for the actual configuration.
 local function get_config()
    return GameConstants.FloatingText
 end
 
---- Spawn a floating text at an entity's position
----
---- @param x, y: world position (center of entity recommended)
---- @param amount: number or string to display
---- @param text_type: "damage", "heal", or "pickup" (optional, auto-detected from amount if omitted)
---- @param sprite_index: optional sprite index to display before the text
-function FloatingText.spawn(x, y, amount, text_type, sprite_index)
+--- Spawn a floating text entity
+function FloatingText.spawn(x, y, amount, color, sprite_index)
    local config = get_config()
 
-   -- Determine type from amount if not specified
-   if not text_type then
-      text_type = (type(amount) == "number" and amount < 0) and "damage" or "heal"
-   end
-
-   -- Determine color based on type
-   local color = config[text_type.."_color"] or (text_type == "damage" and config.damage_color) or config.heal_color
-
-   -- Format amount
+   -- Format text
    local text
    if type(amount) == "number" then
       local display_amount = flr(abs(amount))
-      -- For pickups with sprites, show "+n" format
       if sprite_index then
          text = "+"..tostring(display_amount)
       else
@@ -44,109 +33,156 @@ function FloatingText.spawn(x, y, amount, text_type, sprite_index)
       text = tostring(amount)
    end
 
-   -- Add slight random horizontal offset to prevent overlap
+   -- Random spread
    local offset_x = (rnd(1) - 0.5) * config.spread
+   local offset_y = config.offset_y
 
-   -- Check for nearby active texts and stagger Y position to prevent overlap
-   local base_y = y + config.offset_y
-   local stagger_y = 0
-   local stagger_amount = 10 -- Vertical spacing between stacked texts
-
-   for _, existing in ipairs(active_texts) do
-      -- Check if existing text is at similar position (within spread range)
-      if abs(existing.x - (x + offset_x)) < 16 and abs(existing.y - base_y - stagger_y) < stagger_amount then
-         stagger_y = stagger_y - stagger_amount
-      end
-   end
-
-   local entry = {
-      x = x + offset_x,
-      y = base_y + stagger_y,
-      text = text,
-      color = color,
-      timer = config.duration,
-      rise_speed = config.rise_speed,
-      outline_color = config.outline_color,
-      fade_start = config.duration - config.fade_duration,
-      sprite_index = sprite_index, -- optional sprite to draw
-   }
-
-   table.insert(active_texts, entry)
+   -- Spawn Entity
+   current_world:add_entity({
+      position = {
+         x = x + offset_x,
+         y = y + offset_y,
+         z = 100 -- High Z to render on top
+      },
+      floating_text = {
+         text = text,
+         color = color,
+         outline_color = config.outline_color or 0,
+         timer = config.duration,
+         rise_speed = config.rise_speed,
+         fade_start = config.duration - config.fade_duration,
+         sprite_index = sprite_index or 0,
+      }
+   })
 end
 
--- Convenience function to spawn damage text at an entity
-function FloatingText.spawn_at_entity(entity, amount, text_type, sprite_index)
-   local cx = entity.x + (entity.width or 16) / 2
-   local cy = entity.y
-   FloatingText.spawn(cx, cy, amount, text_type, sprite_index)
-end
+-- Convenience function to spawn damage text at an entity (by ID)
+function FloatingText.spawn_at_entity(entity_id, amount, color, sprite_index)
+   if not current_world then return end
 
--- Update all active floating texts (call once per frame)
-function FloatingText.update()
-   local i = 1
-   while i <= #active_texts do
-      local entry = active_texts[i]
-      entry.timer -= 1
-      entry.y -= entry.rise_speed
+   -- Lookup Position and Components
+   local pos = current_world.components.position
+   local size = current_world.components.size
 
-      if entry.timer <= 0 then
-         table.remove(active_texts, i)
+   if pos and pos.x[entity_id] then
+      local x = pos.x[entity_id]
+      local y = pos.y[entity_id]
+
+      -- Center based on size if available
+      if size and size.width[entity_id] then
+         x = x + size.width[entity_id] / 2
       else
-         i += 1
+         x = x + 8
       end
+
+      FloatingText.spawn(x, y, amount, color, sprite_index)
    end
 end
 
--- Draw all active floating texts (call during draw phase)
-function FloatingText.draw()
+-- Spawn damage text (defaults to damage color)
+function FloatingText.spawn_damage(entity_id, amount)
+   local config = get_config()
+   FloatingText.spawn_at_entity(entity_id, amount, config.damage_color)
+end
+
+-- Spawn heal text (defaults to heal color)
+function FloatingText.spawn_heal(entity_id, amount)
+   local config = get_config()
+   FloatingText.spawn_at_entity(entity_id, amount, config.heal_color)
+end
+
+-- Spawn pickup text (defaults to pickup color)
+function FloatingText.spawn_pickup(entity_id, text_or_amount, sprite_index)
+   local config = get_config()
+   FloatingText.spawn_at_entity(entity_id, text_or_amount, config.pickup_color, sprite_index)
+end
+
+-- Spawn info/generic text (defaults to white/light color if no specific info color, using pickup as fallback for now or white)
+function FloatingText.spawn_info(entity_id, text)
+   -- Using pickup color as default for info/purchased messages for now, or could add an info_color to GameConstants
+   local config = get_config()
+   local color = config.info_color or 7 -- Default to white if not defined
+   FloatingText.spawn_at_entity(entity_id, text, color)
+end
+
+-- Update all floating text entities
+function FloatingText.update(world)
+   -- Need 'position' and 'floating_text'
+   world:query({"position", "floating_text"}, function(ids, pos, ft)
+      for i = ids.first, ids.last do
+         -- Update timer
+         ft.timer[i] = ft.timer[i] - 1
+
+         -- Move Up
+         pos.y[i] = pos.y[i] - ft.rise_speed[i]
+
+         -- Check Expire
+         if ft.timer[i] <= 0 then
+            world:remove_entity(i)
+         end
+      end
+   end)
+end
+
+-- Draw all floating text entities
+function FloatingText.draw(world)
    local config = get_config()
 
-   for _, entry in ipairs(active_texts) do
-      -- Calculate alpha based on remaining time (for fade effect)
-      local alpha = 1
-      if entry.timer < entry.fade_start then
-         -- In fade phase
-         alpha = entry.timer / entry.fade_start
-      end
+   world:query({"position", "floating_text"}, function(ids, pos, ft)
+      for i = ids.first, ids.last do
+         local text = ft.text[i] -- value type, so it's the string
+         local x = pos.x[i]
+         local y = pos.y[i]
+         local color = ft.color[i]
+         local outline = ft.outline_color[i]
+         local timer = ft.timer[i]
+         local fade = ft.fade_start[i]
+         local sprite = ft.sprite_index[i]
 
-      -- Center the text horizontally
-      local text_width = #entry.text * 4    -- Approximate character width
-      local draw_x = entry.x - text_width / 2
-      local draw_y = entry.y
-
-      -- Draw with fade effect (Picotron supports fillp patterns for transparency)
-      -- For simplicity, use color blinking during fade
-
-      if alpha < 0.5 and (t() * 30) % 2 < 1 then
-         -- Skip drawing every other frame during fade for blink effect
-      else
-         -- If we have a sprite, draw it first (8x8 scaled to fit)
-         local sprite_width = 0
-         if entry.sprite_index then
-            sprite_width = config.icon_size + 2    -- sprite + small gap
-
-            local ix = draw_x + (config.icon_offset_x or -4)
-            local iy = draw_y + (config.icon_offset_y or -1)
-            local isize = config.icon_size or 8
-
-            -- Use sspr to scale 16x16 sprite down to target size
-            -- sspr(s, sx, sy, sw, sh, dx, dy, dw, dh)
-            sspr(entry.sprite_index, 0, 0, 16, 16, ix, iy, isize, isize)
+         -- Alpha/Fade Logic
+         local alpha = 1
+         if timer < fade then
+            alpha = timer / fade
          end
 
-         TextUtils.print_outlined(entry.text, draw_x + sprite_width - 4, draw_y, entry.color, entry.outline_color)
+         if alpha < 0.5 and (t() * 30) % 2 < 1 then
+            -- Blink skip
+         else
+            -- Draw
+            local text_width = #text * 4
+            local draw_x = x - text_width / 2
+            local draw_y = y
+
+            local sprite_width = 0
+            if sprite and sprite > 0 then
+               sprite_width = config.icon_size + 2
+               local isize = config.icon_size
+               local ix = draw_x + (config.icon_offset_x or -4)
+               local iy = draw_x + (config.icon_offset_y or -1)
+               sspr(sprite, 0, 0, 16, 16, ix, iy, isize, isize)
+            end
+
+            TextUtils.print_outlined(text, draw_x + sprite_width - 4, draw_y, color, outline)
+         end
       end
-   end
+   end)
 end
 
--- Clear all active floating texts (e.g., on room transition)
 function FloatingText.clear()
-   active_texts = {}
+   -- ECS handles cleanup usually, but if we want to force clear?
+   -- We'd iterate and delete. For now, rely on timers or scene reset.
+   -- Or implement remove_all logic.
 end
 
--- Get count of active texts (for debugging)
 function FloatingText.count()
-   return #active_texts
+   -- Count via query?
+   local count = 0
+   if current_world then
+      current_world:query({"floating_text"}, function(ids)
+         count = count + (ids.last - ids.first + 1)
+      end)
+   end
+   return count
 end
 
 return FloatingText

@@ -17,6 +17,19 @@ function Utils.get_config(entity)
     return GameConstants[entity.type]
 end
 
+-- Get configuration based on unrolled component values (ECS friendly)
+function Utils.get_component_config(type_val, enemy_type_val, proj_type_val, minion_type_val)
+    if type_val == "Enemy" and enemy_type_val then
+        return GameConstants.Enemy[enemy_type_val]
+    elseif (type_val == "Projectile" or type_val == "EnemyProjectile") and proj_type_val then
+        return GameConstants.Projectile[proj_type_val]
+    elseif minion_type_val then
+        return GameConstants.Minion[minion_type_val]
+    else
+        return GameConstants[type_val]
+    end
+end
+
 -- Convert direction vector (dx, dy) to direction name string
 -- @param dx - x component of direction (-1, 0, or 1)
 -- @param dy - y component of direction (-1, 0, or 1)

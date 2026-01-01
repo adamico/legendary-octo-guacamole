@@ -1,5 +1,6 @@
--- Pure animation system: sprite frame calculation and visual updates only
+-- Pure animation system: sprite frame calculation (Picobloc ECS)
 local EntityUtils = require("src/utils/entity_utils")
+local GameConstants = require("src/game/game_config")
 
 local Animation = {}
 
@@ -55,160 +56,151 @@ local function find_animation_config(config, state, direction)
    return animations["idle"]
 end
 
--- Main animation update: calculates sprite indices and flip flags
-function Animation.animate(world, entity)
-   -- Increment animation timer
-   entity.anim_timer = (entity.anim_timer or 0) + 1
-
-   -- Get current state and direction
-   local state = entity.fsm and entity.fsm.current or "idle"
-   local direction = entity.current_direction or entity.direction or "down"
-
-   -- Update direction based on movement (only when moving)
-   local is_moving = (abs(entity.vel_x or 0) > 0.1 or abs(entity.vel_y or 0) > 0.1)
-   if is_moving then
-      entity.current_direction = EntityUtils.get_direction_name(
-         entity.vel_x or 0,
-         entity.vel_y or 0,
-         entity.current_direction
-      ) or direction
-      direction = entity.current_direction
-   end
-
-   local config = EntityUtils.get_config(entity)
-   local state_anim = find_animation_config(config, state, direction)
-
-   local current_frame_idx = 0
-   local total_duration = 0
-
-   if state_anim then
-      local speed = state_anim.speed or DEFAULT_SPEED
-      local durations = state_anim.durations
-
-      if state_anim.top_indices or state_anim.bottom_indices then
-         -- Composite sprite (top/bottom halves)
-         local top_indices = state_anim.top_indices or {0}
-         local bottom_indices = state_anim.bottom_indices or {0}
-
-         local frame_idx, duration = get_frame_from_durations(durations, speed, entity.anim_timer, #top_indices)
-         local b_frame_idx = get_frame_from_durations(durations, speed, entity.anim_timer, #bottom_indices)
-
-         current_frame_idx = frame_idx
-         total_duration = duration
-         entity.sprite_top = top_indices[(frame_idx % #top_indices) + 1] or 0
-         entity.sprite_bottom = bottom_indices[(b_frame_idx % #bottom_indices) + 1] or 0
-         entity.split_row = state_anim.split_row or flr((entity.height or 16) / 2)
-         entity.sprite_index = nil
-      elseif state_anim.indices then
-         -- Explicit indices array
-         local indices = state_anim.indices
-         local frame_idx, duration = get_frame_from_durations(durations, speed, entity.anim_timer, #indices)
-
-         current_frame_idx = frame_idx
-         total_duration = duration
-         entity.sprite_top = nil
-         entity.sprite_bottom = nil
-         entity.split_row = nil
-         entity.sprite_index = indices[(frame_idx % #indices) + 1] or 0
-      elseif state_anim.base then
-         -- Base sprite + frame offset
-         local frames = state_anim.frames or 2
-         local frame_idx, duration = get_frame_from_durations(durations, speed, entity.anim_timer, frames)
-
-         current_frame_idx = frame_idx
-         total_duration = duration
-         entity.sprite_top = nil
-         entity.sprite_bottom = nil
-         entity.split_row = nil
-         entity.sprite_index = state_anim.base + frame_idx
-      end
-
-      -- Apply flip configuration
-      local fx = state_anim.flip_x or state_anim.flip or false
-      local fy = state_anim.flip_y or false
-
-      -- Per-frame flip support
-      if state_anim.flips and state_anim.flips[current_frame_idx + 1] then
-         local f = state_anim.flips[current_frame_idx + 1]
-         fx = f.x ~= nil and f.x or fx
-         fy = f.y ~= nil and f.y or fy
-      end
-
-      entity.flip_x = fx
-      entity.flip_y = fy
-   else
-      -- Fallback: simple 2-frame loop using sprite_index_offsets
-      local base_sprite = 0
-      if config and config.sprite_index_offsets then
-         base_sprite = config.sprite_index_offsets[direction] or 0
-      end
-      current_frame_idx = flr(entity.anim_timer / DEFAULT_SPEED) % 2
-      total_duration = DEFAULT_SPEED * 2
-
-      entity.sprite_top = nil
-      entity.sprite_bottom = nil
-      entity.split_row = nil
-      entity.sprite_index = base_sprite + current_frame_idx
-      entity.flip_x = false
-      entity.flip_y = false
-   end
-
-   -- Notify lifecycle system if animation completed
-   if total_duration > 0 and entity.anim_timer >= total_duration then
-      -- Set completion flags for usage by Lifecycle system
-      entity.anim_complete_state = state
-      entity.anim_looping = state_anim and state_anim.loop
-   else
-      entity.anim_complete_state = nil
-   end
-end
-
--- Simple direction-based sprite change (for non-FSM entities)
-local function change_sprite(entity)
-   if entity.fsm then return end -- FSM entities use animate()
-
-   local dx = entity.dir_x or 0
-   local dy = entity.dir_y or 0
-   local neutral = (dx == 0 and dy == 0)
-   local down = (dx == 0 and dy == 1)
-   local down_right = (dx == 1 and dy == 1)
-   local down_left = (dx == -1 and dy == 1)
-   local right = (dx == 1 and dy == 0)
-   local up_right = (dx == 1 and dy == -1)
-   local up = (dx == 0 and dy == -1)
-   local up_left = (dx == -1 and dy == -1)
-   local left = (dx == -1 and dy == 0)
-   local sprite_index
-   local flip = false
-
-   local config = EntityUtils.get_config(entity)
-   if not config then return end
-
-   -- Skip if entity doesn't have directional sprites (uses static sprite_index)
-   if not config.sprite_index_offsets then return end
-
-   if neutral or down then sprite_index = config.sprite_index_offsets.down end
-   if right or down_right or up_right then sprite_index = config.sprite_index_offsets.right end
-   if up or up_left or down_left then sprite_index = config.sprite_index_offsets.up end
-   if left or up_left or down_left then
-      sprite_index = config.sprite_index_offsets.right
-      flip = true
-   end
-
-   entity.base_sprite_index = sprite_index
-   entity.sprite_index = sprite_index
-   entity.flip_x = flip
-   entity.flip_y = false
-end
-
 -- Update all animations
--- @param world - ECS world
 function Animation.update(world)
-   -- Update direction-based sprites for simple entities
-   world.sys("sprite", change_sprite)()
+   -- Access optional components directly
+   local comps = world.components
+   local vel = comps.velocity
+   local fsm = comps.fsm
+   -- REVIEW: do we need to check each ai, or entity types?
+   local enemy_ai = comps.enemy_ai
+   local minion_ai = comps.minion_ai
+   local enemy_type = comps.enemy_type
+   local proj_type = comps.projectile_type
+   local minion_type = comps.minion_type
 
-   -- Update FSM-based animations
-   world.sys("animatable", function(e) Animation.animate(world, e) end)()
+   local query = {
+      "drawable", "animatable", "direction", "type"
+   }
+
+   world:query(query, function(ids, drawable, animatable, dir, type_c)
+      for i = ids.first, ids.last do
+         -- Increment Timer
+         local timer = (animatable.anim_timer[i] or 0) + 1
+         animatable.anim_timer[i] = timer
+
+         -- Resolve FSM State
+         local fsm_instance = (fsm and fsm.value[i])
+            or (enemy_ai and enemy_ai.fsm[i])
+            or (minion_ai and minion_ai.fsm[i])
+
+         local state = fsm_instance and fsm_instance.current or "idle"
+
+         -- Resolve Direction
+         -- If moving, update 'facing' (stored in component for persistence)
+         local facing = dir.facing[i] or "down"
+         if vel and vel.vel_x[i] then
+            local vx = vel.vel_x[i]
+            local vy = vel.vel_y[i]
+            if abs(vx) > 0.1 or abs(vy) > 0.1 then
+               facing = EntityUtils.get_direction_name(vx, vy, facing)
+               dir.facing[i] = facing
+            end
+         end
+
+         -- Resolve Config
+         local enemy_t_val = enemy_type and enemy_type.value[i]
+         local proj_t_val = proj_type and proj_type.value[i]
+         local minion_t_val = minion_type and minion_type.value[i]
+
+         local config = EntityUtils.get_component_config(type_c.value[i], enemy_t_val, proj_t_val, minion_t_val)
+         local state_anim = find_animation_config(config, state, facing)
+
+         -- Resolve Animation Frame
+         local current_frame_idx = 0
+         local total_duration = 0
+
+         -- Output Declarations
+         local spr_idx, spr_top, spr_bot, split
+         local fx, fy = false, false
+
+         if state_anim then
+            local speed = state_anim.speed or DEFAULT_SPEED
+            local durations = state_anim.durations
+
+            if state_anim.top_indices or state_anim.bottom_indices then
+               -- Composite
+               local top_indices = state_anim.top_indices or {0}
+               local bot_indices = state_anim.bottom_indices or {0}
+
+               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, #top_indices)
+               local b_frame_idx = get_frame_from_durations(durations, speed, timer, #bot_indices)
+
+               current_frame_idx = frame_idx
+               total_duration = dur
+
+               spr_top = top_indices[(frame_idx % #top_indices) + 1] or 0
+               spr_bot = bot_indices[(b_frame_idx % #bot_indices) + 1] or 0
+               split = state_anim.split_row
+               -- We use size/2 based split logic in renderer if nil?
+               -- Renderer uses `draw_outlined_composite` helper which defaults to flr(height/2)
+               -- We pass `split_row` component.
+            elseif state_anim.indices then
+               -- Explicit Indices
+               local indices = state_anim.indices
+               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, #indices)
+               current_frame_idx = frame_idx
+               total_duration = dur
+               spr_idx = indices[(frame_idx % #indices) + 1] or 0
+            elseif state_anim.base then
+               -- Base + Offset
+               local frames = state_anim.frames or 2
+               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, frames)
+               current_frame_idx = frame_idx
+               total_duration = dur
+               spr_idx = state_anim.base + frame_idx
+            end
+
+            -- Flips
+            local afx = state_anim.flip_x or state_anim.flip or false
+            local afy = state_anim.flip_y or false
+
+            if state_anim.flips and state_anim.flips[current_frame_idx + 1] then
+               local f = state_anim.flips[current_frame_idx + 1]
+               afx = f.x ~= nil and f.x or afx
+               afy = f.y ~= nil and f.y or afy
+            end
+            fx, fy = afx, afy
+         else
+            -- Fallback: Simple 2-frame loop using sprite_index_offsets
+            local base = 0
+            if config and config.sprite_index_offsets then
+               -- Check for directional sprite offsets
+               if type(config.sprite_index_offsets) == "table" then
+                  base = config.sprite_index_offsets[facing] or 0
+                  -- Legacy fallback logic for left facing using right sprite + flip?
+                  -- "left" might not exist in offsets, defaulting to right + flip.
+                  -- Picobloc migration: let's reimplement `change_sprite` logic basically.
+                  if not config.sprite_index_offsets["left"] and facing == "left" then
+                     base = config.sprite_index_offsets["right"] or 0
+                     fx = true
+                  end
+               else
+                  base = config.sprite_index_offsets -- Number
+               end
+            end
+            current_frame_idx = flr(timer / DEFAULT_SPEED) % 2
+            total_duration = DEFAULT_SPEED * 2
+            spr_idx = base + current_frame_idx
+         end
+
+         -- Write outputs to component buffers
+         drawable.sprite_index[i] = spr_idx or 0
+         drawable.sprite_top[i] = spr_top or 0
+         drawable.sprite_bottom[i] = spr_bot or 0
+         drawable.split_row[i] = split or 0
+         drawable.flip_x[i] = fx
+         drawable.flip_y[i] = fy
+
+         -- Lifecycle Flags
+         if total_duration > 0 and timer >= total_duration then
+            animatable.anim_complete_state[i] = state
+            animatable.anim_looping[i] = state_anim and state_anim.loop
+         else
+            animatable.anim_complete_state[i] = nil
+         end
+      end
+   end)
 end
 
 return Animation

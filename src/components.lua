@@ -8,7 +8,7 @@ return function(world)
    )
 
    world:component("type", {value = "value"})
-   world:component("position", {x = "f64", y = "f64"})
+   world:component("position", {x = "f64", y = "f64", z = "f64"}) -- Added z support
    world:component("size", {width = "f64", height = "f64"})
    world:component("acceleration", {
       accel = "f64",
@@ -24,6 +24,7 @@ return function(world)
    world:component("direction", {
       dir_x = "f64",
       dir_y = "f64",
+      facing = "value", -- String: "up", "down", "left", "right"
    })
    world:component("collidable", {
       hitboxes = "value",       -- Table of per-direction hitboxes
@@ -104,10 +105,36 @@ return function(world)
       sprite_index = "u64",
       flip_x = "value", -- Boolean
       flip_y = "value", -- Boolean
+      -- Composite sprite support
+      sprite_top = "u64",
+      sprite_bottom = "u64",
+      split_row = "f64",
    })
    world:component("animatable", {
       animations = "value",           -- Complex animation config table
       sprite_index_offsets = "value", -- PRUNE: could merge into animations
+      anim_timer = "u64",             -- Animation frame timer
+      anim_complete_state = "value",  -- Output: state that just finished
+      anim_looping = "value",         -- Output: is current anim looping?
+   })
+
+   world:component("spotlight", {
+      radius = "f64",
+      color = "u64",
+   })
+
+   world:component("floating_text", {
+      text = "value", -- String content
+      color = "u64",
+      outline_color = "u64",
+      timer = "f64",
+      rise_speed = "f64",
+      fade_start = "f64",
+      sprite_index = "u64", -- Optional icon
+   })
+
+   world:component("fsm", {
+      value = "value", -- Generic FSM instance
    })
 
    ---------------------------------------------------------------------------
@@ -143,6 +170,11 @@ return function(world)
       loot_rolls = "u64",
       use_diverse_loot = "value", -- Boolean
       xp_value = "u64",
+   })
+
+   world:component("flash", {
+      flash_timer = "u64",
+      flash_duration = "u64", -- Optional config
    })
 
    ---------------------------------------------------------------------------

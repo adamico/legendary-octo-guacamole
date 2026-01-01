@@ -58,8 +58,7 @@ Systems.draw_shadows = Shadows.draw
 
 -- Rendering systems
 Systems.draw_layer = Rendering.draw_layer
-Systems.apply_palette_swaps = Rendering.apply_palette_swaps
-Systems.set_active_rooms = Rendering.set_active_rooms
+
 
 -- UI systems (self-iterating)
 Systems.draw_health_bars = UI.draw_health_bars
