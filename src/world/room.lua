@@ -8,9 +8,11 @@ local machine = require("lib/lua-state-machine/statemachine")
 
 --- @class RoomLifecycle
 --- @field is fun(self: RoomLifecycle, state: string): boolean
+--- @field can fun(self: RoomLifecycle, event: string): boolean
 --- @field enter fun(self: RoomLifecycle)
 --- @field spawn fun(self: RoomLifecycle)
 --- @field clear fun(self: RoomLifecycle)
+--- @field current string
 
 --- @class RoomDoor
 --- @field sprite number
@@ -19,6 +21,8 @@ local machine = require("lib/lua-state-machine/statemachine")
 --- @class Room
 --- @field tiles RoomBounds
 --- @field pixels RoomBounds
+--- @field grid_x number
+--- @field grid_y number
 --- @field enemy_positions table<integer, {x: number, y: number, type: string}>
 --- @field lifecycle RoomLifecycle
 --- @field doors? table<string, RoomDoor>
@@ -31,6 +35,9 @@ local machine = require("lib/lua-state-machine/statemachine")
 --- @field contents_config? {wave_pattern?: table, enemies?: table}
 --- @field spawn_timer? number
 --- @field shop_items? table
+--- @field obstacle_data? table
+--- @field obstacle_entities? integer[]
+--- @field obstacles_spawned? boolean
 --- @field get_bounds fun(self: Room): {x1: number, y1: number, x2: number, y2: number}
 --- @field get_inner_bounds fun(self: Room): {x1: number, y1: number, x2: number, y2: number}
 --- @field get_center_tile fun(self: Room): {tx: number, ty: number}

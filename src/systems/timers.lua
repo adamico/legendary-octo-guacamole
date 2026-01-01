@@ -2,7 +2,8 @@
 local GameState = require("src/game/game_state")
 local Timers = {}
 
--- Update countdown timers on entities with "timers" tag
+--- Update countdown timers on entities with "timers" tag
+--- @param world ECSWorld
 function Timers.update(world)
    world:query({"timers", "health?"}, function(ids, timers, health)
       -- REVIEW: maybe we should make it dynamically discover defined timers?
@@ -35,7 +36,7 @@ function Timers.update(world)
          if timers.lifespan and timers.lifespan[i] then
             timers.lifespan[i] = timers.lifespan[i] - 1
             if timers.lifespan[i] <= 0 then
-               world:del_entity(ids[i])
+               world:remove_entity(ids[i])
             end
          end
       end
@@ -56,7 +57,7 @@ function Timers.update(world)
             if health.hp[i] > 0 then
                health.hp[i] = health.hp[i] - 1
                if health.hp[i] <= 0 then
-                  world:del_entity(ids[i])
+                  world:remove_entity(ids[i])
                end
             end
          end

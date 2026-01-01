@@ -1,13 +1,14 @@
 -- Physics and movement systems
 -- Handles acceleration, friction, and velocity application
-local Entities = require("src/entities")
-local Effects = require("src/systems/effects")
-local DungeonManager = require("src/world/dungeon_manager")
 
 local Physics = {}
 
--- Internal: apply acceleration, friction, and clamp velocity
--- Internal: apply acceleration, friction, and clamp velocity (column version)
+--- Internal: apply acceleration, friction, and clamp velocity
+--- @param i number
+--- @param accel_c AccelerationComponent
+--- @param vel_c VelocityComponent
+--- @param dir_c DirectionComponent?
+--- @param timers_c TimersComponent?
 local function apply_accel_logic(i, accel_c, vel_c, dir_c, timers_c)
    -- Handle stun: no movement at all
    if timers_c and timers_c.stun_timer and timers_c.stun_timer[i] and timers_c.stun_timer[i] > 0 then
@@ -82,11 +83,8 @@ local function apply_vel_logic(i, pos_c, vel_c)
 end
 
 
-
-
-
--- Update acceleration for all entities with acceleration tag
--- @param world - ECS world
+--- Update acceleration for all entities with acceleration tag
+--- @param world ECSWorld
 function Physics.acceleration(world)
    world:query({"acceleration", "velocity", "direction?", "timers?"}, function(ids, accel, vel, dir, timers)
       for i = ids.first, ids.last do
@@ -95,8 +93,8 @@ function Physics.acceleration(world)
    end)
 end
 
--- Update velocity for all entities with velocity tag
--- @param world - ECS world
+--- Update velocity for all entities with velocity tag
+--- @param world ECSWorld
 function Physics.velocity(world)
    world:query({"position", "velocity"}, function(ids, pos, vel)
       for i = ids.first, ids.last do
@@ -105,8 +103,9 @@ function Physics.velocity(world)
    end)
 end
 
--- Apply knockback to velocity BEFORE collision resolution
--- Consumes the knockback impulse and adds it to the entity's current velocity
+--- Apply knockback to velocity BEFORE collision resolution
+--- Consumes the knockback impulse and adds it to the entity's current velocity
+--- @param world ECSWorld
 function Physics.knockback_pre(world)
    world:query({"velocity"}, function(ids, vel)
       for i = ids.first, ids.last do
@@ -131,7 +130,7 @@ function Physics.knockback_post(world)
 end
 
 --- Update Z-axis physics (gravity, movement, ground collision)
---- @param world ECS world
+--- @param world ECSWorld
 function Physics.z_axis(world)
    world:query({"position", "velocity", "acceleration?", "lifetime?", "type", "tags?"},
       function(ids, pos, vel, accel, lifetime, type_c, tags_c)
@@ -162,12 +161,6 @@ function Physics.z_axis(world)
             local prev_z = z
             z += v_z
 
-            -- Vertical shot adjustment (shadow catches up to sprite)
-            -- Warning: access instance_data keys "vertical_shot"? Not in components.
-            -- Should be in a component if used here.
-            -- Assuming vertical_shot logic is niche or needs component.
-            -- Skipping specific vertical_shot fix in this migration step for simplicity.
-
             local hit_ground = false
             if z <= 0 and g_z < 0 then
                z = 0
@@ -180,19 +173,8 @@ function Physics.z_axis(world)
             vel.vel_z[i] = v_z
 
             if hit_ground then
-               -- Logic for ground impact (egg hatching, etc)
-               -- Needs to check tags/type
-               -- This logic was complex in original file accessing "owner", "tags" string, etc.
-               -- Simplified here for migration pass.
                if type_c and (type_c.value[i] == "Projectile" or type_c.value[i] == "EnemyProjectile") then
-                  -- Handle impact
-                  -- Requires spawning entities etc.
-                  -- Defer destruction to world.del(ids[i])?
-                  -- picobloc deletion: world:remove_entity(ids[i])
                   world:remove_entity(ids[i])
-
-                  -- Spawning logic for egg hatching omitted for brevity in this chunk
-                  -- Should extract to specific handler or system later
                end
             end
          end

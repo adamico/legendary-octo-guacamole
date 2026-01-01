@@ -14,6 +14,12 @@ local Events = require("src/game/events")
 
 local Minimap = {}
 
+--- @class CameraManager
+--- @field x number
+--- @field y number
+--- @field current_room Room
+--- @field get_offset fun(self: CameraManager): number, number
+
 -- State
 Minimap.visited = {}           -- Hash map of visited room keys
 Minimap.current_x = nil        -- Current X position
@@ -123,7 +129,7 @@ function Minimap.init()
 end
 
 --- Mark a room as visited
---- @param room The room to mark as visited
+--- @param room Room Room object
 function Minimap.visit(room)
    if room then
       local key = room.grid_x..","..room.grid_y
@@ -140,7 +146,10 @@ function Minimap.is_visited(gx, gy)
 end
 
 --- Calculate the grid bounds of all rooms
---- @return min_gx, max_gx, min_gy, max_gy
+--- @return number min_gx
+--- @return number max_gx
+--- @return number min_gy
+--- @return number max_gy
 function Minimap.get_grid_bounds()
    local min_gx, max_gx = 0, 0
    local min_gy, max_gy = 0, 0
@@ -156,12 +165,13 @@ function Minimap.get_grid_bounds()
 end
 
 --- Calculate viewport offset to center on current room
---- @param current_room The player's current room
---- @param min_gx Minimum grid X
---- @param max_gx Maximum grid X
---- @param min_gy Minimum grid Y
---- @param max_gy Maximum grid Y
---- @return view_min_gx, view_min_gy (the grid coordinates of top-left cell in viewport)
+--- @param current_room Room
+--- @param min_gx number Minimum grid X
+--- @param max_gx number Maximum grid X
+--- @param min_gy number Minimum grid Y
+--- @param max_gy number Maximum grid Y
+--- @return number view_min_gx
+--- @return number view_min_gy
 function Minimap.get_viewport_bounds(current_room, min_gx, max_gx, min_gy, max_gy)
    local cfg = GameConstants.Minimap
 
@@ -181,13 +191,16 @@ function Minimap.get_viewport_bounds(current_room, min_gx, max_gx, min_gy, max_g
 end
 
 --- Convert grid coordinates to screen position (with viewport bounds)
---- @param gx Grid X coordinate
---- @param gy Grid Y coordinate
---- @param view_min_gx Top-left grid X of viewport
---- @param view_min_gy Top-left grid Y of viewport
---- @param viewport_width Viewport width in pixels
---- @param map_y Y position of the minimap (top-left corner)
---- @return number screen_x, number screen_y, boolean is_visible
+--- @param gx number Grid X coordinate
+--- @param gy number Grid Y coordinate
+--- @param view_min_gx number Top-left grid X of viewport
+--- @param view_min_gy number Top-left grid Y of viewport
+--- @param viewport_width number Viewport width in pixels
+--- @param map_x number X position of minimap
+--- @param map_y number Y position of the minimap (top-left corner)
+--- @return number screen_x
+--- @return number screen_y
+--- @return boolean is_visible
 function Minimap.grid_to_screen_viewport(gx, gy, view_min_gx, view_min_gy, viewport_width, map_x, map_y)
    local cfg = GameConstants.Minimap
    local cell_total = cfg.cell_size + cfg.padding
@@ -207,13 +220,13 @@ function Minimap.grid_to_screen_viewport(gx, gy, view_min_gx, view_min_gy, viewp
 end
 
 --- Check if player screen position overlaps with minimap bounds (with margin)
---- @param player_screen_x Player X position in screen coordinates
---- @param player_screen_y Player Y position in screen coordinates
---- @param map_x Minimap X position
---- @param map_y Minimap Y position
---- @param viewport_width Minimap width
---- @param viewport_height Minimap height
---- @return boolean
+--- @param player_screen_x number Player X position in screen coordinates
+--- @param player_screen_y number Player Y position in screen coordinates
+--- @param map_x number Minimap X position
+--- @param map_y number Minimap Y position
+--- @param viewport_width number Minimap width
+--- @param viewport_height number Minimap height
+--- @return boolean is_overlapping
 function Minimap.is_player_overlapping(player_screen_x, player_screen_y, map_x, map_y, viewport_width, viewport_height)
    local cfg = GameConstants.Minimap
    local margin_x = cfg.overlap_margin_x or 16
@@ -251,7 +264,7 @@ function Minimap.update()
 end
 
 --- Draw the minimap
---- @param current_room The player's current room
+--- @param current_room Room Room object
 function Minimap.draw(current_room)
    local cfg = GameConstants.Minimap
 
@@ -318,7 +331,7 @@ function Minimap.draw(current_room)
       gx, gy = tonumber(gx), tonumber(gy)
 
       local room = DungeonManager.rooms[key]
-      if room then
+      if room and gx and gy then
          local sx, sy, is_visible = Minimap.grid_to_screen_viewport(
             gx, gy, view_min_gx, view_min_gy, viewport_width, map_x, map_y)
 

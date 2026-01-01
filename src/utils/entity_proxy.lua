@@ -86,6 +86,21 @@
 --- @field pickup boolean
 --- @field obstacle boolean
 --- @field minion boolean
+--- @field background boolean
+--- @field chest boolean
+--- @field controllable boolean
+--- @field destructible boolean
+--- @field emotional boolean
+--- @field flying boolean
+--- @field locked boolean
+--- @field middleground boolean
+--- @field shop_item boolean
+--- @field skull boolean
+--- @field sprite boolean
+--- @field static boolean
+--- @field world_obj boolean
+--- @field yolk_splat boolean
+--- @field melee_hitbox boolean
 --- @field bomb_cooldown number Transient field for bomber system cooldown
 --- @field explosion_radius number Transient field for bomber system explosion radius
 --- @field is_chest boolean Transient field for chest system
@@ -94,6 +109,26 @@
 --- @field item_name string Transient field for shop system
 --- @field emotion_timer number Transient field for emotions system
 --- @field emotion_phase number Transient field for emotions system
+--- @field impact_damage number Shooter component field
+--- @field shot_speed number Shooter component field
+--- @field range number Shooter component field
+--- @field fire_rate number Shooter component field
+--- @field coins number Inventory component field
+--- @field keys number Inventory component field
+--- @field bombs number Inventory component field
+--- @field level number XP component field
+--- @field xp number XP component field
+--- @field xp_to_next_level number XP component field
+--- @field item_id string Shop data field
+--- @field apply_fn function Shop data field
+--- @field room_key string Map position field
+--- @field tile_x number Map position field
+--- @field tile_y number Map position field
+--- @field sub_x number Movement field
+--- @field sub_y number Movement field
+--- @field sub_z number Movement field
+--- @field ignore_map_collision boolean Flag
+--- @field height_z number Z-vertical field
 local EntityProxy = {}
 EntityProxy.__index = EntityProxy
 
@@ -142,6 +177,22 @@ local ComponentMap = {
    -- Projectile specific
    damage = {"projectile_combat", "damage"}, -- Warning: ambiguous
 
+   -- Shooter
+   impact_damage = {"shooter", "impact_damage"},
+   shot_speed = {"shooter", "shot_speed"},
+   range = {"shooter", "range"},
+   fire_rate = {"shooter", "fire_rate"},
+
+   -- Inventory
+   coins = {"inventory", "coins"},
+   keys = {"inventory", "keys"},
+   bombs = {"inventory", "bombs"},
+
+   -- XP
+   level = {"xp", "level"},
+   xp = {"xp", "xp"},
+   xp_to_next_level = {"xp", "xp_to_next_level"},
+
    -- Type
    type = {"type", "value"},
    projectile_type = {"projectile_type", "value"},
@@ -157,6 +208,18 @@ local ComponentMap = {
 
    -- Flags
    map_collidable = {"collidable", "map_collidable"},
+   obstacle_type = {"obstacle_type", "value"},
+   room_key = {"room_key", "value"},
+
+   -- Shop Data
+   item_id = {"shop_data", "item_id"},
+   price = {"shop_data", "price"},
+   item_name = {"shop_data", "item_name"},
+   apply_fn = {"shop_data", "apply_fn"},
+
+   -- Map Position
+   tile_x = {"map_pos", "tx"},
+   tile_y = {"map_pos", "ty"},
 }
 
 -- Mapping for boolean flags (checking existence of component)
@@ -170,6 +233,21 @@ local TagMap = {
    pickup = "pickup",
    obstacle = "obstacle",
    minion = "minion",
+   background = "background",
+   chest = "chest",
+   controllable = "controllable",
+   destructible = "destructible",
+   emotional = "emotional",
+   flying = "flying",
+   locked = "locked",
+   middleground = "middleground",
+   shop_item = "shop_item",
+   skull = "skull",
+   sprite = "sprite",
+   static = "static",
+   world_obj = "world_obj",
+   yolk_splat = "yolk_splat",
+   melee_hitbox = "melee_hitbox",
 }
 
 --- @param world ECSWorld
@@ -248,7 +326,18 @@ function EntityProxy:__newindex(key, value)
       return
    end
 
-   -- 2. Allow setting custom transient fields on the proxy table itself
+   -- 2. Check Tag Map
+   local tag_comp = TagMap[key]
+   if tag_comp then
+      if value then
+         self._world:add_components(self._id, {[tag_comp] = true})
+      else
+         self._world:remove_components(self._id, {tag_comp})
+      end
+      return
+   end
+
+   -- 3. Allow setting custom transient fields on the proxy table itself
    -- (This allows things like `entity.hit_obstacle = true` to work within the scope of the proxy usage)
    rawset(self, key, value)
 end

@@ -1,5 +1,11 @@
 local Collision = {}
 
+--- @class Hitbox
+--- @field x number
+--- @field y number
+--- @field w number
+--- @field h number
+
 local SpatialGrid = require("src/physics/spatial_grid")
 local CollisionFilter = require("src/physics/collision_filter")
 local HitboxUtils = require("src/utils/hitbox_utils")
@@ -38,8 +44,10 @@ end
 --- @param y number
 --- @param w number
 --- @param h number
---- @param entity Entity
---- @returns nil|number, nil|number, nil|number
+--- @param entity EntityProxy
+--- @return number|nil stx
+--- @return number|nil sty
+--- @return number|nil stile
 local function find_solid_tile(x, y, w, h, entity)
     local stx, sty, stile = for_each_tile({x = x, y = y, w = w, h = h}, function(tx, ty, tile)
         if tile and fget(tile, SOLID_FLAG) then
@@ -55,8 +63,12 @@ local function find_solid_tile(x, y, w, h, entity)
     return stx, sty, stile
 end
 
-Collision.find_solid_tile = find_solid_tile
-
+--- @param x number
+--- @param y number
+--- @param w number
+--- @param h number
+--- @param entity EntityProxy
+--- @return boolean
 local function is_solid(x, y, w, h, entity)
     return find_solid_tile(x, y, w, h, entity) ~= nil
 end
@@ -67,7 +79,7 @@ Collision.is_solid = is_solid
 ---
 --- This helps players "slide" into doorways when moving along walls
 ---
---- @param entity Entity
+--- @param entity EntityProxy
 --- @param tx number
 --- @param ty number
 --- @param room Room
@@ -102,9 +114,9 @@ end
 
 --- Check if player has exited room bounds and trigger transition
 ---
---- @param entity Entity
---- @param camera_manager CameraManager
---- @return nil|[number, number]
+--- @param entity EntityProxy
+--- @param camera_manager table
+--- @return number[]|nil trigger_pos
 function Collision.check_trigger(entity, camera_manager)
     local room = camera_manager.current_room
     if not room then return nil end
@@ -130,7 +142,7 @@ end
 
 --- Update the spatial grid once per frame
 ---
---- @param world The ECS world instance
+--- @param world ECSWorld The ECS world instance
 function Collision.update_spatial_grid(world)
     local EntityProxy = require("src/utils/entity_proxy")
     current_grid = SpatialGrid:new(SPATIAL_GRID_CELL_SIZE)
@@ -152,6 +164,9 @@ function Collision.resolve_all(world)
     end
 end
 
+--- @param world ECSWorld
+--- @param room Room
+--- @param camera_manager table
 function Collision.resolve_map_all(world, room, camera_manager)
     for _, entity in ipairs(Collision.active_proxies) do
         if entity.map_collidable then
@@ -162,8 +177,8 @@ end
 
 --- Resolve collisions between entities
 ---
---- @param world World
---- @param entity1 Entity
+--- @param world ECSWorld
+--- @param entity1 EntityProxy
 function Collision.resolve_entities(world, entity1)
     if not current_grid then return end
 
@@ -226,9 +241,9 @@ end
 
 --- Resolve collisions between entity and map
 ---
---- @param entity Entity
+--- @param entity EntityProxy
 --- @param room Room
---- @param camera_manager CameraManager
+--- @param camera_manager table
 function Collision.resolve_map(entity, room, camera_manager)
     if entity.ignore_map_collision then
         return
@@ -280,16 +295,17 @@ end
 
 --- Check if two entities overlap
 ---
---- @param entity1 Entity
---- @param entity2 Entity
+--- @param entity1 EntityProxy
+--- @param entity2 EntityProxy
 --- @return boolean
 function Collision.check_overlap(entity1, entity2)
     local hb1 = get_hitbox(entity1)
     local hb2 = get_hitbox(entity2)
-    return hb1.x < hb2.x + hb2.w and
+    local overlaps = hb1.x < hb2.x + hb2.w and
        hb1.x + hb1.w > hb2.x and
        hb1.y < hb2.y + hb2.h and
        hb1.y + hb1.h > hb2.y
+    return overlaps
 end
 
 return Collision

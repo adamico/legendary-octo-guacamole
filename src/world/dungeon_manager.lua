@@ -1,5 +1,7 @@
 local Room = require("src/world/room")
 local Events = require("src/game/events")
+local Entities = require("src/entities")
+local EntityProxy = require("src/utils/entity_proxy")
 local RoomLayouts = require("src/world/room_layouts")
 local FloorPatterns = require("src/world/floor_patterns")
 local WavePatterns = require("src/world/wave_patterns")
@@ -450,9 +452,9 @@ function DungeonManager.autotile_walls()
 end
 
 --- Setup a room upon entry (spawning, lifecycle transitions, skull timer)
--- @param room The room to setup
--- @param player The player entity (for spawn distance calculations)
--- @param world The ECS world instance
+--- @param room Room The room to setup
+--- @param player EntityProxy The player entity
+--- @param world ECSWorld The ECS world instance
 function DungeonManager.setup_room(room, player, world)
    local Systems = require("src/systems")
 
@@ -460,7 +462,9 @@ function DungeonManager.setup_room(room, player, world)
    if room.contents_config and room.contents_config.wave_pattern then
       local pattern = room.contents_config.wave_pattern
       Log.info("Entering room ("..room.grid_x..","..room.grid_y..")")
-      Log.info("wave pattern="..pattern.name)
+      if pattern and pattern.name then
+         Log.info("wave pattern="..pattern.name)
+      end
       Log.info("Room layout="..room.layout.name)
    end
 
@@ -469,7 +473,6 @@ function DungeonManager.setup_room(room, player, world)
    -- Spawn obstacles (Rocks, Destructibles, Chests, ShopItems) if not already spawned
    -- Uses pre-generated obstacle_data from dungeon generation for seed determinism
    if not room.obstacles_spawned and room.obstacle_data then
-      local Entities = require("src/entities")
       local rocks_count = 0
       local dest_count = 0
       local chest_count = 0
@@ -505,24 +508,24 @@ function DungeonManager.setup_room(room, player, world)
          elseif f.feature == "shop_item" then
             entity = Entities.spawn_obstacle(world, wx, wy, "ShopItem", f.item_sprite)
             -- Transfer shop item data from obstacle_data to entity
-            entity.item_id = f.item_id
-            entity.item_name = f.item_name
-            entity.price = f.price
-            entity.apply_fn = f.apply_fn
+            if entity then
+               local proxy = EntityProxy.new(world, entity)
+               proxy.item_id = f.item_id
+               proxy.item_name = f.item_name
+               proxy.price = f.price
+               proxy.apply_fn = f.apply_fn
+            end
             shop_item_count += 1
          end
          if entity then
-            entity.room_key = room.grid_x..","..room.grid_y
+            local proxy = EntityProxy.new(world, entity)
+            proxy.room_key = room.grid_x..","..room.grid_y
             -- Store original tile coordinates for pathfinder (pixel offset doesn't affect this)
-            entity.tile_x = f.tx
-            entity.tile_y = f.ty
+            proxy.tile_x = f.tx
+            proxy.tile_y = f.ty
             add(room.obstacle_entities, entity)
          end
       end
-      Log.info("Spawned obstacles in room ("..
-         room.grid_x..","..room.grid_y.."): "..rocks_count.." rocks, "..dest_count..
-         " destructibles, "..chest_count.." chests, "..locked_chest_count..
-         " locked chests, "..shop_item_count.." shop items")
       room.obstacles_spawned = true
    end
 
@@ -540,8 +543,8 @@ function DungeonManager.setup_room(room, player, world)
 end
 
 --- Check if an active room has been cleared of enemies
--- @param room The room to check
--- @param world The ECS world instance
+--- @param room Room The room to check
+--- @param world ECSWorld The ECS world instance
 function DungeonManager.check_room_clear(room, world)
    if not room.lifecycle:is("active") then return end
 
@@ -634,7 +637,6 @@ function DungeonManager.is_valid_spawn_tile(tx, ty, room)
 
    -- 5. Check for layout features (Rocks/Destructibles/Chests) if room provided
    if room and room.layout and room.layout.grid then
-      local RoomLayouts = require("src/world/room_layouts")
       local floor_rect = room:get_inner_bounds()
       local room_w = floor_rect.x2 - floor_rect.x1 + 1
       local room_h = floor_rect.y2 - floor_rect.y1 + 1

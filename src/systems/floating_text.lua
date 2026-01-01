@@ -7,6 +7,7 @@ local FloatingText = {}
 -- Stored reference to ECS world for spawning from callbacks
 local current_world = nil
 
+--- @param world ECSWorld
 function FloatingText.set_world(world)
    current_world = world
 end
@@ -38,22 +39,24 @@ function FloatingText.spawn(x, y, amount, color, sprite_index)
    local offset_y = config.offset_y
 
    -- Spawn Entity
-   current_world:add_entity({
-      position = {
-         x = x + offset_x,
-         y = y + offset_y,
-         z = 100 -- High Z to render on top
-      },
-      floating_text = {
-         text = text,
-         color = color,
-         outline_color = config.outline_color or 0,
-         timer = config.duration,
-         rise_speed = config.rise_speed,
-         fade_start = config.duration - config.fade_duration,
-         sprite_index = sprite_index or 0,
-      }
-   })
+   if current_world then
+      current_world:add_entity({
+         position = {
+            x = x + offset_x,
+            y = y + offset_y,
+            z = 100 -- High Z to render on top
+         },
+         floating_text = {
+            text = text,
+            color = color,
+            outline_color = config.outline_color or 0,
+            timer = config.duration,
+            rise_speed = config.rise_speed,
+            fade_start = config.duration - config.fade_duration,
+            sprite_index = sprite_index or 0,
+         }
+      })
+   end
 end
 
 -- Convenience function to spawn damage text at an entity (by ID)

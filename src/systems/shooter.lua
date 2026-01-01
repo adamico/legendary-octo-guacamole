@@ -5,7 +5,8 @@ local EntityUtils = require("src/utils/entity_utils")
 
 local Shooter = {}
 
--- Shooting system: works for ANY entity with "shooter" tags
+--- Shooting system: works for ANY entity with "shooter" tags
+--- @param world ECSWorld
 function Shooter.update(world)
    world:query({
       "shooter", "position", "direction?", "health?",
@@ -131,10 +132,6 @@ function Shooter.update(world)
                   drain_heal = shooter.drain_heal[i],
                   hatch_time = shooter.hatch_time[i],
 
-                  -- Slow stats need to be in shooter component or pulled from somewhere?
-                  -- Original code: entity.egg_slow_duration. Not in shooter component def.
-                  -- Assuming these are custom fields on entity or missing from component.
-                  -- If missing, we should use defaults or add them.
                   egg_slow_duration = 60, -- Default
                   egg_slow_factor = 0.5,
                }

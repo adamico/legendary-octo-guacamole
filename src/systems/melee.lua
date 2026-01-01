@@ -1,11 +1,12 @@
 -- Melee attack system
 local GameConstants = require("src/game/game_config")
 local GameState = require("src/game/game_state")
-local Render = require("src/systems/rendering")
 local EntityUtils = require("src/utils/entity_utils")
 
 local Melee = {}
 
+--- Melee update function
+--- @param world ECSWorld
 function Melee.update(world)
    -- Only players can melee for now
    world:query({

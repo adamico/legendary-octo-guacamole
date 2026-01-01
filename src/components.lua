@@ -4,7 +4,7 @@ return function(world)
       "background", "chest", "controllable", "destructible", "emotional", "enemy",
       "flying", "locked", "middleground", "minion", "obstacle",
       "pickup", "player", "projectile", "shop_item", "skull",
-      "spotlight", "sprite", "static", "world_obj", "yolk_splat"
+      "sprite", "static", "world_obj", "yolk_splat", "melee_hitbox"
    )
 
    world:component("type", {value = "value"})
@@ -269,5 +269,17 @@ return function(world)
    -- Consider if this should be handled differently with picobloc queries
    world:component("room_key", {
       value = "value", -- String: "0,0", "1,0", etc.
+   })
+
+   world:component("shop_data", {
+      item_id = "value",
+      item_name = "value",
+      price = "u64",
+      apply_fn = "value",
+   })
+
+   world:component("map_pos", {
+      tx = "u64",
+      ty = "u64",
    })
 end

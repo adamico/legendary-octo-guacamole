@@ -4,8 +4,8 @@ local GameConstants = require("src/game/game_config")
 
 local Obstacle = {}
 
--- Spawn generic obstacle
---- @param world World - picobloc World
+--- Spawn generic obstacle
+--- @param world ECSWorld - picobloc World
 --- @param x number - spawn x position
 --- @param y number - spawn y position
 --- @param obstacle_type string - type key in GameConstants.Obstacle

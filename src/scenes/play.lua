@@ -1,17 +1,17 @@
 local GameState = require("src/game/game_state")
 local GameConstants = require("src/game/game_config")
 local World = require("src/world")
-local ECS = require("lib/picobloc/picobloc")
+local picobloc = require("lib/picobloc/picobloc")
+local register_components = require("src/components")
 local Entities = require("src/entities")
 local Systems = require("src/systems")
 local Emotions = require("src/systems/emotions")
 local Events = require("src/game/events")
 local UI = require("src/ui")
-local Wander = require("src/ai/primitives/wander")
-local AI = require("src/ai")
 local AIDebug = require("src/systems/ai_debug")
 local Leveling = require("src/utils/leveling")
-local EntityProxy = require("src/utils/entity_proxy")
+local DebugUI = require("src/ui/debug_ui")
+local PlayEvents = require("src/scenes/play_events")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -22,14 +22,17 @@ local SceneManager = require("src/scenes/manager")
 
 local Play = SceneManager:addState("Play")
 
-world = ECS:new()
+--- @type ECSWorld
+local world -- Global world instance (initialized later)
 local player
 local camera_manager
 local current_room
 
 function Play:enteredState()
    Log.trace("Entered Play scene")
-   world = ECS:new() -- MUST re-initialize ECS world on every entry for restart to work
+   --- @type ECSWorld
+   world = picobloc.World()   -- MUST re-initialize ECS world on every entry for restart to work
+   register_components(world) -- Register all ECS components
    Systems.init_extended_palette()
    Systems.init_spotlight()
    Systems.FloatingText.set_world(world) -- Initialize FloatingText with proper ECS world
@@ -57,140 +60,19 @@ function Play:enteredState()
    Minimap.init()
    Minimap.visit(current_room)
 
-   -- Subscribe to room transition events
-   Events.on(Events.ROOM_TRANSITION, function(new_room)
-      current_room = new_room
-      DungeonManager.current_room = new_room
-      camera_manager:set_room(current_room)
-      DungeonManager.setup_room(current_room, player, world)
-      Minimap.visit(current_room) -- Mark new room as visited
-      -- Remove projectiles, pickups, skulls from previous room
-      world:query({"projectile"}, function(ids)
-         for i = ids.first, ids.last do world:remove_entity(ids[i]) end
-      end)
-      world:query({"pickup"}, function(ids)
-         for i = ids.first, ids.last do world:remove_entity(ids[i]) end
-      end)
-      world:query({"skull"}, function(ids)
-         for i = ids.first, ids.last do world:remove_entity(ids[i]) end
-      end)
-      -- Teleport minions to player in new room
-      world:query({"minion", "position"}, function(ids, pos)
-         for i = ids.first, ids.last do
-            pos.x[i] = player.x
-            pos.y[i] = player.y
-            -- Reset behavior if chick
-            local e = EntityProxy.new(world, ids[i])
-            if e.chick_fsm then
-               Wander.reset(e)
-            end
-         end
-      end)
-      Systems.FloatingText.clear()
-      AI.ChickAI.clear_target() -- Clear painted target from previous room
-   end)
+   -- Subscribe to events (room transition, level up, game over)
+   PlayEvents.subscribe({
+      get_world = function() return world end,
+      get_player = function() return player end,
+      get_current_room = function() return current_room end,
+      set_current_room = function(room) current_room = room end,
+      get_camera_manager = function() return camera_manager end,
+      minimap = Minimap,
+      scene = self
+   })
 
-   -- Subscribe to Level Up event
-   Events.on(Events.LEVEL_UP, function(player_entity, new_level)
-      self:pushState("LevelUp", player_entity)
-   end)
-
-   -- Subscribe to Game Over event
-   Events.on(Events.GAME_OVER, function()
-      self:gotoState("GameOver")
-   end)
-
-   -- Subscribe to room clear events
-   Events.on(Events.ROOM_CLEAR, function(room)
-      -- No healing on room clear anymore (as per new design)
-   end)
-
-   -- Setup debugui cheats toggles (clickable)
-   -- Helper to sync toggle visual state without triggering tap callback
-   local function sync_toggle_visual(toggle, cheat_value)
-      if toggle.on ~= cheat_value then
-         toggle.on = cheat_value
-         -- Swap colors to reflect state
-         toggle.bg_col, toggle.text_col = toggle.text_col, toggle.bg_col
-      end
-   end
-
-   -- Cheats Group
-   add(debugui.elements, debugui.create_group(7, debugui.config._ACCENT1_color, true, function(self)
-      self.vars = {"[== cheats ==]"}
-   end))
-
-   local godmode_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "godmode",
-      function(self) sync_toggle_visual(self, GameState.cheats.godmode) end,
-      nil,
-      function(self) GameState.cheats.godmode = not GameState.cheats.godmode end)
-   add(debugui.elements, godmode_toggle)
-
-   local free_attacks_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "free_attacks",
-      function(self) sync_toggle_visual(self, GameState.cheats.free_attacks) end,
-      nil,
-      function(self) GameState.cheats.free_attacks = not GameState.cheats.free_attacks end)
-   add(debugui.elements, free_attacks_toggle)
-
-   local infinite_inv_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "infinite_inventory",
-      function(self) sync_toggle_visual(self, GameState.cheats.infinite_inventory) end,
-      nil,
-      function(self) GameState.cheats.infinite_inventory = not GameState.cheats.infinite_inventory end)
-   add(debugui.elements, infinite_inv_toggle)
-
-   -- Debug Group
-   add(debugui.elements, debugui.create_group(7, debugui.config._ACCENT1_color, true, function(self)
-      self.vars = {"[== debug ==]"}
-   end))
-
-   local hitboxes_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_hitboxes",
-      function(self) sync_toggle_visual(self, GameState.debug.show_hitboxes) end,
-      nil,
-      function(self) GameState.debug.show_hitboxes = not GameState.debug.show_hitboxes end)
-   add(debugui.elements, hitboxes_toggle)
-
-   local grid_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_grid",
-      function(self) sync_toggle_visual(self, GameState.debug.show_grid) end,
-      nil,
-      function(self) GameState.debug.show_grid = not GameState.debug.show_grid end)
-   add(debugui.elements, grid_toggle)
-
-   local combat_timer_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_combat_timer",
-      function(self) sync_toggle_visual(self, GameState.debug.show_combat_timer) end,
-      nil,
-      function(self) GameState.debug.show_combat_timer = not GameState.debug.show_combat_timer end)
-   add(debugui.elements, combat_timer_toggle)
-
-   local pathfinding_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "show_pathfinding",
-      function(self) sync_toggle_visual(self, GameState.debug.show_pathfinding) end,
-      nil,
-      function(self) GameState.debug.show_pathfinding = not GameState.debug.show_pathfinding end)
-   add(debugui.elements, pathfinding_toggle)
-
-   -- Player Stats Group (Real-time monitoring)
-   local stats_group = debugui.create_group(7, debugui.config._ACCENT2_color, true,
-      function(self)
-         if not player then return end
-         self.vars = {
-            "[== player stats ==]",
-            "hp: "..tostring(player.hp).."/"..tostring(player.max_hp),
-            "overheal: "..tostring(player.overflow_hp or 0),
-            "damage: "..tostring(player.damage),
-            "shot_speed: "..tostring(player.shot_speed),
-            "range: "..tostring(player.range),
-            "fire_rate: "..tostring(player.fire_rate),
-            "[== inventory ==]",
-            "coins: "..tostring(player.coins),
-            "keys: "..tostring(player.keys),
-            "bombs: "..tostring(player.bombs),
-            "[== xp ==]",
-            "level: "..tostring(player.level),
-            "xp: "..tostring(player.xp).."/"..tostring(player.xp_to_next_level),
-            "[== level ==]",
-            "seed: "..tostring(GameState.current_seed),
-         }
-      end)
-   add(debugui.elements, stats_group)
+   -- Setup debug UI (cheats, debug toggles, player stats)
+   DebugUI.init(function() return player end, function() return world end)
 
    -- Setup initial room
    DungeonManager.setup_room(current_room, player, world)
