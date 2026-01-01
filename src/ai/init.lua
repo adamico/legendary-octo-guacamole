@@ -41,8 +41,8 @@ local minion_profiles = {
 AI.ChickAI = ChickAI
 
 --- Dispatch AI update to the appropriate enemy profile
--- @param entity The entity to process
--- @param player The player entity (target)
+--- @param entity EntityProxy The entity to process
+--- @param player EntityProxy|nil The player entity (target)
 function AI.dispatch(entity, player)
    local profile = enemy_profiles[entity.enemy_type]
    if profile then
@@ -51,12 +51,13 @@ function AI.dispatch(entity, player)
 end
 
 --- Dispatch AI update for minions
--- @param entity The minion entity to process
--- @param world The ECS world (for spawning entities)
-function AI.dispatch_minion(entity, world)
+--- @param entity EntityProxy The minion entity to process
+--- @param world ECSWorld The ECS world (for spawning entities)
+--- @param player EntityProxy|nil The player entity (optional)
+function AI.dispatch_minion(entity, world, player)
    local profile = minion_profiles[entity.minion_type]
    if profile then
-      profile(entity, world)
+      profile(entity, world, player)
    end
 end
 

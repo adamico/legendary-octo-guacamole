@@ -39,7 +39,7 @@ return function(entity, world)
             attachment_target = entity.attachment_target,
             attachment_timer = entity.attachment_timer,
          })
-         world.del(entity)
+         world:remove_entity(entity._id)
       end
    end
 end

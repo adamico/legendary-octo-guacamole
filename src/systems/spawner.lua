@@ -6,7 +6,7 @@ local Spawner = {}
 
 Spawner.indicator_sprite = SPAWNER_INDICATOR_SPRITE
 
-function Spawner.update(world, room)
+function Spawner.update(world, room, player_id)
     -- Regular enemy spawning (room is in spawning state)
     if room and room.lifecycle:is("spawning") then
         room.spawn_timer -= 1
@@ -24,12 +24,21 @@ function Spawner.update(world, room)
         if room.skull_timer <= 0 then
             -- If room is active (locked), ignore health check to add pressure
             local ignore_health = room.lifecycle:is("active")
-            if Spawner.spawn_skull(world, room, ignore_health) then
+            if Spawner.spawn_skull(world, room, player_id, ignore_health) then
                 room.skull_spawned = true
             end
         end
     end
 end
+
+-- Draw methods unchanged... (elided/kept same by user usually, but here I'm only replacing functions I need to)
+-- Wait, replace_file_content replaces a block.
+-- I need to be careful not to delete drawing instructions if I'm replacing a huge chunk.
+-- `Spawner.update` is at top. `spawn_skull` is at bottom.
+-- I should probably do two replacements or one if contiguous. They are not contiguous.
+
+-- Let's stick to replacing `Spawner.update` first.
+
 
 function Spawner.draw(room)
     if not room or not room.lifecycle:is("spawning") then return end
@@ -228,24 +237,28 @@ function Spawner.populate(room, player)
 end
 
 -- Spawn skull at farthest corner from player (outside screen)
-function Spawner.spawn_skull(world, room, ignore_health_check)
+function Spawner.spawn_skull(world, room, player_id, ignore_health_check)
     if not room then return false end
 
-    -- Get player position
-    local player_x, player_y
-    local player_entity
-    world.sys("player", function(p)
-        player_x = p.x
-        player_y = p.y
-        player_entity = p
-    end)()
+    -- Check if player exists and get position
+    if not player_id or not world:entity_exists(player_id) then return false end
 
-    -- If no player, don't spawn
+    local player_x, player_y, player_hp, player_max_hp
+
+    -- Efficient single-entity lookup
+    world:query_entity(player_id, {"position", "health"}, function(idx, pos, health)
+        player_x = pos.x[idx]
+        player_y = pos.y[idx]
+        player_hp = health.hp[idx]
+        player_max_hp = health.max_hp[idx]
+    end)
+
+    -- If query failed (missing components), abort
     if not player_x then return false end
 
     -- Don't spawn if player is at full health (no idle regeneration to punish)
     -- UNLESS we are ignoring the health check (e.g. pressure in locked room)
-    if not ignore_health_check and player_entity and player_entity.hp >= player_entity.max_hp then
+    if not ignore_health_check and player_hp >= player_max_hp then
         return false
     end
 

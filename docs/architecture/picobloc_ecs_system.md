@@ -127,10 +127,10 @@ end)
 - [x] **Obstacle** - Rock, Destructible, Chest
 - [x] **Bomb/Explosion**
 
-### Phase 6: AI & Spawning
+### Phase 6: AI & Spawning ✅
 
-- [ ] **AI dispatch** - Enemy behavior FSMs
-- [ ] **Spawner** - Wave patterns, room population
+- [x] **AI dispatch** - Enemy behavior FSMs (using EntityProxy)
+- [x] **Spawner** - Wave patterns, room population (player ID passed directly)
 
 ### Phase 7: Cleanup
 

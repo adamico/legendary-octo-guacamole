@@ -166,6 +166,10 @@ return function(world)
       wander_pause_min = "u64",  -- PRUNE: overlaps with minion_ai fields
       wander_pause_max = "u64",  -- PRUNE: overlaps with minion_ai fields
    })
+   -- Pathfinding state persistence
+   world:component("path_state", {
+      value = "value", -- Table containing path, path_index, timers, etc.
+   })
    world:component("contact_damage", {
       damage = "f64",
    })

@@ -10,6 +10,7 @@ local HitboxUtils = require("src/utils/hitbox_utils")
 local PUZZLED_DURATION = 60 -- frames to stay puzzled before patrol
 
 -- Cardinal directions for patrol: {dx, dy}
+-- REFACTOR: use the helper function from utils
 local CARDINAL_DIRS = {
    {0,  -1}, -- up
    {0,  1},  -- down
@@ -17,6 +18,7 @@ local CARDINAL_DIRS = {
    {1,  0},  -- right
 }
 
+-- REFACTOR: use a helper function
 -- Get orthogonal directions to current direction
 local function get_orthogonal_directions(dx, dy)
    if dx == 0 then
@@ -30,7 +32,6 @@ end
 
 -- Initialize Dasher FSM on entity
 local function init_fsm(entity)
-   -- Pick initial random direction
    local initial_dir = CARDINAL_DIRS[flr(rnd(4)) + 1]
    entity.patrol_dir_x = initial_dir[1]
    entity.patrol_dir_y = initial_dir[2]
@@ -87,8 +88,8 @@ local function init_fsm(entity)
 end
 
 --- Main AI update for Dasher enemy type
---- @param entity The dasher entity
---- @param player The player entity (target)
+--- @param entity EntityProxy The dasher entity
+--- @param player EntityProxy The player entity (target)
 local function dasher_ai(entity, player)
    -- Initialize FSM if needed
    if not entity.dasher_fsm then

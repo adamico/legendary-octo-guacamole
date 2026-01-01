@@ -3,8 +3,8 @@
 -- OPTIMIZED: No intermediate table allocation, squared distances
 
 local HitboxUtils = require("src/utils/hitbox_utils")
-local GameConstants = require("src/game/game_config")
 local FloatingText = require("src/systems/floating_text")
+local EntityProxy = require("src/utils/entity_proxy")
 
 local SeekFood = {}
 
@@ -21,8 +21,8 @@ end
 
 --- Update SeekFood behavior
 --- OPTIMIZED: Find nearest directly in ECS callback (no table allocation)
---- @param entity Entity - The hungry entity
---- @param world table - ECS world for querying and deleting entities
+--- @param entity EntityProxy - The hungry entity
+--- @param world ECSWorld - ECS world for querying and deleting entities
 --- @param range number - Scanning range (default 100)
 --- @param heal_amount number - Amount to heal (default 5)
 --- @return boolean - Returns true if food was found/pursued/eaten, false otherwise
@@ -31,21 +31,29 @@ function SeekFood.update(entity, world, range, heal_amount)
    heal_amount = heal_amount or 5
 
    -- Find nearest YolkSplat directly in callback (avoid table allocation)
+   --- @type EntityProxy|nil
    local nearest_food = nil
+   --- @type EntityID|nil
+   local nearest_food_id = nil
    local nearest_dist_sq = range * range -- Distance squared
    local ex, ey = entity.x, entity.y
 
    -- OPTIMIZATION: Find nearest directly in ECS query callback
-   world.sys("yolk_splat", function(food)
-      local dx = food.x - ex
-      local dy = food.y - ey
-      local dist_sq = dx * dx + dy * dy
+   world:query({"yolk_splat"}, function(ids)
+      for i = 0, ids.count - 1 do
+         local id = ids[i]
+         local food = EntityProxy.new(world, id)
+         local dx = food.x - ex
+         local dy = food.y - ey
+         local dist_sq = dx * dx + dy * dy
 
-      if dist_sq < nearest_dist_sq then
-         nearest_dist_sq = dist_sq
-         nearest_food = food
+         if dist_sq < nearest_dist_sq then
+            nearest_dist_sq = dist_sq
+            nearest_food = food
+            nearest_food_id = id
+         end
       end
-   end)()
+   end)
 
    if nearest_food then
       -- Move towards food (need sqrt only for movement direction)
@@ -61,9 +69,10 @@ function SeekFood.update(entity, world, range, heal_amount)
          entity.vel_y = dy * (entity.max_speed or 0.5)
 
          -- Check if reached/eating
-         if check_collision(entity, nearest_food) then
+         if check_collision(entity, nearest_food) and nearest_food_id then
             -- Eat it!
-            world.del(nearest_food)
+            --- @cast nearest_food_id integer
+            world:remove_entity(nearest_food_id)
             entity.hp = math.min((entity.max_hp or 10), entity.hp + heal_amount)
             -- Spawn heal text or effect
             if FloatingText then

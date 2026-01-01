@@ -78,11 +78,11 @@ end
 --- Find nearest enemy within vision range (current room only)
 --- OPTIMIZED: Uses squared distances, takes pre-fetched room bounds
 --- Skips enemies that are temporarily blacklisted as unreachable
---- @param entity table - The chick
---- @param world table - ECS world
+--- @param entity EntityProxy - The chick
+--- @param world ECSWorld - ECS world
 --- @param room_bounds table|nil - Pre-fetched room bounds
---- @param player table|nil - Player (for vision bonus)
---- @return table|nil, number - Nearest enemy and distance squared (or nil if none)
+--- @param player EntityProxy|nil - Player (for vision bonus)
+--- @return EntityProxy|nil, number - Nearest enemy and distance squared (or nil if none)
 local function find_nearest_enemy(entity, world, room_bounds, player)
    -- Apply player's vision bonus if available
    local vision_range = entity.vision_range + ((player and player.minion_vision_bonus) or 0)
@@ -118,39 +118,48 @@ local function find_nearest_enemy(entity, world, room_bounds, player)
       painted_target = nil
    end
 
-   world.sys("enemy", function(enemy)
-      -- Skip blacklisted enemies (temporarily unreachable)
-      if entity.unreachable_blacklist[enemy] then
-         return
-      end
+   local EntityProxy = require("src/utils/entity_proxy")
+   world:query({"enemy"}, function(ids)
+      for i = 0, ids.count - 1 do
+         local id = ids[i]
+         local enemy = EntityProxy.new(world, id)
 
-      -- Skip if enemy is outside current room bounds (padded by 1 tile to include walls)
-      if room_bounds then
-         local etx = flr(enemy.x / 16)
-         local ety = flr(enemy.y / 16)
-         -- Fix: Widen bounds by 1 to include enemies overlapping walls (e.g. Dashers)
-         if etx < room_bounds.x1 - 1 or etx > room_bounds.x2 + 1 or
-            ety < room_bounds.y1 - 1 or ety > room_bounds.y2 + 1 then
-            return -- Skip enemies outside room
+         -- Skip blacklisted enemies (temporarily unreachable)
+         if entity.unreachable_blacklist[enemy] then
+            -- continue to next
+         else
+            -- Skip if enemy is outside current room bounds (padded by 1 tile to include walls)
+            local skip = false
+            if room_bounds then
+               local etx = flr(enemy.x / 16)
+               local ety = flr(enemy.y / 16)
+               -- Fix: Widen bounds by 1 to include enemies overlapping walls (e.g. Dashers)
+               if etx < room_bounds.x1 - 1 or etx > room_bounds.x2 + 1 or
+                  ety < room_bounds.y1 - 1 or ety > room_bounds.y2 + 1 then
+                  skip = true -- Skip enemies outside room
+               end
+            end
+
+            if not skip then
+               local dx = enemy.x - ex
+               local dy = enemy.y - ey
+               local dist_sq = dx * dx + dy * dy
+               if dist_sq < nearest_dist_sq then
+                  nearest_dist_sq = dist_sq
+                  nearest_enemy = enemy
+               end
+            end
          end
       end
-
-      local dx = enemy.x - ex
-      local dy = enemy.y - ey
-      local dist_sq = dx * dx + dy * dy
-      if dist_sq < nearest_dist_sq then
-         nearest_dist_sq = dist_sq
-         nearest_enemy = enemy
-      end
-   end)()
+   end)
 
    return nearest_enemy, nearest_dist_sq
 end
 
 --- Apply attack to target enemy
---- @param entity table - The chick
---- @param target table - The enemy being attacked
---- @param player table|nil - The player (for bonus damage)
+--- @param entity EntityProxy - The chick
+--- @param target EntityProxy - The enemy being attacked
+--- @param player EntityProxy|nil - The player (for bonus damage)
 local function attack_enemy(entity, target, player)
    -- Check attack cooldown
    if entity.attack_timer and entity.attack_timer > 0 then
@@ -192,9 +201,10 @@ end
 
 --- Main AI update for Chick minion
 --- OPTIMIZED: Caches queries, uses squared distances, reduces redundant calculations
---- @param entity table - The chick entity
---- @param world table - ECS world
-local function chick_ai(entity, world)
+--- @param entity EntityProxy - The chick entity
+--- @param world ECSWorld - ECS world
+--- @param player EntityProxy|nil - The player entity (optional)
+local function chick_ai(entity, world, player)
    -- Initialize FSM if needed
    if not entity.chick_fsm then
       init_fsm(entity)
@@ -204,10 +214,6 @@ local function chick_ai(entity, world)
    if entity.attack_timer and entity.attack_timer > 0 then
       entity.attack_timer = entity.attack_timer - 1
    end
-
-   -- OPTIMIZATION: Cache player reference early (needed for Face-Hugger and bonuses)
-   local player = nil
-   world.sys("player", function(p) player = p end)()
 
    -- One-time bonus application: Add minion HP bonus when first spawned
    if not entity.bonuses_applied and player then
@@ -224,7 +230,7 @@ local function chick_ai(entity, world)
       local target = entity.attachment_target
 
       -- Check if target is still valid (exists and alive)
-      if target.hp and target.hp > 0 then
+      if target and target.hp and target.hp > 0 then
          -- Follow target position (stick to enemy)
          entity.x = target.x
          entity.y = target.y
@@ -510,10 +516,10 @@ local active_chicks = {}
 
 -- Module exports (AI function + target painting utilities)
 return {
-   update = function(entity, world)
+   update = function(entity, world, player)
       -- Track this chick for blacklist clearing
       active_chicks[entity] = true
-      return chick_ai(entity, world)
+      return chick_ai(entity, world, player)
    end,
    -- Paint a target for all chicks to prioritize
    -- Also clears the enemy from all chick blacklists so they retry reaching it
