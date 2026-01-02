@@ -39,9 +39,9 @@ function Player.spawn(world, x, y)
          facing = "down", -- Must be set explicitly (0 would break animation lookup)
       },
 
-      -- Collision
+      -- Collision (supports both 'hitbox' for single and 'hitboxes' for per-direction)
       collidable = {
-         hitboxes = cfg.hitboxes,
+         hitboxes = cfg.hitboxes or cfg.hitbox,
          map_collidable = true,
       },
 

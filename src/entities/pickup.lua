@@ -66,7 +66,7 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
         -- Collision
         collidable = {
             hitboxes = hitbox,
-            map_collidable = tag_set.map_collidable or false,
+            map_collidable = config.map_collidable or false, -- Pickups typically don't need map collision
         },
 
         -- Pickup effect

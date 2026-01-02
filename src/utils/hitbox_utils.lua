@@ -9,19 +9,28 @@ local HitboxUtils = {}
 function HitboxUtils.get_hitbox(entity)
     local w, h, ox, oy
 
-    -- Check for per-direction hitboxes table first
+    -- Check for hitboxes field (can be single hitbox or per-direction table)
     if entity.hitboxes then
-        local dir = entity.direction or entity.current_direction
-        local dir_hb = dir and entity.hitboxes[dir]
-        if dir_hb then
-            w = dir_hb.w
-            h = dir_hb.h
-            ox = dir_hb.ox or 0
-            oy = dir_hb.oy or 0
+        -- Check if this is a single hitbox: {w=..., h=...}
+        if entity.hitboxes.w then
+            w = entity.hitboxes.w
+            h = entity.hitboxes.h
+            ox = entity.hitboxes.ox or 0
+            oy = entity.hitboxes.oy or 0
+        else
+            -- Per-direction format: {down={...}, up={...}, ...}
+            local dir = entity.facing or entity.current_direction
+            local dir_hb = dir and entity.hitboxes[dir]
+            if dir_hb then
+                w = dir_hb.w
+                h = dir_hb.h
+                ox = dir_hb.ox or 0
+                oy = dir_hb.oy or 0
+            end
         end
     end
 
-    -- Check for simple hitbox table (same for all directions)
+    -- Legacy fallback: check for separate entity.hitbox field
     if not w and entity.hitbox and entity.hitbox.w then
         w = entity.hitbox.w
         h = entity.hitbox.h

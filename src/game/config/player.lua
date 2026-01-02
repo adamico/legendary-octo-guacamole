@@ -96,13 +96,8 @@ return {
    outline_color = 1,
    sort_offset_y = 38,
    height_z = 25, -- Vertical collision height (human body, projectiles above this miss)
-   -- Per-direction hitboxes (use 'hitbox = {w, h, ox, oy}' for same hitbox all directions)
-   hitboxes = {
-      down  = {w = 10, h = 12, ox = 7, oy = 18},
-      up    = {w = 10, h = 12, ox = 7, oy = 18},
-      right = {w = 10, h = 12, ox = 7, oy = 18},
-      left  = {w = 10, h = 12, ox = 7, oy = 18},
-   },
+   -- Hitbox config (use 'hitboxes = {down = {...}, ...}' for per-direction)
+   hitbox = {w = 10, h = 12, ox = 7, oy = 18},
    melee_cost = 2,
    melee_cooldown = 60,
    melee_sprite = 57,

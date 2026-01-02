@@ -62,7 +62,7 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
                 ox = config.hitbox_offset_x or 2,
                 oy = config.hitbox_offset_y or 3,
             },
-            map_collidable = tag_set.map_collidable or false,
+            map_collidable = config.map_collidable ~= false, -- Default to true for enemies
         },
 
         -- Health

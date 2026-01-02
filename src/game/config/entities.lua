@@ -4,7 +4,7 @@ return {
    Projectile = {
       Egg = {
          entity_type = "Projectile",
-         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,shadow,middleground",
+         tags = "projectile,velocity,collidable,drawable,animatable,shadow,middleground",
          owner = "player",
          speed = 0,
          knockback = 0,
@@ -50,7 +50,7 @@ return {
       },
       EnemyBullet = {
          entity_type = "EnemyProjectile",
-         tags = "projectile,velocity,map_collidable,collidable,drawable,animatable,shadow,middleground",
+         tags = "projectile,velocity,collidable,drawable,animatable,shadow,middleground",
          owner = "enemy",
          speed = 1.5,
          damage = 10,
@@ -169,7 +169,7 @@ return {
    Enemy = {
       Skulker = {
          entity_type = "Enemy",
-         tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         tags = "enemy,timers,velocity,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 20,
          xp_value = 10,
          max_speed = 0.5,
@@ -201,8 +201,7 @@ return {
       },
       Shooter = {
          entity_type = "Enemy",
-         tags =
-         "enemy,shooter,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         tags = "enemy,shooter,timers,velocity,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 30,
          xp_value = 15,
          max_speed = 0.3,
@@ -284,7 +283,7 @@ return {
       },
       Dasher = {
          entity_type = "Enemy",
-         tags = "enemy,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         tags = "enemy,timers,velocity,collidable,health,drawable,animatable,sprite,shadow,middleground",
          hp = 60,
          xp_value = 25,
          max_speed = 0.2,
@@ -341,7 +340,7 @@ return {
    Minion = {
       Chick = {
          entity_type = "Chick",
-         tags = "minion,timers,health,velocity,map_collidable,collidable,drawable,animatable,sprite,shadow,middleground",
+         tags = "minion,timers,health,velocity,collidable,drawable,animatable,sprite,shadow,middleground",
          hp = 20,
          hp_drain_rate = 60,    -- Frames between each 1 HP loss (60 = 1 HP/second)
          food_seek_range = 120, -- Range to detect yolk splats
@@ -400,7 +399,7 @@ return {
       },
       YolkSplat = {
          entity_type = "YolkSplat",
-         tags = "yolk_splat,drawable,sprite,shadow,middleground,timers,map_collidable",
+         tags = "yolk_splat,drawable,sprite,shadow,middleground,timers",
          -- map_collidable needed so it doesn't fall through floor if we use gravity, though usually splats are flat.
          -- Actually, simple splats might not need map_collidable if they are static.
          -- But minion/chick needs to find it.
