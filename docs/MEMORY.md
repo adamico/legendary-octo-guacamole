@@ -25,6 +25,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **`floating_text.lua`**: Replaced `world.components` random-access lookup with proper `world:query_entity()` call for entity position/size retrieval.
   - **Root Cause**: Code was using a pattern from a different ECS library (eggs.p8?) that doesn't exist in picobloc. In picobloc, components are accessed only through query callbacks, not a global `world.components` table.
 
+- **Fixed Critical Picobloc Bug (Boolean Handling)**:
+  - **Issue**: `picobloc` was converting `false` to `0` during entity creation due to `val or 0` logic. In Lua/Picotron, `0` is truthy, causing `flip_y = false` to be treated as `true` (flipped), resulting in upside-down obstacles.
+  - **Fix**: Patched `lib/picobloc/picobloc.lua` to explicitly check for `nil` before defaulting to `0`, preserving `false` values correctly.
+  - **Impact**: Fixed "obstacles sprites drawn flipped" bug and potential future bugs with other boolean flags (`flip_x`, `map_collidable`, etc.).
+
 - **Completed Phase 7: Cleanup (eggs.p8 removal)**:
   - **Deleted** `lib/eggs.p8/` directory entirely.
   - **Refactored 11 files** from eggs.p8 API (`world.sys()`, `world.del()`) to picobloc API (`world:query()`, `world:remove_entity()`):

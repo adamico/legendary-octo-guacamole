@@ -98,7 +98,7 @@ function Rendering.draw_one(i, pos, drawable, size, flash, animatable, enemy_ai,
 
    -- procedural death?
    local fsm = (enemy_ai and enemy_ai.fsm[i]) or (minion_ai and minion_ai.fsm[i])
-   if fsm and type(fsm) == "table" and fsm.is and fsm:is("death") and animatable then
+   if fsm and type(fsm) == "table" and fsm:is("death") and animatable then
       local sprite = drawable.sprite_index[i] or (drawable.sprite_top and drawable.sprite_top[i]) or 0
       apply_death_effect(sx, sy, w, h, sprite, flip_x, flip_y, animatable.anim_timer[i])
       return

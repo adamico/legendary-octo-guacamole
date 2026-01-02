@@ -1,4 +1,4 @@
--- Obstacle entity factory (picobloc version)
+-- Obstacle entity factory
 -- Obstacles: Rock, Destructible, Chest, LockedChest, ShopItem
 local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
