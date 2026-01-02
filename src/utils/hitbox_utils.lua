@@ -59,10 +59,10 @@ function HitboxUtils.get_hitbox(entity)
     oy = oy or entity.hitbox_offset_y or 0
 
     return {
-        x = entity.x + ox + (entity.sprite_offset_x or 0),
-        y = entity.y + oy + (entity.sprite_offset_y or 0) - (entity.z or 0),
-        w = w,
-        h = h
+        x = (entity.x or 0) + (ox or 0) + (entity.sprite_offset_x or 0),
+        y = (entity.y or 0) + (oy or 0) + (entity.sprite_offset_y or 0) - (entity.z or 0),
+        w = w or 0,
+        h = h or 0
     }
 end
 

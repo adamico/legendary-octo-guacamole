@@ -1,3 +1,4 @@
+-- REFACTOR: extract sub modules
 local Room = require("src/world/room")
 local Events = require("src/game/events")
 local Entities = require("src/entities")
@@ -550,10 +551,10 @@ function DungeonManager.check_room_clear(room, world)
 
    local enemy_count = 0
    room.combat_timer += 1
-   world:query({"enemy", "health", "!skull"}, function(ids, health)
+   world:query({"enemy", "health", "!skull"}, function(ids, enemy, health)
       for i = ids.first, ids.last do
          -- Only count living enemies (hp > 0)
-         if health.hp[i] > 0 then
+         if health and health.hp and health.hp[i] and health.hp[i] > 0 then
             enemy_count += 1
          end
       end

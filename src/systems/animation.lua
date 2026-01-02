@@ -68,7 +68,8 @@ function Animation.update(world)
    }
 
    world:query(query, function(ids, drawable, animatable, dir, type_c,
-                               vel, fsm, enemy_ai, minion_ai, enemy_type, proj_type, minion_type, pickup_type,
+                               vel, fsm, enemy_ai, minion_ai, enemy_type,
+                               proj_type, minion_type, pickup_type,
                                obstacle_type)
       for i = ids.first, ids.last do
          -- Increment Timer
@@ -80,7 +81,10 @@ function Animation.update(world)
             or (enemy_ai and enemy_ai.fsm[i])
             or (minion_ai and minion_ai.fsm[i])
 
-         local state = fsm_instance and fsm_instance.current or "idle"
+         local state = "idle"
+         if fsm_instance and type(fsm_instance) == "table" then
+            state = fsm_instance.current or "idle"
+         end
 
          -- Resolve Direction
          -- If moving, update 'facing' (stored in component for persistence)
