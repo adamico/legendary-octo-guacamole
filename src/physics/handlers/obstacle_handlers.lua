@@ -8,6 +8,8 @@ local HitboxUtils = require("src/utils/hitbox_utils")
 local Effects = require("src/systems/effects")
 local DungeonManager = require("src/world/dungeon_manager")
 local FloatingText = require("src/systems/floating_text")
+local Collision = require("src/physics/collision")
+local qsort = require("lib/qsort")
 
 local ObstacleHandlers = {}
 
@@ -159,8 +161,6 @@ end
 --- @param entity The entity to push out of the obstacle
 --- @param obstacle The obstacle to push the entity out of
 local function push_out(entity, obstacle)
-   local Collision = require("src/physics/collision")
-   local qsort = require("lib/qsort")
    local e_hb = HitboxUtils.get_hitbox(entity)
    local o_hb = HitboxUtils.get_hitbox(obstacle)
 
@@ -418,7 +418,7 @@ function ObstacleHandlers.register(handlers)
    end
 
    -- Pickup vs Pickup -> push apart to prevent stacking
-   local pickup_types = {"Coin", "Key", "Bomb", "HealthPickup", "ProjectilePickup"}
+   local pickup_types = {"Coin", "Key", "Bomb", "HealthPickup"}
    for _, type1 in ipairs(pickup_types) do
       for _, type2 in ipairs(pickup_types) do
          handlers.entity[type1..","..type2] = function(p1, p2)

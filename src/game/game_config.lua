@@ -7,7 +7,10 @@ require("src/game/config/tiles")
 -- Load modular configs
 local player = require("src/game/config/player")
 local entities = require("src/game/config/entities")
+local obstacles = require("src/game/config/obstacles")
 local effects = require("src/game/config/effects")
+local pickups = require("src/game/config/pickups")
+local mutations = require("src/game/config/mutations")
 local ui = require("src/game/config/ui")
 local controls_config = require("src/game/config/controls")
 local collision = require("src/game/config/collision")
@@ -22,10 +25,14 @@ local GameConstants = {
 
    -- Entities (from entities.lua)
    Projectile = entities.Projectile,
-   Pickup = entities.Pickup,
    Enemy = entities.Enemy,
    Minion = entities.Minion,
-   Obstacle = entities.Obstacle,
+
+   -- Pickups (from pickups.lua)
+   Pickup = pickups.Pickup,
+
+   -- Obstacles (from obstacles.lua)
+   Obstacle = obstacles.Obstacle,
 
    -- Effects (from effects.lua)
    PlacedBomb = effects.PlacedBomb,

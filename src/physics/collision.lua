@@ -154,8 +154,7 @@ function Collision.resolve_entities(entity1)
     local nearby = current_grid:get_nearby(entity1, get_hitbox)
 
     -- Pre-calculate projectile segment if applicable (Continuous Collision Detection)
-    local is_projectile = entity1.type == "Projectile" or entity1.type == "EnemyProjectile" or
-       entity1.type == "ProjectilePickup"
+    local is_projectile = entity1.type == "Projectile" or entity1.type == "EnemyProjectile"
     local p_start_x, p_start_y, p_end_x, p_end_y
     if is_projectile and (abs(entity1.vel_x or 0) > 4 or abs(entity1.vel_y or 0) > 4) then
         -- Only strictly needed for fast moving objects, but let's be safe

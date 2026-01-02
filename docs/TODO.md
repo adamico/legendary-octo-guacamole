@@ -31,8 +31,6 @@
 
 ## AI & Enemies
 
-- make skulls faster (faster) [BRAINSTORM]
-
 ## World & Level Design
 
 - add room floor patterns to avoid having floors that are too random [BRAINSTORM]

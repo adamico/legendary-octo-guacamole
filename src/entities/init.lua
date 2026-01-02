@@ -29,11 +29,9 @@ end
 Entities.spawn_projectile_from_origin = Projectile.spawn_from_origin
 
 -- Pickup spawners (convenience wrappers for Type Object pattern)
-Entities.spawn_pickup_projectile = Pickup.spawn_projectile
 Entities.spawn_health_pickup = Pickup.spawn_health
 
 -- Random pickup spawn (for destructibles, etc.)
--- Currently only spawns HealthPickup since ProjectilePickup requires special data
 Entities.spawn_pickup = function(world, x, y, pickup_type, instance_data)
     if pickup_type then
         return Pickup.spawn(world, x, y, pickup_type, instance_data)

@@ -6,11 +6,13 @@ local EntityUtils = require("src/utils/entity_utils")
 
 local Pickup = {}
 
--- Unified spawn function using Type Object pattern
--- @param world - ECS world
--- @param x, y - spawn position
--- @param pickup_type - type key in GameConstants.Pickup (e.g., "ProjectilePickup", "HealthPickup")
--- @param instance_data - optional table with instance-specific overrides
+--- Unified spawn function using Type Object pattern
+--- @param world ECSWorld
+--- @param x number
+--- @param y number
+--- @param pickup_type - type key in GameConstants.Pickup (e.g., "HealthPickup", "Coin")
+--- @param instance_data optional table with instance-specific overrides
+--- @return EntityProxy
 function Pickup.spawn(world, x, y, pickup_type, instance_data)
     instance_data = instance_data or {}
 
@@ -50,11 +52,6 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
         pickup.sprite_index = config.sprite_index or 0
     end
 
-    -- 4. Hitbox: special handling for projectile-based pickups (uses Egg hitbox)
-    if config.hitbox_from_projectile then
-        pickup.hitbox = GameConstants.Projectile.Egg.hitbox
-    end
-
     -- 5. Apply instance-specific overrides
     for k, v in pairs(instance_data) do
         pickup[k] = v
@@ -62,20 +59,6 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
 
     -- 6. Create entity with tags from config
     return EntityUtils.spawn_entity(world, config.tags, pickup)
-end
-
--- Convenience: Spawn projectile-based pickup (from wall collisions)
-function Pickup.spawn_projectile(world, x, y, dir_x, dir_y, amount, sprite_index, z, vertical_shot)
-    local direction = EntityUtils.get_direction_name(dir_x, dir_y)
-    return Pickup.spawn(world, x, y, "ProjectilePickup", {
-        direction = direction,
-        dir_x = dir_x,
-        dir_y = dir_y,
-        recovery_amount = amount,
-        sprite_index = sprite_index,
-        z = z,                         -- Inherit Z height
-        vertical_shot = vertical_shot, -- Inherit vertical shot flag for drop animation
-    })
 end
 
 -- Convenience: Spawn simple health pickup (from enemy deaths)

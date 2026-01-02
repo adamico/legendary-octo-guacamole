@@ -62,7 +62,6 @@ end
 
 -- Register all pickup handlers
 function PickupHandlers.register(handlers)
-   handlers.entity["Player,ProjectilePickup"] = handle_pickup_collection
    handlers.entity["Player,HealthPickup"] = handle_pickup_collection
    handlers.entity["Player,Coin"] = handle_pickup_collection
    handlers.entity["Player,Key"] = handle_pickup_collection

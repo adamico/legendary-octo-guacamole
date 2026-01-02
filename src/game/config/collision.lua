@@ -30,7 +30,7 @@ local EntityCollisionLayer = {
    Projectile = CollisionLayers.PLAYER_PROJECTILE,
    MeleeHitbox = CollisionLayers.PLAYER_PROJECTILE,
    EnemyProjectile = CollisionLayers.ENEMY_PROJECTILE,
-   ProjectilePickup = CollisionLayers.PICKUP,
+
    HealthPickup = CollisionLayers.PICKUP,
    Coin = CollisionLayers.PICKUP,
    Key = CollisionLayers.PICKUP,
