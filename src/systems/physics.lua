@@ -147,7 +147,7 @@ function Physics.z_axis(world)
 
             -- Age update
             if lifetime and max_age > 0 then
-               age = age + 1
+               age += 1
                lifetime.age[i] = age
 
                -- Delayed gravity for projectiles
@@ -160,7 +160,6 @@ function Physics.z_axis(world)
                v_z += g_z
             end
 
-            local prev_z = z
             z += v_z
 
             local hit_ground = false

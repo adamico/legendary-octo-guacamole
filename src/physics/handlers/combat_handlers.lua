@@ -40,8 +40,8 @@ end
 
 --- Handler for MeleeHitbox hitting Enemy
 --- @param world World
---- @param hitbox MeleeHitbox entity
---- @param enemy Enemy entity
+--- @param hitbox MeleeHitbox
+--- @param enemy Enemy EntityProxy
 local function melee_vs_enemy(world, hitbox, enemy)
    -- Skip if enemy is invulnerable
    if enemy.invuln_timer and enemy.invuln_timer > 0 then
@@ -94,23 +94,16 @@ local function melee_vs_enemy(world, hitbox, enemy)
    end
 end
 
--- Handler for Projectile hitting Enemy
-local function projectile_vs_enemy(world, projectile, enemy)
-   -- Prevent double processing if already handled
-   if projectile.hit_obstacle then return end
-   projectile.hit_obstacle = true
-
-   -- Trigger impact effect
-   Effects.hit_impact(world, projectile, enemy.id)
-
-   -- Target painting: Mark this enemy as priority target for all chicks
-   AI.ChickAI.paint_target(enemy)
-
-   -- Get outcome values (using proxy access)
+--- Shared helper: Apply 3-way roll outcome for projectile impacts
+--- Can be called with or without an enemy target (floor impacts have no enemy)
+--- @param world ECSWorld
+--- @param projectile EntityProxy
+--- @param enemy EntityProxy|nil Optional enemy that was hit
+local function apply_projectile_outcome(world, projectile, enemy)
+   -- Get outcome values from projectile or config
    local dud_damage = projectile.dud_damage or GameConstants.Player.dud_damage or 3
    local leech_damage = projectile.leech_damage or GameConstants.Player.leech_damage or 5
    local leech_heal = projectile.leech_heal or GameConstants.Player.leech_heal or 5
-   -- hatch_time is in component? projectile.hatch_time.
    local hatch_time = projectile.hatch_time or GameConstants.Player.hatch_time or 120
 
    local stun_dur = GameConstants.Player.egg_stun_duration or 12
@@ -131,40 +124,63 @@ local function projectile_vs_enemy(world, projectile, enemy)
    local threshold_hatch = roll_dud + roll_hatch
 
    if roll < threshold_dud then
-      -- The Dud
-      if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
+      -- The Dud: damage enemy (if present), spawn visual splat
+      if enemy and not (enemy.invuln_timer and enemy.invuln_timer > 0) then
          enemy.hp = enemy.hp - dud_damage
          enemy.invuln_timer = 10
          FloatingText.spawn_damage(enemy, -dud_damage)
          Effects.apply_sticky_yolk(world, enemy.id, stun_dur, slow_dur, slow_factor)
       end
-      -- Visual splat effect for Dud
       Effects.spawn_visual_effect(world, spawn_x, spawn_y, BROKEN_EGG_SPRITE, 15)
    elseif roll < threshold_hatch then
-      -- The Hatching
-      Effects.apply_sticky_yolk(world, enemy.id, stun_dur, slow_dur, slow_factor)
-
-      -- Spawn egg at enemy position with attachment
-      Entities.spawn_egg(world, enemy.x, enemy.y, {
-         hatch_timer = hatch_time,
-         z = spawn_z,
-         attachment_target = enemy, -- Might need ID? Check spawn_egg logic.
-         attachment_timer = attach_dur,
-      })
+      -- The Hatching: spawn egg (attached to enemy if present)
+      if enemy then
+         Effects.apply_sticky_yolk(world, enemy.id, stun_dur, slow_dur, slow_factor)
+         Entities.spawn_egg(world, enemy.x, enemy.y, {
+            hatch_timer = hatch_time,
+            z = spawn_z,
+            attachment_target = enemy,
+            attachment_timer = attach_dur,
+         })
+      else
+         -- Floor impact: spawn egg at projectile position (no attachment)
+         Entities.spawn_egg(world, spawn_x, spawn_y, {
+            hatch_timer = hatch_time,
+            z = spawn_z,
+         })
+      end
    else
-      -- Parasitic Drain
-      if not (enemy.invuln_timer and enemy.invuln_timer > 0) then
+      -- Parasitic Drain: damage enemy (if present), spawn health pickup
+      if enemy and not (enemy.invuln_timer and enemy.invuln_timer > 0) then
          enemy.hp = enemy.hp - leech_damage
          enemy.invuln_timer = 10
          FloatingText.spawn_damage(enemy, -leech_damage)
          Effects.apply_sticky_yolk(world, enemy.id, stun_dur, slow_dur, slow_factor)
       end
-      -- Spawn health pickup (blood glob)
       local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y + spawn_z, DungeonManager.current_room)
       if not sx then sx, sy = spawn_x, spawn_y + spawn_z end
       Entities.spawn_health_pickup(world, sx, sy, leech_heal)
    end
    world:remove_entity(projectile.id)
+end
+
+-- Export for use by ground handlers
+CombatHandlers.apply_projectile_outcome = apply_projectile_outcome
+
+-- Handler for Projectile hitting Enemy
+local function projectile_vs_enemy(world, projectile, enemy)
+   -- Prevent double processing if already handled
+   if projectile.hit_obstacle then return end
+   projectile.hit_obstacle = true
+
+   -- Trigger impact effect
+   Effects.hit_impact(world, projectile, enemy.id)
+
+   -- Target painting: Mark this enemy as priority target for all chicks
+   AI.ChickAI.paint_target(enemy)
+
+   -- Apply shared outcome logic
+   apply_projectile_outcome(world, projectile, enemy)
 end
 
 --- Handler for Player touching Enemy (contact damage)
