@@ -8,13 +8,22 @@ local Animation = {}
 local DEFAULT_SPEED = 8
 
 -- Calculate frame index from durations array or single speed
-local function get_frame_from_durations(durations, speed, timer, frame_count)
+-- @param should_loop boolean|nil - if false/nil, clamp to last frame instead of wrapping
+local function get_frame_from_durations(durations, speed, timer, frame_count, should_loop)
    if durations and #durations > 0 then
       local total_duration = 0
       for _, d in ipairs(durations) do
          total_duration = total_duration + d
       end
-      local cycle_time = timer % total_duration
+
+      -- For non-looping animations, clamp to last frame when timer exceeds duration
+      local cycle_time
+      if should_loop then
+         cycle_time = timer % total_duration
+      else
+         cycle_time = min(timer, total_duration - 1)
+      end
+
       local accumulated = 0
       for i, d in ipairs(durations) do
          accumulated = accumulated + d
@@ -24,9 +33,17 @@ local function get_frame_from_durations(durations, speed, timer, frame_count)
       end
       return #durations - 1, total_duration
    else
-      return flr(timer / speed) % frame_count, frame_count * speed
+      -- Simple speed-based animation
+      if should_loop then
+         return flr(timer / speed) % frame_count, frame_count * speed
+      else
+         local total = frame_count * speed
+         local frame = min(flr(timer / speed), frame_count - 1)
+         return frame, total
+      end
    end
 end
+
 
 -- Helper to find the best matching animation config
 local function find_animation_config(config, state, direction)
@@ -126,8 +143,8 @@ function Animation.update(world)
                local top_indices = state_anim.top_indices or {0}
                local bot_indices = state_anim.bottom_indices or {0}
 
-               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, #top_indices)
-               local b_frame_idx = get_frame_from_durations(durations, speed, timer, #bot_indices)
+               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, #top_indices, state_anim.loop)
+               local b_frame_idx = get_frame_from_durations(durations, speed, timer, #bot_indices, state_anim.loop)
 
                current_frame_idx = frame_idx
                total_duration = dur
@@ -141,14 +158,14 @@ function Animation.update(world)
             elseif state_anim.indices then
                -- Explicit Indices
                local indices = state_anim.indices
-               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, #indices)
+               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, #indices, state_anim.loop)
                current_frame_idx = frame_idx
                total_duration = dur
                spr_idx = indices[(frame_idx % #indices) + 1] or 0
             elseif state_anim.base then
                -- Base + Offset
                local frames = state_anim.frames or 2
-               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, frames)
+               local frame_idx, dur = get_frame_from_durations(durations, speed, timer, frames, state_anim.loop)
                current_frame_idx = frame_idx
                total_duration = dur
                spr_idx = state_anim.base + frame_idx

@@ -69,8 +69,7 @@ Systems.draw_aim_lines = UI.draw_aim_lines
 -- Animation systems (self-iterating)
 Systems.animation = Animation.update
 
--- Lifecycle systems
-Systems.init_lifecycle = Lifecycle.init
+-- Lifecycle systems (FSM auto-initializes on first update)
 Systems.update_lifecycle = Lifecycle.update
 
 -- Effects systems

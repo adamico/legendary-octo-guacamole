@@ -80,6 +80,7 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
     -- Apply parsed tags and emotional flag
     EntityUtils.apply_tags(entity, tag_set)
     entity.emotional = true
+    entity.emotion_state = {emotion = nil, emotion_timer = 0, emotion_phase = 0}
 
     -- Add shooter component if tagged (requires full component data)
     if tag_set.shooter then

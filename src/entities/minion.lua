@@ -86,6 +86,7 @@ function Minion.spawn(world, x, y, minion_type, instance_data)
    -- Chicks can display emotions (not YolkSplat or Egg)
    if minion_type == "Chick" then
       entity.emotional = true
+      entity.emotion_state = {emotion = nil, emotion_timer = 0, emotion_phase = 0}
    end
 
    local id = world:add_entity(entity)

@@ -195,6 +195,12 @@ return function(world)
       flash_duration = "u64", -- Optional config
    })
 
+   world:component("emotion_state", {
+      emotion = "value",     -- String: "alert", "confused", "idle", or nil
+      emotion_timer = "f64", -- Countdown timer
+      emotion_phase = "f64", -- Random phase offset for bounce animation
+   })
+
    ---------------------------------------------------------------------------
    -- Projectile components
    ---------------------------------------------------------------------------

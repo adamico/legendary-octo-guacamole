@@ -60,13 +60,6 @@ function Shooter.update(world)
             local current_facing = dir and dir.facing[i]
             local new_facing = EntityUtils.get_direction_name(sx, sy, current_facing)
             if dir then dir.facing[i] = new_facing end
-
-            -- Add "aiming" tag logic if needed (ECS usually separate state, but we can mimic tag)
-            if player_tag then
-               -- Using aiming tag for player visual state
-               -- Implementation note: Picobloc doesn't have instant tag like eggs.
-               -- We'd need to add/remove component. Skipping purely visual transient tag for now unless critical.
-            end
          end
 
          -- Input check
@@ -74,7 +67,9 @@ function Shooter.update(world)
          -- Enemy shoots if cooldown ready (and typically if in range/aggro, managed by AI setting shoot_dir)
          local enemy_shoot = not is_player and cooldown_ready and wants_to_shoot
 
-         local trigger_shot = (attack_pressed and cooldown_ready) or enemy_shoot
+         -- Player must be aiming (wants_to_shoot) AND press attack to shoot
+         local player_shoot = is_player and attack_pressed and cooldown_ready and wants_to_shoot
+         local trigger_shot = player_shoot or enemy_shoot
 
          if trigger_shot and has_ammo then
             -- Trigger attack animation

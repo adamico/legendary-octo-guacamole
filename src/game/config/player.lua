@@ -55,32 +55,32 @@ return {
    bombs = 2,
    animations = {
       down = {
-         idle      = {indices = {1, 10, 1, 2}, durations = {20, 20, 20, 20}},
-         walking   = {indices = {3, 4}, durations = {15, 15}},
-         attacking = {indices = {1, 5}, durations = {4, 15}},
-         hurt      = {indices = {8}, durations = {30}},
-         death     = {indices = {9}, durations = {8}}
+         idle      = {indices = {1, 10, 1, 2}, durations = {20, 20, 20, 20}, loop = true},
+         walking   = {indices = {3, 4}, durations = {15, 15}, loop = true},
+         attacking = {indices = {1, 5}, durations = {4, 15}, loop = false},
+         hurt      = {indices = {8}, durations = {30}, loop = false},
+         death     = {indices = {9}, durations = {8}, loop = false}
       },
       right = {
-         idle      = {indices = {13, 11, 12, 11}, durations = {20, 20, 20, 20}},
-         walking   = {indices = {14, 15}, durations = {8, 8}},
-         attacking = {indices = {11, 16}, durations = {4, 15}},
-         hurt      = {indices = {19}, durations = {30}},
-         death     = {indices = {9}, durations = {8}}
+         idle      = {indices = {13, 11, 12, 11}, durations = {20, 20, 20, 20}, loop = true},
+         walking   = {indices = {14, 15}, durations = {8, 8}, loop = true},
+         attacking = {indices = {11, 16}, durations = {4, 15}, loop = false},
+         hurt      = {indices = {19}, durations = {30}, loop = false},
+         death     = {indices = {9}, durations = {8}, loop = false}
       },
       up = {
-         idle      = {indices = {20, 20, 21, 20}, durations = {20, 20, 20, 20}},
-         walking   = {indices = {22, 23}, durations = {8, 8}},
-         attacking = {indices = {20, 24}, durations = {8, 15}},
-         hurt      = {indices = {8}, durations = {30}},
-         death     = {indices = {9}, durations = {8}}
+         idle      = {indices = {20, 20, 21, 20}, durations = {20, 20, 20, 20}, loop = true},
+         walking   = {indices = {22, 23}, durations = {8, 8}, loop = true},
+         attacking = {indices = {20, 24}, durations = {8, 15}, loop = false},
+         hurt      = {indices = {8}, durations = {30}, loop = false},
+         death     = {indices = {9}, durations = {8}, loop = false}
       },
       left = {
-         idle      = {indices = {13, 11, 12, 11}, durations = {20, 20, 20, 20}, flip = true},
-         walking   = {indices = {14, 15}, durations = {8, 8}, flip = true},
-         attacking = {indices = {11, 16}, durations = {4, 15}, flip = true},
-         hurt      = {indices = {19}, durations = {30}, flip = true},
-         death     = {indices = {9}, durations = {8}, flip = true}
+         idle      = {indices = {13, 11, 12, 11}, durations = {20, 20, 20, 20}, flip = true, loop = true},
+         walking   = {indices = {14, 15}, durations = {8, 8}, flip = true, loop = true},
+         attacking = {indices = {11, 16}, durations = {4, 15}, flip = true, loop = false},
+         hurt      = {indices = {19}, durations = {30}, flip = true, loop = false},
+         death     = {indices = {9}, durations = {8}, flip = true, loop = false}
       }
    },
    sprite_index_offsets = {
