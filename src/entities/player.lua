@@ -1,5 +1,5 @@
--- Player entity factory (picobloc version)
 local GameConstants = require("src/game/game_config")
+local EntityUtils = require("src/utils/entity_utils")
 
 local Player = {}
 
@@ -19,31 +19,15 @@ function Player.spawn(world, x, y)
 
       -- Transform
       position = {x = x, y = y},
-      size = {width = cfg.width, height = cfg.height},
+      size = EntityUtils.build_size(cfg),
 
       -- Movement
-      acceleration = {
-         accel = 1.2,
-         friction = 0.5,
-         max_speed = cfg.max_speed,
-      },
-      velocity = {
-         vel_x = 0,
-         vel_y = 0,
-         sub_x = 0,
-         sub_y = 0,
-      },
-      direction = {
-         dir_x = 0,
-         dir_y = 1,       -- Default facing down
-         facing = "down", -- Must be set explicitly (0 would break animation lookup)
-      },
+      acceleration = EntityUtils.build_acceleration(cfg, {accel = 1.2}),
+      velocity = EntityUtils.build_velocity(),
+      direction = EntityUtils.build_direction(0, 1), -- Default facing down
 
-      -- Collision (supports both 'hitbox' for single and 'hitboxes' for per-direction)
-      collidable = {
-         hitboxes = cfg.hitboxes or cfg.hitbox,
-         map_collidable = true,
-      },
+      -- Collision
+      collidable = EntityUtils.build_collidable(cfg, {map_collidable = true}),
 
       -- Health
       health = {
@@ -58,12 +42,8 @@ function Player.spawn(world, x, y)
          regen_trigger_field = "time_since_shot",
       },
 
-      -- Timers (REFACTOR: duplicates some fields)
-      timers = {
-         shoot_cooldown = 0,
-         invuln_timer = 0,
-         hp_drain_timer = 0,
-      },
+      -- Timers
+      timers = EntityUtils.build_timers(),
 
       -- Combat: Shooter
       shooter = {
@@ -116,32 +96,10 @@ function Player.spawn(world, x, y)
          xp_to_next_level = cfg.base_xp_to_level,
       },
 
-      -- Visuals: Shadow
-      shadow = {
-         shadow_offset_x = cfg.shadow_offset_x or 0,
-         shadow_offset_y = cfg.shadow_offset_y or 0,
-         shadow_width = cfg.shadow_width,
-         shadow_height = cfg.shadow_height,
-         shadow_offsets_x = cfg.shadow_offsets_x,
-         shadow_offsets_y = cfg.shadow_offsets_y,
-         shadow_widths = cfg.shadow_widths,
-         shadow_heights = cfg.shadow_heights,
-      },
-
-      -- Visuals: Drawable
-      drawable = {
-         outline_color = cfg.outline_color,
-         sort_offset_y = cfg.sort_offset_y,
-         sprite_index = cfg.sprite_index_offsets.down,
-         flip_x = false,
-         flip_y = false,
-      },
-
-      -- Visuals: Animation
-      animatable = {
-         animations = cfg.animations,
-         sprite_index_offsets = cfg.sprite_index_offsets,
-      },
+      -- Visuals
+      shadow = EntityUtils.build_shadow(cfg),
+      drawable = EntityUtils.build_drawable(cfg, "down"),
+      animatable = EntityUtils.build_animatable(cfg),
    })
 
    return id

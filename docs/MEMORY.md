@@ -35,6 +35,21 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
   - **Marked Phase 7 complete** in `picobloc_ecs_system.md`.
   - **Future optimization**: emotions.lua could use a shared `emotional` tag for enemy/minion to simplify dual queries.
 
+- **Refactored Entity Factories and Fixed Core Bugs (Phase 5 Cleanup)**:
+  - **Fixed Vital Gameplay Bugs**:
+    - **Player Sprite Blinking**: Fixed by initializing `direction.facing = "down"` in `player.lua` (Picobloc default `0` broke animation lookup).
+    - **Leveling Crash**: Added nil guards in `leveling.lua` to prevent crashes when accessing uninitialized component data.
+    - **Spontaneous Player Death**: Fixed `timers.lua` to only countdown lifespan if `lifespan > 0`.
+    - **`map_collidable` Crash**: Removed `map_collidable` from entity tags strings (it's a component field, not a tag) which caused unknown component errors.
+  - **Unified Hitbox Logic**:
+    - Updated `hitbox_utils.lua` to correctly read `entity.facing` (via EntityProxy) instead of the raw `direction` table.
+    - Added support for a single `hitbox` table in config (merging logic for single vs per-direction hitboxes).
+  - **Centralized Entity Factories**:
+    - **New Utilities**: Added `build_collidable`, `build_shadow`, `build_timers`, `build_acceleration`, `build_health`, and `build_drawable` to `EntityUtils`.
+    - **Refactor**: Updated **ALL** entity factories (`player`, `enemy`, `minion`, `projectile`, `pickup`, `obstacle`, `explosion`, `bomb`) to use these centralized builders.
+    - **Benefit**: Drastically reduced code duplication, standardized default values, and ensured consistent tag parsing across the codebase.
+    - **Linting**: Fixed LuaLS annotations in `entity_utils.lua` and `picobloc.lua` module export.
+
 - **Migrated Combat Systems to Picobloc ECS (Phase 4)**:
   - **ECS Migration**:
     - **`Shooter.update`**: Refactored to use `world:query()` for input handling and cooldowns. Updated `Entities.spawn_projectile` to be compatible.

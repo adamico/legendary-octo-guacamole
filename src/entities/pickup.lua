@@ -6,7 +6,7 @@ local EntityUtils = require("src/utils/entity_utils")
 local Pickup = {}
 
 -- Unified spawn function using Type Object pattern
---- @param world World - picobloc World
+--- @param world ECSWorld - picobloc World
 --- @param x number - spawn x position
 --- @param y number - spawn y position
 --- @param pickup_type string - type key in GameConstants.Pickup
@@ -20,32 +20,12 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
         return nil
     end
 
-    -- Parse tags from comma-separated config string
-    local tag_set = {}
-    for tag in all(split(config.tags or "", ",")) do
-        tag_set[tag] = true
-    end
+    -- Parse tags from config
+    local tag_set = EntityUtils.parse_tags(config.tags)
 
     local direction = instance_data.direction
 
-    -- Determine sprite index
-    local sprite_index = instance_data.sprite_index or EntityUtils.get_sprite_index(config, direction)
-
-    -- Determine hitbox
-    local hitbox = config.hitbox
-    if config.hitbox_from_projectile then
-        hitbox = GameConstants.Projectile.Egg.hitbox
-    end
-    if not hitbox then
-        hitbox = {
-            w = config.hitbox_width or 12,
-            h = config.hitbox_height or 12,
-            ox = config.hitbox_offset_x or 2,
-            oy = config.hitbox_offset_y or 2,
-        }
-    end
-
-    -- Build entity with components
+    -- Build entity with centralized component builders
     local entity = {
         -- Type identifier
         type = {value = config.entity_type or "Pickup"},
@@ -53,21 +33,19 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
 
         -- Transform
         position = {x = x, y = y},
-        size = {width = config.width or 16, height = config.height or 16},
+        size = EntityUtils.build_size(config),
 
         -- Optional velocity (for projectile pickups that fall)
-        velocity = {
-            vel_x = 0,
-            vel_y = 0,
-            sub_x = 0,
-            sub_y = 0,
-        },
+        velocity = EntityUtils.build_velocity(),
 
         -- Collision
-        collidable = {
-            hitboxes = hitbox,
-            map_collidable = config.map_collidable or false, -- Pickups typically don't need map collision
-        },
+        collidable = EntityUtils.build_collidable(config, {
+            map_collidable = false,
+            w = 12,
+            h = 12,
+            ox = 2,
+            oy = 2
+        }),
 
         -- Pickup effect
         pickup_effect = {
@@ -77,32 +55,13 @@ function Pickup.spawn(world, x, y, pickup_type, instance_data)
             xp_amount = instance_data.xp_amount or 0,
         },
 
-        -- Visuals: Shadow
-        shadow = {
-            shadow_offset_x = config.shadow_offset_x or 0,
-            shadow_offset_y = config.shadow_offset_y or 0,
-            shadow_width = config.shadow_width or 11,
-            shadow_height = config.shadow_height or 3,
-            shadow_offsets_x = nil,
-            shadow_offsets_y = nil,
-            shadow_widths = nil,
-            shadow_heights = nil,
-        },
-
-        -- Visuals: Drawable
-        drawable = {
-            outline_color = nil,
-            sort_offset_y = 0,
-            sprite_index = sprite_index,
-            flip_x = false,
-            flip_y = false,
-        },
+        -- Visuals
+        shadow = EntityUtils.build_shadow(config),
+        drawable = EntityUtils.build_drawable(config, direction),
     }
 
-    -- Copy all parsed tags into entity
-    for tag, _ in pairs(tag_set) do
-        entity[tag] = true
-    end
+    -- Apply parsed tags
+    EntityUtils.apply_tags(entity, tag_set)
 
     -- Add z-axis data for falling pickups
     if instance_data.z then

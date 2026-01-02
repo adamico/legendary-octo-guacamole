@@ -5,7 +5,7 @@ local EntityUtils = require("src/utils/entity_utils")
 
 local Projectile = {}
 
--- Unified spawn function using Type Object pattern
+--- Unified spawn function using Type Object pattern
 --- @param world ECSWorld - picobloc World
 --- @param x number - spawn x position
 --- @param y number - spawn y position
@@ -23,11 +23,8 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         return nil
     end
 
-    -- Parse tags from comma-separated config string
-    local tag_set = {}
-    for tag in all(split(config.tags or "", ",")) do
-        tag_set[tag] = true
-    end
+    -- Parse tags from config
+    local tag_set = EntityUtils.parse_tags(config.tags)
 
     local direction = EntityUtils.get_direction_name(dx, dy)
     local speed = instance_data.speed or config.speed
@@ -40,10 +37,7 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
     if drop_duration < 1 then drop_duration = 1 end
     local gravity_z = (-2 * initial_z) / (drop_duration * drop_duration)
 
-    -- Determine sprite index
-    local sprite_index = EntityUtils.get_sprite_index(config, direction)
-
-    -- Build entity with components
+    -- Build entity with centralized component builders
     local entity = {
         -- Type identifier
         type = {value = config.entity_type or "Projectile"},
@@ -54,29 +48,18 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
             owner = config.owner or "player",
         },
 
-        -- Z-axis physics
+        -- Z-axis physics (Custom override for position)
         position = {x = x, y = y, z = initial_z},
-        size = {width = config.width or 16, height = config.height or 16},
-        direction = {
-            dir_x = dx,
-            dir_y = dy,
-        },
+        size = EntityUtils.build_size(config),
+        direction = EntityUtils.build_direction(dx, dy),
 
         -- Movement
-        velocity = {
-            vel_x = dx * speed,
-            vel_y = dy * speed,
-            vel_z = 0,
-            sub_x = 0,
-            sub_y = 0,
-        },
-
-        acceleration = {
+        velocity = EntityUtils.build_velocity(dx * speed, dy * speed, 0),
+        acceleration = EntityUtils.build_acceleration(config, {
             accel = 0,
             friction = 0,
-            max_speed = 0,
-            gravity_z = gravity_z,
-        },
+            gravity_z = gravity_z
+        }),
 
         lifetime = {
             age = 0,
@@ -84,15 +67,13 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
         },
 
         -- Collision
-        collidable = {
-            hitboxes = config.hitboxes or {
-                w = config.hitbox_width or 8,
-                h = config.hitbox_height or 8,
-                ox = config.hitbox_offset_x or 4,
-                oy = config.hitbox_offset_y or 4,
-            },
-            map_collidable = config.map_collidable ~= false, -- Default to true for projectiles
-        },
+        collidable = EntityUtils.build_collidable(config, {
+            map_collidable = true,
+            w = 8,
+            h = 8,
+            ox = 4,
+            oy = 4
+        }),
 
         -- Combat
         projectile_combat = {
@@ -100,38 +81,17 @@ function Projectile.spawn(world, x, y, dx, dy, projectile_type, instance_data)
             knockback = instance_data.knockback or config.knockback,
         },
 
-        -- Visuals: Shadow
-        shadow = {
-            shadow_offset_x = config.shadow_offset_x or 0,
-            shadow_offset_y = config.shadow_offset_y or 0,
-            shadow_width = config.shadow_width or 4,
-            shadow_height = config.shadow_height or 3,
-            shadow_offsets_x = config.shadow_offsets_x,
-            shadow_offsets_y = config.shadow_offsets_y,
-            shadow_widths = config.shadow_widths,
-            shadow_heights = config.shadow_heights,
-        },
-
-        -- Visuals: Drawable
-        drawable = {
-            outline_color = nil,
-            sort_offset_y = 0,
-            sprite_index = sprite_index,
-            flip_x = false,
-            flip_y = false,
-        },
-
-        -- Visuals: Animation
-        animatable = {
-            animations = config.animations,
-            sprite_index_offsets = config.sprite_index_offsets,
-        },
+        -- Visuals
+        shadow = EntityUtils.build_shadow(config),
+        drawable = EntityUtils.build_drawable(config, direction),
+        animatable = EntityUtils.build_animatable(config),
     }
 
-    -- Copy all parsed tags into entity
-    for tag, _ in pairs(tag_set) do
-        entity[tag] = true
-    end
+    -- Apply parsed tags
+    EntityUtils.apply_tags(entity, tag_set)
+
+    -- Force max_speed to 0 (physics quirk for projectiles)
+    entity.acceleration.max_speed = 0
 
     local id = world:add_entity(entity)
     return id

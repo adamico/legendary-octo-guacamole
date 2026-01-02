@@ -42,9 +42,11 @@ local function apply_accel_logic(i, accel_c, vel_c, dir_c, timers_c)
       max_spd = max_spd * (timers_c.slow_factor and timers_c.slow_factor[i] or 0.5)
    end
 
-   -- Clamp to max speed
-   vel_c.vel_x[i] = mid(-max_spd, vel_c.vel_x[i], max_spd)
-   vel_c.vel_y[i] = mid(-max_spd, vel_c.vel_y[i], max_spd)
+   -- Clamp to max speed (if max_spd > 0)
+   if max_spd > 0 then
+      vel_c.vel_x[i] = mid(-max_spd, vel_c.vel_x[i], max_spd)
+      vel_c.vel_y[i] = mid(-max_spd, vel_c.vel_y[i], max_spd)
+   end
 
    -- Stop completely if very slow (prevents drift)
    if abs(vel_c.vel_x[i]) < 0.1 then vel_c.vel_x[i] = 0 end

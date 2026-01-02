@@ -1,71 +1,53 @@
 -- Explosion entity factory (picobloc version)
 -- Reusable explosion effect for bombs, enemy attacks, environmental hazards
 local GameConstants = require("src/game/game_config")
+local EntityUtils = require("src/utils/entity_utils")
 
 local Explosion = {}
 
--- Spawn a single explosion at the given position
---- @param world World - picobloc World
+--- Spawn a single explosion at the given position
+--- @param world ECSWorld - picobloc World
 --- @param x number - Position x in pixels
 --- @param y number - Position y in pixels
 --- @param center_x number|nil - Optional center for knockback direction
 --- @param center_y number|nil - Optional center for knockback direction
---- @return number The spawned explosion entity ID
+--- @return EntityID The spawned explosion entity ID
 function Explosion.spawn(world, x, y, center_x, center_y)
    local config = GameConstants.Explosion
 
-   -- Parse tags from comma-separated config string
-   local tag_set = {}
-   for tag in all(split(config.tags or "", ",")) do
-      tag_set[tag] = true
-   end
+   -- Parse tags from config
+   local tag_set = EntityUtils.parse_tags(config.tags)
 
-   -- Build entity with components
+   -- Build entity with centralized component builders
    local entity = {
       -- Type identifier
       type = {value = config.entity_type or "Explosion"},
 
       -- Transform
       position = {x = x, y = y},
-      size = {width = config.width or 16, height = config.height or 16},
+      size = EntityUtils.build_size(config),
 
       -- Collision (for damaging entities)
-      collidable = {
-         hitboxes = {
-            w = config.hitbox_width or 16,
-            h = config.hitbox_height or 16,
-            ox = config.hitbox_offset_x or 0,
-            oy = config.hitbox_offset_y or 0,
-         },
-         map_collidable = false,
-      },
+      collidable = EntityUtils.build_collidable(config, {map_collidable = false}),
 
       -- Combat
       contact_damage = {
          damage = config.damage or 20,
       },
 
-      -- Visuals: Drawable
-      drawable = {
-         outline_color = nil,
-         sort_offset_y = 0,
-         sprite_index = config.sprite_index or 27,
-         flip_x = false,
-         flip_y = false,
-      },
+      -- Visuals
+      drawable = EntityUtils.build_drawable(config, nil, 27),
    }
 
-   -- Copy all parsed tags into entity
-   for tag, _ in pairs(tag_set) do
-      entity[tag] = true
-   end
+   -- Apply parsed tags
+   EntityUtils.apply_tags(entity, tag_set)
 
    local id = world:add_entity(entity)
    return id
 end
 
--- Spawn explosions in a 3x3 grid around a center position
---- @param world World - picobloc World
+--- Spawn explosions in a 3x3 grid around a center position
+--- @param world ECSWorld - picobloc World
 --- @param center_x number - Center position x in pixels
 --- @param center_y number - Center position y in pixels
 --- @param radius number - Radius in tiles (1 = 3x3, 2 = 5x5, etc.)

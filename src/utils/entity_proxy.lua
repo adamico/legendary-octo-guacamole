@@ -130,6 +130,13 @@
 --- @field sub_z number Movement field
 --- @field ignore_map_collision boolean Flag
 --- @field height_z number Z-vertical field
+--- @field hitbox {w: number, h: number, ox: number|nil, oy: number|nil}|nil Legacy hitbox table
+--- @field hitbox_width number|nil Legacy fallback
+--- @field hitbox_height number|nil Legacy fallback
+--- @field hitbox_offset_x number|nil Legacy fallback
+--- @field hitbox_offset_y number|nil Legacy fallback
+--- @field sprite_offset_x number|nil Visual offset
+--- @field sprite_offset_y number|nil Visual offset
 local EntityProxy = {}
 EntityProxy.__index = EntityProxy
 
@@ -271,7 +278,8 @@ function EntityProxy:__index(key)
    local map = ComponentMap[key]
    if map then
       local comp_name, field_name = map[1], map[2]
-      local archetype = self._world._id_to_archetype[self._id]
+      local world = self._world
+      local archetype = world._id_to_archetype[self._id]
       if not archetype then return nil end -- Entity dead?
 
       local buffer = archetype._buffers[comp_name]
@@ -287,7 +295,8 @@ function EntityProxy:__index(key)
    if tag_comp then
       -- Special case: map_collidable check logic?
       -- No, just check if simple tag component exists
-      local archetype = self._world._id_to_archetype[self._id]
+      local world = self._world
+      local archetype = world._id_to_archetype[self._id]
       if not archetype then return false end
       return archetype._buffers[tag_comp] ~= nil
    end
@@ -296,7 +305,8 @@ function EntityProxy:__index(key)
    if key == "id" then return self._id end
    if key == "hitboxes" then
       -- Return value from collidable.hitboxes
-      local archetype = self._world._id_to_archetype[self._id]
+      local world = self._world
+      local archetype = world._id_to_archetype[self._id]
       if not archetype then return nil end
       local buffer = archetype._buffers["collidable"]
       if buffer then
@@ -330,10 +340,11 @@ function EntityProxy:__newindex(key, value)
    -- 2. Check Tag Map
    local tag_comp = TagMap[key]
    if tag_comp then
+      local world = self._world
       if value then
-         self._world:add_components(self._id, {[tag_comp] = true})
+         world:add_components(self._id, {[tag_comp] = true})
       else
-         self._world:remove_components(self._id, {tag_comp})
+         world:remove_components(self._id, {tag_comp})
       end
       return
    end

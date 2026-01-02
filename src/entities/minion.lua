@@ -21,13 +21,10 @@ function Minion.spawn(world, x, y, minion_type, instance_data)
       return nil
    end
 
-   -- Parse tags from comma-separated config string
-   local tag_set = {}
-   for tag in all(split(config.tags or "", ",")) do
-      tag_set[tag] = true
-   end
+   -- Parse tags from config
+   local tag_set = EntityUtils.parse_tags(config.tags)
 
-   -- Build entity with components
+   -- Build entity with centralized component builders
    local entity = {
       -- Type identifier
       type = {value = config.entity_type or "Minion"},
@@ -35,50 +32,27 @@ function Minion.spawn(world, x, y, minion_type, instance_data)
 
       -- Transform
       position = {x = x, y = y},
-      size = {width = config.width or 16, height = config.height or 16},
+      size = EntityUtils.build_size(config),
 
       -- Movement
-      acceleration = {
-         accel = 0,
-         friction = 0.5,
-         max_speed = config.max_speed or 1,
-      },
-      velocity = {
-         vel_x = 0,
-         vel_y = 0,
-         sub_x = 0,
-         sub_y = 0,
-      },
-      direction = {
-         dir_x = 1,
-         dir_y = 0, -- Default facing right
-      },
+      acceleration = EntityUtils.build_acceleration(config, {max_speed = 1}),
+      velocity = EntityUtils.build_velocity(),
+      direction = EntityUtils.build_direction(1, 0), -- Default facing right
 
       -- Collision
-      collidable = {
-         hitboxes = {
-            w = config.hitbox_width or 10,
-            h = config.hitbox_height or 10,
-            ox = config.hitbox_offset_x or 3,
-            oy = config.hitbox_offset_y or 3,
-         },
-         map_collidable = config.map_collidable ~= false, -- Default to true for minions
-      },
+      collidable = EntityUtils.build_collidable(config, {
+         map_collidable = true,
+         w = 10,
+         h = 10,
+         ox = 3,
+         oy = 3
+      }),
 
       -- Health
-      health = {
-         hp = config.hp or 20,
-         max_hp = config.hp or 20,
-         overflow_hp = 0,
-         overflow_banking = false,
-      },
+      health = EntityUtils.build_health(config),
 
       -- Timers
-      timers = {
-         shoot_cooldown = 0,
-         invuln_timer = 0,
-         hp_drain_timer = 0,
-      },
+      timers = EntityUtils.build_timers(),
 
       -- HP Drain
       hp_drain = {
@@ -100,38 +74,14 @@ function Minion.spawn(world, x, y, minion_type, instance_data)
          follow_speed_mult = config.follow_speed_mult or 3,
       },
 
-      -- Visuals: Shadow
-      shadow = {
-         shadow_offset_x = config.shadow_offset_x or 0,
-         shadow_offset_y = config.shadow_offset_y or 0,
-         shadow_width = config.shadow_width or 8,
-         shadow_height = config.shadow_height or 3,
-         shadow_offsets_x = config.shadow_offsets_x,
-         shadow_offsets_y = config.shadow_offsets_y,
-         shadow_widths = config.shadow_widths,
-         shadow_heights = config.shadow_heights,
-      },
-
-      -- Visuals: Drawable
-      drawable = {
-         outline_color = nil,
-         sort_offset_y = 0,
-         sprite_index = EntityUtils.get_sprite_index(config, "right"),
-         flip_x = false,
-         flip_y = false,
-      },
-
-      -- Visuals: Animation
-      animatable = {
-         animations = config.animations,
-         sprite_index_offsets = config.sprite_index_offsets,
-      },
+      -- Visuals
+      shadow = EntityUtils.build_shadow(config),
+      drawable = EntityUtils.build_drawable(config, "right"),
+      animatable = EntityUtils.build_animatable(config),
    }
 
-   -- Copy all parsed tags into entity
-   for tag, _ in pairs(tag_set) do
-      entity[tag] = true
-   end
+   -- Apply parsed tags
+   EntityUtils.apply_tags(entity, tag_set)
 
    -- Chicks can display emotions (not YolkSplat or Egg)
    if minion_type == "Chick" then

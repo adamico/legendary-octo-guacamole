@@ -1,3 +1,6 @@
+--- @class SpatialGrid
+--- @field cell_size number
+--- @field cells table<number, table>
 local SpatialGrid = Class("SpatialGrid")
 
 function SpatialGrid:initialize(cell_size)
@@ -5,6 +8,8 @@ function SpatialGrid:initialize(cell_size)
     self.cells = {}
 end
 
+--- @param entity EntityProxy
+--- @param get_hitbox_fn fun(entity: EntityProxy): Hitbox
 function SpatialGrid:add(entity, get_hitbox_fn)
     local hb = get_hitbox_fn(entity)
     local x1 = flr(hb.x / self.cell_size)
@@ -25,6 +30,9 @@ function SpatialGrid:add(entity, get_hitbox_fn)
     end
 end
 
+--- @param entity EntityProxy
+--- @param get_hitbox_fn fun(entity: EntityProxy): Hitbox
+--- @return EntityProxy[]
 function SpatialGrid:get_nearby(entity, get_hitbox_fn)
     local hb = get_hitbox_fn(entity)
     local nearby = {}
@@ -54,6 +62,8 @@ function SpatialGrid:get_nearby(entity, get_hitbox_fn)
     return nearby
 end
 
+--- @param hb Hitbox
+--- @return any[]
 function SpatialGrid:get_nearby_hb(hb)
     local nearby = {}
     local seen = {}

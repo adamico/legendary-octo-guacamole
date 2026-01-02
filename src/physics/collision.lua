@@ -1,22 +1,20 @@
+--- @diagnostic disable: return-type-mismatch
 local Collision = {}
-
---- @class Hitbox
---- @field x number
---- @field y number
---- @field w number
---- @field h number
 
 local SpatialGrid = require("src/physics/spatial_grid")
 local CollisionFilter = require("src/physics/collision_filter")
 local HitboxUtils = require("src/utils/hitbox_utils")
 Collision.CollisionHandlers = require("src/physics/handlers")
+--- @type EntityProxy[]
 Collision.active_proxies = {} -- Initialize for first frame safety
 local MathUtils = require("src/utils/math_utils")
 
 local collision_filter = CollisionFilter:new()
 
+--- @type fun(entity: EntityProxy): Hitbox
 local get_hitbox = HitboxUtils.get_hitbox
 
+--- @type SpatialGrid|nil
 local current_grid = nil
 
 --- Helper: Iterate over tiles overlapping a hitbox
@@ -184,7 +182,7 @@ function Collision.resolve_entities(world, entity1)
     if not current_grid then return end
 
     -- Query nearby entities (spatial partitioning optimization)
-    local nearby = current_grid:get_nearby(entity1, get_hitbox)
+    local nearby = (current_grid --[[@as SpatialGrid]]):get_nearby(entity1, get_hitbox)
 
     -- Pre-calculate projectile segment if applicable (Continuous Collision Detection)
     local is_projectile = entity1.type == "Projectile" or entity1.type == "EnemyProjectile" or
@@ -270,7 +268,7 @@ function Collision.resolve_map(entity, room, camera_manager)
         local cy = y + voy + (axis == "y" and move or 0)
 
         local stx, sty, stile = find_solid_tile(cx, cy, w, h, entity)
-        if stx then
+        if stx and sty then
             if handler then handler(entity, cx, cy, stx, sty, stile, room) end
 
             -- Apply door guidance for player only
@@ -302,11 +300,10 @@ end
 function Collision.check_overlap(entity1, entity2)
     local hb1 = get_hitbox(entity1)
     local hb2 = get_hitbox(entity2)
-    local overlaps = hb1.x < hb2.x + hb2.w and
-       hb1.x + hb1.w > hb2.x and
-       hb1.y < hb2.y + hb2.h and
-       hb1.y + hb1.h > hb2.y
-    return overlaps
+    return hb1.x < hb2.x + hb2.w
+       and hb1.x + hb1.w > hb2.x
+       and hb1.y < hb2.y + hb2.h
+       and hb1.y + hb1.h > hb2.y
 end
 
 return Collision

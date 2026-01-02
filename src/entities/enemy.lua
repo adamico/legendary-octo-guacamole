@@ -21,13 +21,10 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
         return nil
     end
 
-    -- Parse tags from comma-separated config string into a lookup table
-    local tag_set = {}
-    for tag in all(split(config.tags or "", ",")) do
-        tag_set[tag] = true
-    end
+    -- Parse tags from config
+    local tag_set = EntityUtils.parse_tags(config.tags)
 
-    -- Build entity with all components
+    -- Build entity with centralized component builders
     local entity = {
         -- Type identifier
         type = {value = config.entity_type or "Enemy"},
@@ -35,50 +32,21 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
 
         -- Transform
         position = {x = x, y = y},
-        size = {width = config.width or 16, height = config.height or 16},
+        size = EntityUtils.build_size(config),
 
         -- Movement
-        acceleration = {
-            accel = 0,
-            friction = 0.5,
-            max_speed = config.max_speed or 0.5,
-        },
-        velocity = {
-            vel_x = 0,
-            vel_y = 0,
-            sub_x = 0,
-            sub_y = 0,
-        },
-        direction = {
-            dir_x = 0,
-            dir_y = 1, -- Default facing down
-        },
+        acceleration = EntityUtils.build_acceleration(config),
+        velocity = EntityUtils.build_velocity(),
+        direction = EntityUtils.build_direction(0, 1), -- Default facing down
 
         -- Collision
-        collidable = {
-            hitboxes = config.hitboxes or {
-                w = config.hitbox_width or 12,
-                h = config.hitbox_height or 10,
-                ox = config.hitbox_offset_x or 2,
-                oy = config.hitbox_offset_y or 3,
-            },
-            map_collidable = config.map_collidable ~= false, -- Default to true for enemies
-        },
+        collidable = EntityUtils.build_collidable(config, {map_collidable = true}),
 
         -- Health
-        health = {
-            hp = config.hp or 10,
-            max_hp = config.hp or 10,
-            overflow_hp = 0,
-            overflow_banking = false,
-        },
+        health = EntityUtils.build_health(config),
 
         -- Timers
-        timers = {
-            shoot_cooldown = 0,
-            invuln_timer = 0,
-            hp_drain_timer = 0,
-        },
+        timers = EntityUtils.build_timers(),
 
         -- AI
         enemy_ai = {
@@ -103,40 +71,14 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
             xp_value = config.xp_value or 10,
         },
 
-        -- Visuals: Shadow
-        shadow = {
-            shadow_offset_x = config.shadow_offset_x or 0,
-            shadow_offset_y = config.shadow_offset_y or 0,
-            shadow_width = config.shadow_width or 15,
-            shadow_height = config.shadow_height or 3,
-            shadow_offsets_x = config.shadow_offsets_x,
-            shadow_offsets_y = config.shadow_offsets_y,
-            shadow_widths = config.shadow_widths,
-            shadow_heights = config.shadow_heights,
-        },
-
-        -- Visuals: Drawable
-        drawable = {
-            outline_color = config.outline_color or 1,
-            sort_offset_y = 0,
-            sprite_index = EntityUtils.get_sprite_index(config, "down"),
-            flip_x = false,
-            flip_y = false,
-        },
-
-        -- Visuals: Animation
-        animatable = {
-            animations = config.animations,
-            sprite_index_offsets = config.sprite_index_offsets,
-        },
+        -- Visuals
+        shadow = EntityUtils.build_shadow(config),
+        drawable = EntityUtils.build_drawable(config, "down"),
+        animatable = EntityUtils.build_animatable(config),
     }
 
-    -- Copy all parsed tags from config into entity
-    for tag, _ in pairs(tag_set) do
-        entity[tag] = true
-    end
-
-    -- All enemies can display emotions
+    -- Apply parsed tags and emotional flag
+    EntityUtils.apply_tags(entity, tag_set)
     entity.emotional = true
 
     -- Add shooter component if tagged (requires full component data)

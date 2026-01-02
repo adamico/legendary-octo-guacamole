@@ -1,6 +1,7 @@
 -- Obstacle entity factory (picobloc version)
 -- Obstacles: Rock, Destructible, Chest, LockedChest, ShopItem
 local GameConstants = require("src/game/game_config")
+local EntityUtils = require("src/utils/entity_utils")
 
 local Obstacle = {}
 
@@ -17,13 +18,10 @@ function Obstacle.spawn(world, x, y, obstacle_type, sprite_override)
       return nil
    end
 
-   -- Parse tags from comma-separated config string
-   local tag_set = {}
-   for tag in all(split(config.tags or "", ",")) do
-      tag_set[tag] = true
-   end
+   -- Parse tags from config
+   local tag_set = EntityUtils.parse_tags(config.tags)
 
-   -- Build entity with components
+   -- Build entity with centralized component builders
    local entity = {
       -- Type identifier
       type = {value = config.entity_type or obstacle_type},
@@ -31,33 +29,22 @@ function Obstacle.spawn(world, x, y, obstacle_type, sprite_override)
 
       -- Transform
       position = {x = x, y = y},
-      size = {width = config.width or 16, height = config.height or 16},
+      size = EntityUtils.build_size(config),
 
       -- Collision
-      collidable = {
-         hitboxes = {
-            w = config.hitbox_width or 16,
-            h = config.hitbox_height or 16,
-            ox = config.hitbox_offset_x or 0,
-            oy = config.hitbox_offset_y or 0,
-         },
-         map_collidable = false,
-      },
+      collidable = EntityUtils.build_collidable(config, {map_collidable = false}),
 
-      -- Visuals: Drawable
-      drawable = {
-         outline_color = config.outline_color,
-         sort_offset_y = 0,
-         sprite_index = sprite_override or config.sprite_index or 0,
-         flip_x = false,
-         flip_y = false,
-      },
+      -- Visuals
+      drawable = EntityUtils.build_drawable(config),
    }
 
-   -- Copy all parsed tags into entity
-   for tag, _ in pairs(tag_set) do
-      entity[tag] = true
+   -- Apply sprite override if provided
+   if sprite_override then
+      entity.drawable.sprite_index = sprite_override
    end
+
+   -- Apply parsed tags
+   EntityUtils.apply_tags(entity, tag_set)
 
    -- Add chest-specific components
    if config.is_chest then

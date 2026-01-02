@@ -1,11 +1,25 @@
 local HitboxUtils = {}
 
--- Get hitbox bounds in world space
--- Returns {x, y, w, h} for collision detection
--- Supports two formats:
---   1. Simple: entity.hitbox = {w, h, ox, oy} - same hitbox for all directions
---   2. Per-direction: entity.hitboxes = {down = {...}, up = {...}, ...}
--- Falls back to hitbox_* properties, then width/height
+--- @class Hitbox
+--- @field x number
+--- @field y number
+--- @field w number
+--- @field h number
+
+--- Get hitbox bounds in world space
+---
+--- Returns {x, y, w, h} for collision detection
+---
+--- Supports two formats:
+---
+---   1. Simple: entity.hitbox = {w, h, ox, oy} - same hitbox for all directions
+---
+---   2. Per-direction: entity.hitboxes = {down = {...}, up = {...}, ...}
+---
+--- Falls back to hitbox_* properties, then width/height
+---
+--- @param entity EntityProxy
+--- @return Hitbox
 function HitboxUtils.get_hitbox(entity)
     local w, h, ox, oy
 

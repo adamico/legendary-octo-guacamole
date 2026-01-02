@@ -1,4 +1,10 @@
 -- Entity configurations: Enemy, Minion, Projectile, Pickup, Obstacle
+local EGG_HITBOX = {
+   down  = {w = 6, h = 12, ox = 4, oy = 4},
+   up    = {w = 6, h = 12, ox = 4, oy = 2},
+   right = {w = 10, h = 6, ox = 3, oy = 5},
+   left  = {w = 10, h = 6, ox = 3, oy = 5},
+}
 
 return {
    Projectile = {
@@ -10,12 +16,7 @@ return {
          knockback = 0,
          width = 16,
          height = 16,
-         hitboxes = {
-            down  = {w = 6, h = 12, ox = 4, oy = 4},
-            up    = {w = 6, h = 12, ox = 4, oy = 2},
-            right = {w = 10, h = 6, ox = 3, oy = 5},
-            left  = {w = 10, h = 6, ox = 3, oy = 5},
-         },
+         hitbox = EGG_HITBOX,
          sprite_index_offsets = {
             down = 26,
             right = 25,
@@ -82,7 +83,7 @@ return {
          pickup_effect = "health",
          width = 16,
          height = 16,
-         hitbox_from_projectile = true,
+         hitbox = EGG_HITBOX,
          sprite_index_offsets = {
             down = 36,
             right = 36,
