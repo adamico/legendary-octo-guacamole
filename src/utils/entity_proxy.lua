@@ -206,6 +206,8 @@ local ComponentMap = {
    projectile_type = {"projectile_type", "value"},
    enemy_type = {"enemy_type", "value"},
    minion_type = {"minion_type", "value"},
+   pickup_type = {"pickup_type", "value"},
+   obstacle_type = {"obstacle_type", "value"},
 
    -- AI
    path_state = {"path_state", "value"},
@@ -216,7 +218,6 @@ local ComponentMap = {
 
    -- Flags
    map_collidable = {"collidable", "map_collidable"},
-   obstacle_type = {"obstacle_type", "value"},
    room_key = {"room_key", "value"},
 
    -- Shop Data

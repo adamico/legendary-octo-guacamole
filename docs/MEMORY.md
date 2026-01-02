@@ -49,6 +49,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
     - **Refactor**: Updated **ALL** entity factories (`player`, `enemy`, `minion`, `projectile`, `pickup`, `obstacle`, `explosion`, `bomb`) to use these centralized builders.
     - **Benefit**: Drastically reduced code duplication, standardized default values, and ensured consistent tag parsing across the codebase.
     - **Linting**: Fixed LuaLS annotations in `entity_utils.lua` and `picobloc.lua` module export.
+- **Refactored Entity Config Resolution** (`entity_utils.lua`):
+  - **Dynamic Lookup**: Consolidated hardcoded `if` chains in `get_config` and `get_component_config` into a single, data-driven `lookup_config` helper using a mapping table.
+  - **Enhanced Support**: Added support for `pickup_type` and `obstacle_type` in addition to `enemy_type`, `projectile_type`, and `minion_type`.
+  - **EntityProxy Updates**: Added `pickup_type` and `obstacle_type` to `EntityProxy`'s `ComponentMap` to allow direct access via proxy objects.
+  - **Animation System Integration**: Updated `Animation.update` to query for and resolve `pickup_type` and `obstacle_type` configurations, enabling future support for animated world objects/pickups.
+  - **Linting**: Fixed various LuaLS annotation warnings in `entity_utils.lua`.
 
 - **Migrated Combat Systems to Picobloc ECS (Phase 4)**:
   - **ECS Migration**:

@@ -63,11 +63,13 @@ function Animation.update(world)
    local query = {
       "drawable", "animatable", "direction", "type",
       "velocity?", "fsm?", "enemy_ai?", "minion_ai?",
-      "enemy_type?", "projectile_type?", "minion_type?"
+      "enemy_type?", "projectile_type?", "minion_type?",
+      "pickup_type?", "obstacle_type?"
    }
 
    world:query(query, function(ids, drawable, animatable, dir, type_c,
-                               vel, fsm, enemy_ai, minion_ai, enemy_type, proj_type, minion_type)
+                               vel, fsm, enemy_ai, minion_ai, enemy_type, proj_type, minion_type, pickup_type,
+                               obstacle_type)
       for i = ids.first, ids.last do
          -- Increment Timer
          local timer = (animatable.anim_timer[i] or 0) + 1
@@ -96,8 +98,11 @@ function Animation.update(world)
          local enemy_t_val = enemy_type and enemy_type.value[i]
          local proj_t_val = proj_type and proj_type.value[i]
          local minion_t_val = minion_type and minion_type.value[i]
+         local pickup_t_val = pickup_type and pickup_type.value[i]
+         local obstacle_t_val = obstacle_type and obstacle_type.value[i]
 
-         local config = EntityUtils.get_component_config(type_c.value[i], enemy_t_val, proj_t_val, minion_t_val)
+         local config = EntityUtils.get_component_config(type_c.value[i], enemy_t_val, proj_t_val, minion_t_val,
+            pickup_t_val, obstacle_t_val)
          local state_anim = find_animation_config(config, state, facing)
 
          -- Resolve Animation Frame

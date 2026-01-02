@@ -1,20 +1,40 @@
 local GameConstants = require("src/game/game_config")
 local Utils = {}
 
--- Get the configuration table for an entity based on its type and enemy_type
+-- Internal mapping table to make config resolution dynamic
+local SUBTYPE_CONFIGS = {
+    {field = "enemy_type",      category = "Enemy",      types = {Enemy = true}},
+    {field = "projectile_type", category = "Projectile", types = {Projectile = true, EnemyProjectile = true}},
+    {field = "minion_type",     category = "Minion"},
+    {field = "pickup_type",     category = "Pickup"},
+    {field = "obstacle_type",   category = "Obstacle"},
+}
+
+--- Internal helper for shared config lookup logic
+--- @param type_val string Entity type
+--- @param data table Keyed components (e.g. {enemy_type = "Skulker"})
+--- @return any Configuration table (usually a table, but could be a value)
+local function lookup_config(type_val, data)
+    for _, map in ipairs(SUBTYPE_CONFIGS) do
+        local subtype = data[map.field]
+        if subtype then
+            -- If 'types' is specified, it must match type_val
+            if not map.types or map.types[type_val] then
+                local category = GameConstants[map.category]
+                if category and category[subtype] then
+                    return category[subtype]
+                end
+            end
+        end
+    end
+    -- Fallback to top-level category or type name
+    return GameConstants[type_val]
+end
+
+-- Get the configuration table for an entity based on its components
+--- @param entity EntityProxy
 function Utils.get_config(entity)
-    if entity.type == "Enemy" and entity.enemy_type then
-        return GameConstants.Enemy[entity.enemy_type]
-    end
-    -- Handle projectile Type Object pattern
-    if (entity.type == "Projectile" or entity.type == "EnemyProjectile") and entity.projectile_type then
-        return GameConstants.Projectile[entity.projectile_type]
-    end
-    -- Handle minion Type Object pattern
-    if entity.minion_type then
-        return GameConstants.Minion[entity.minion_type]
-    end
-    return GameConstants[entity.type]
+    return lookup_config(entity.type, entity)
 end
 
 --- Get configuration based on unrolled component values (ECS friendly)
@@ -22,24 +42,25 @@ end
 --- @param enemy_type_val string|nil Enemy type
 --- @param proj_type_val string|nil Projectile type
 --- @param minion_type_val string|nil Minion type
---- @return table|string|nil Configuration table
-function Utils.get_component_config(type_val, enemy_type_val, proj_type_val, minion_type_val)
-    if type_val == "Enemy" and enemy_type_val then
-        return GameConstants.Enemy[enemy_type_val]
-    elseif (type_val == "Projectile" or type_val == "EnemyProjectile") and proj_type_val then
-        return GameConstants.Projectile[proj_type_val]
-    elseif minion_type_val then
-        return GameConstants.Minion[minion_type_val]
-    else
-        return GameConstants[type_val]
-    end
+--- @param pickup_type_val string|nil Pickup type
+--- @param obstacle_type_val string|nil Obstacle type
+--- @return any Configuration table
+function Utils.get_component_config(type_val, enemy_type_val, proj_type_val, minion_type_val, pickup_type_val,
+                                    obstacle_type_val)
+    return lookup_config(type_val, {
+        enemy_type = enemy_type_val,
+        projectile_type = proj_type_val,
+        minion_type = minion_type_val,
+        pickup_type = pickup_type_val,
+        obstacle_type = obstacle_type_val,
+    })
 end
 
 --- Convert direction vector (dx, dy) to direction name string
 --- @param dx number x component of direction
 --- @param dy number y component of direction
---- @param default string|nil optional fallback value if movement is below threshold
---- @return string|nil "right", "left", "up", "down", or the provided default
+--- @param default string optional fallback value if movement is below threshold
+--- @return string "right", "left", "up", "down", or the provided default
 function Utils.get_direction_name(dx, dy, default)
     local threshold = 0.1
     if dx > threshold then
