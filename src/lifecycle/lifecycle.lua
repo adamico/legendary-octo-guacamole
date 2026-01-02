@@ -44,7 +44,9 @@ end
 
 -- Update entity FSM based on game state
 function Lifecycle.update_fsm(entity, world)
-    if not entity.fsm then
+    -- Note: picobloc stores 0 for uninitialized "value" type fields,
+    -- so we check type(entity.fsm) ~= "table" instead of just `not entity.fsm`
+    if type(entity.fsm) ~= "table" then
         Lifecycle.init_fsm(entity)
     end
 

@@ -100,6 +100,9 @@ function Player.spawn(world, x, y)
       shadow = EntityUtils.build_shadow(cfg),
       drawable = EntityUtils.build_drawable(cfg, "down"),
       animatable = EntityUtils.build_animatable(cfg),
+
+      -- FSM (required for Lifecycle system to manage idle/walking/etc states)
+      fsm = {value = nil}, -- Initialized by Lifecycle.init_fsm
    })
 
    return id

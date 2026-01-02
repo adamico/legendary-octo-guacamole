@@ -211,8 +211,10 @@ local ComponentMap = {
 
    -- AI
    path_state = {"path_state", "value"},
+   fsm = {"fsm", "value"},
 
-
+   -- Animation
+   anim_timer = {"animatable", "anim_timer"},
    -- Owners
    owner = {"projectile_owner", "owner"},
 
