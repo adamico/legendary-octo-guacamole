@@ -94,8 +94,8 @@ local function projectile_vs_enemy(projectile, enemy)
    local slow_factor = projectile.egg_slow_factor or GameConstants.Player.egg_slow_factor or 0.5
    local attach_dur = GameConstants.Player.chick_attach_duration or 60
 
-   local roll_dud = GameConstants.Player.roll_dud_chance or 0.50
-   local roll_hatch = GameConstants.Player.roll_hatch_chance or 0.35
+   local roll_dud = projectile.roll_dud_chance or GameConstants.Player.roll_dud_chance or 0.50
+   local roll_hatch = projectile.roll_hatch_chance or GameConstants.Player.roll_hatch_chance or 0.35
    -- Remainder is Leech (approx 0.15)
 
    local hb = HitboxUtils.get_hitbox(projectile)
@@ -130,6 +130,7 @@ local function projectile_vs_enemy(projectile, enemy)
          z = spawn_z,
          attachment_target = enemy,
          attachment_timer = attach_dur,
+         broodmother_active = projectile.broodmother_active,
       })
    else
       -- Parasitic Drain (approx 15%): Partial damage + spawn health pickup + Sticky Yolk

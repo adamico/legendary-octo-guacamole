@@ -4,6 +4,7 @@ local RoomLayouts = require("src/world/room_layouts")
 local FloorPatterns = require("src/world/floor_patterns")
 local WavePatterns = require("src/world/wave_patterns")
 local ShopItems = require("src/game/config/shop_items")
+local Mutations = require("src/game/mutations")
 
 -- Constants for procedural generation
 local ROOM_TILES_W = 29 -- Fixed room width in tiles
@@ -195,6 +196,8 @@ function DungeonManager.carve_room_floor(room)
    -- Select and assign layout for this room
    local layout = RoomLayouts.get_random_layout(room.room_type or "combat", room)
    room.layout = layout
+   Log.info("Carving room ("..
+      room.grid_x..","..room.grid_y..") Type="..(room.room_type or "combat").." Layout="..layout.name)
    room.destructibles = {} -- Store positions for destructible entity spawning
 
    local floor = room:get_inner_bounds()
@@ -230,9 +233,22 @@ function DungeonManager.place_room_obstacles(room)
       for _, f in ipairs(features) do
          if f.feature == "shop_item" then shop_count += 1 end
       end
+      Log.info("Room ("..room.grid_x..","..room.grid_y..") is SHOP. Found "..shop_count.." shop_item features.")
       shop_items_selected = ShopItems.pick_random_items(shop_count)
    end
    local shop_item_index = 1
+
+   local treasure_selected = nil
+   if room.room_type == "treasure" then
+      local treasure_count = 0
+      for _, f in ipairs(features) do
+         if f.feature == "treasure_chest" then treasure_count += 1 end
+      end
+      Log.info("Room ("..
+      room.grid_x..","..room.grid_y..") is TREASURE. Found "..treasure_count.." treasure_chest features.")
+      treasure_selected = Mutations.pick_random_items(treasure_count)
+   end
+   local treasure_index = 1
 
    for _, f in ipairs(features) do
       if f.feature == "pit" then
@@ -252,7 +268,6 @@ function DungeonManager.place_room_obstacles(room)
          -- Locked chest - sprite is fixed
          add(room.obstacle_data, {feature = "locked_chest", tx = f.tx, ty = f.ty, sprite = LOCKED_CHEST_TILE})
       elseif f.feature == "shop_item" and shop_items_selected then
-         -- Shop item pedestal - store item data for spawning
          local item = shop_items_selected[shop_item_index]
          if item then
             add(room.obstacle_data, {
@@ -268,6 +283,23 @@ function DungeonManager.place_room_obstacles(room)
             })
             shop_item_index += 1
          end
+      elseif f.feature == "treasure_chest" then
+         -- Treasure chest spawning
+         local mutation_data = nil
+         if treasure_selected and treasure_selected[treasure_index] then
+            mutation_data = treasure_selected[treasure_index]
+            treasure_index += 1
+         end
+
+         add(room.obstacle_data, {
+            feature = "treasure_chest",
+            tx = f.tx,
+            ty = f.ty,
+            sprite = TREASURE_CHEST_TILE,
+            mutation = mutation_data and mutation_data.mutation,
+            mutation_sprite = mutation_data and mutation_data.sprite_index_offsets and
+               mutation_data.sprite_index_offsets.down
+         })
       end
    end
 
@@ -293,35 +325,66 @@ function DungeonManager.assign_room_types()
       room.distance = abs(room.grid_x) + abs(room.grid_y)
    end
 
-   -- Find leaf nodes (1 neighbor only, excluding start)
+   -- Categorize rooms
    local leaves = {}
+   local others = {}
    for _, room in pairs(DungeonManager.rooms) do
       if room.room_type ~= "start" then
          local neighbors = DungeonManager.count_neighbors(room.grid_x, room.grid_y)
          if neighbors == 1 then
             add(leaves, room)
+         else
+            add(others, room)
          end
       end
    end
 
-   -- Sort leaves by distance (descending) - farthest first
-   for i = 1, #leaves - 1 do
-      for j = i + 1, #leaves do
-         if leaves[j].distance > leaves[i].distance then
-            leaves[i], leaves[j] = leaves[j], leaves[i]
+   -- Note: PICO-8 sort is basic bubble sort usually, or we can use custom implementation
+   -- But here we used bubble sort in original code. Retaining that logic or using table.sort if available?
+   -- Lua sort: table.sort(list, func). Pico-8 (standard) uses simple sort?
+   -- Original code implemented bubble sort manually. I'll stick to that or use a helper.
+   -- Let's replicate manual sort for safety/consistency with original code style.
+   local function manual_sort(list)
+      for i = 1, #list - 1 do
+         for j = i + 1, #list do
+            if list[j].distance > list[i].distance then
+               list[i], list[j] = list[j], list[i]
+            end
          end
       end
    end
+   manual_sort(leaves)
+   manual_sort(others)
 
-   -- Assign special types: farthest = boss, next = treasure, next = shop
-   if #leaves >= 1 then
-      leaves[1].room_type = "boss"
+   -- Helper to pick next available room (prefer leaves, then others)
+   local function pick_next()
+      if #leaves > 0 then
+         return deli(leaves, 1) -- Take farthest leaf
+      elseif #others > 0 then
+         return deli(others, 1) -- Fallback to farthest non-leaf
+      end
+      return nil
    end
-   if #leaves >= 2 then
-      leaves[2].room_type = "treasure"
+
+   -- Assign special types
+   local boss_room = pick_next()
+   if boss_room then
+      boss_room.room_type = "boss"
+      Log.info("Assigned BOSS room: "..boss_room.grid_x..","..boss_room.grid_y)
    end
-   if #leaves >= 3 then
-      leaves[3].room_type = "shop"
+
+   local treasure_room = pick_next()
+   if treasure_room then
+      treasure_room.room_type = "treasure"
+      Log.info("Assigned TREASURE room: "..treasure_room.grid_x..","..treasure_room.grid_y)
+   else
+      Log.error("FAILED to assign TREASURE room! Not enough candidates.")
+   end
+
+   local shop_room = pick_next()
+   if shop_room then
+      shop_room.room_type = "shop"
+      Log.info("Assigned SHOP room: "..shop_room.grid_x..","..shop_room.grid_y)
    end
 
    -- Remaining rooms are combat rooms with wave patterns
@@ -475,6 +538,7 @@ function DungeonManager.setup_room(room, player, world)
       local chest_count = 0
       local locked_chest_count = 0
       local shop_item_count = 0
+      local treasure_count = 0
 
       -- Initialize obstacle entity tracking for this room
       room.obstacle_entities = room.obstacle_entities or {}
@@ -484,7 +548,7 @@ function DungeonManager.setup_room(room, player, world)
          -- Rocks/Destructibles have hitbox_offset=4, so we offset by -4 to align hitbox with tile
          -- Chests/ShopItems have custom offsets, no adjustment needed
          local wx, wy
-         if f.feature == "chest" or f.feature == "locked_chest" or f.feature == "shop_item" then
+         if f.feature == "chest" or f.feature == "locked_chest" or f.feature == "shop_item" or f.feature == "treasure_chest" then
             wx, wy = f.tx * GRID_SIZE, f.ty * GRID_SIZE
          else
             wx, wy = f.tx * GRID_SIZE - 4, f.ty * GRID_SIZE - 4
@@ -510,6 +574,13 @@ function DungeonManager.setup_room(room, player, world)
             entity.price = f.price
             entity.apply_fn = f.apply_fn
             shop_item_count += 1
+         elseif f.feature == "treasure_chest" then
+            entity = Entities.spawn_obstacle(world, wx, wy, "TreasureChest", f.sprite)
+            if entity then
+               entity.mutation = f.mutation
+               entity.mutation_sprite = f.mutation_sprite
+            end
+            treasure_count += 1
          end
          if entity then
             entity.room_key = room.grid_x..","..room.grid_y
@@ -522,7 +593,7 @@ function DungeonManager.setup_room(room, player, world)
       Log.info("Spawned obstacles in room ("..
          room.grid_x..","..room.grid_y.."): "..rocks_count.." rocks, "..dest_count..
          " destructibles, "..chest_count.." chests, "..locked_chest_count..
-         " locked chests, "..shop_item_count.." shop items")
+         " locked chests, "..shop_item_count.." shop items, "..treasure_count.." treasure chests")
       room.obstacles_spawned = true
    end
 
@@ -540,8 +611,8 @@ function DungeonManager.setup_room(room, player, world)
 end
 
 --- Check if an active room has been cleared of enemies
--- @param room The room to check
--- @param world The ECS world instance
+--- @param room Room to check
+--- @param world ECSWorld instance
 function DungeonManager.check_room_clear(room, world)
    if not room.lifecycle:is("active") then return end
 

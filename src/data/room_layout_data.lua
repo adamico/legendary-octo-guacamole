@@ -18,15 +18,16 @@ local LayoutData = {}
 
 -- Feature legend (char → feature type)
 LayoutData.FEATURE_LEGEND = {
-   ["."] = "floor",        -- Normal floor tile
-   ["R"] = "rock",         -- Solid rock obstacle
-   ["P"] = "pit",          -- Pit (blocks walking, not projectiles)
-   ["D"] = "destructible", -- Breakable obstacle
-   ["W"] = "wall",         -- Interior wall (solid)
-   ["C"] = "chest",        -- Normal chest (drops 1-3 pickups)
-   ["L"] = "locked_chest", -- Locked chest (requires key, drops 2-6 pickups)
-   ["S"] = "shop_item",    -- Shop item pedestal (purchasable)
-   ["N"] = "no_spawn",     -- No enemy spawn zone (walkable, blocks spawns)
+   ["."] = "floor",          -- Normal floor tile
+   ["R"] = "rock",           -- Solid rock obstacle
+   ["P"] = "pit",            -- Pit (blocks walking, not projectiles)
+   ["D"] = "destructible",   -- Breakable obstacle
+   ["W"] = "wall",           -- Interior wall (solid)
+   ["C"] = "chest",          -- Normal chest (drops 1-3 pickups)
+   ["L"] = "locked_chest",   -- Locked chest (requires key, drops 2-6 pickups)
+   ["S"] = "shop_item",      -- Shop item pedestal (purchasable)
+   ["N"] = "no_spawn",       -- No enemy spawn zone (walkable, blocks spawns)
+   ["T"] = "treasure_chest", -- Treasure chest (drops mutation)
 }
 
 -- Cell pattern position offsets within 3×2 cell
@@ -77,6 +78,22 @@ LayoutData.Layouts = {
       layout_type = "open",
       floor_pattern = "random",
       grid = nil
+   },
+
+   treasure = {
+      room_types = {"treasure"},
+      layout_type = "treasure",
+      floor_pattern = "random",
+      cell_pattern = {"bm"},
+      grid = {
+         ".........",
+         ".........",
+         ".........",
+         "....T....",
+         ".........",
+         ".........",
+         ".........",
+      }
    },
 
    -- SHOP layout - 3 item pedestals

@@ -244,6 +244,7 @@ function Play:update()
 
    -- Effects
    Systems.Effects.update_shake()
+   Systems.Effects.update_animations(world)
    Systems.FloatingText.update()
 
    -- Leveling (check for level ups after XP collection)

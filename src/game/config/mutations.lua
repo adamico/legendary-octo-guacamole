@@ -2,22 +2,53 @@
 
 return {
    Mutation = {
-      Mutation = {
+      Eggsaggerated = {
          entity_type = "Mutation",
-         tags = "mutation,velocity,collidable,drawable,sprite,background,shadow",
-         pickup_effect = "health",
+         tags = "mutation,velocity,collidable,drawable,sprite,middleground,shadow",
          width = 16,
          height = 16,
-         hitbox_from_projectile = true,
          sprite_index_offsets = {
-            down = 36,
-            right = 36,
-            left = 36,
-            up = 36,
+            down = 58,
+            right = 58,
+            left = 58,
+            up = 58,
          },
          sprite_offset_y = 6,
          shadow_offset_y = 4,
          shadow_width = 6,
+         mutation = "Eggsaggerated",
+      },
+      Broodmother = {
+         entity_type = "Mutation",
+         tags = "mutation,velocity,collidable,drawable,sprite,middleground,shadow",
+         width = 16,
+         height = 16,
+         sprite_index_offsets = {
+            down = 59,
+            right = 59,
+            left = 59,
+            up = 59,
+         },
+         sprite_offset_y = 6,
+         shadow_offset_y = 4,
+         shadow_width = 6,
+         mutation = "Broodmother",
+      },
+      Pureblood = {
+         entity_type = "Mutation",
+         tags = "mutation,velocity,collidable,drawable,sprite,middleground,shadow",
+         width = 16,
+         height = 16,
+         sprite_index_offsets = {
+            down = 60,
+            right = 60,
+            left = 60,
+            up = 60,
+         },
+         sprite_offset_y = 6,
+         shadow_offset_y = 4,
+         shadow_width = 6,
+         mutation = "Pureblood",
       },
    }
 }

@@ -73,5 +73,20 @@ return {
          shadow_width = 11,
          -- xp_amount set at spawn time via instance_data
       },
+      Mutation = {
+         entity_type = "Mutation",
+         tags = "pickup,collidable,drawable,sprite,background,shadow",
+         pickup_effect = "mutation", -- Matches logic in pickup_handlers.lua
+         width = 16,
+         height = 16,
+         sprite_index = 58, -- Placeholder, will be overridden by mutation_sprite
+         hitbox_width = 12,
+         hitbox_height = 12,
+         hitbox_offset_x = 2,
+         hitbox_offset_y = 2,
+         shadow_offset_y = 3,
+         shadow_width = 11,
+         -- mutation field set via instance_data
+      },
    }
 }

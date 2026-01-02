@@ -79,11 +79,20 @@ function Shooter.update(world)
                shot_cost = shot_cost,
                lifetime = (entity.range and entity.shot_speed)
                   and (entity.range / entity.shot_speed) or 60,
-               -- Egg outcome stats (single roll with 3 equal outcomes)
+               -- Egg outcome stats (single roll, 3 outcomes)
                impact_damage = entity.impact_damage,
                drain_damage = entity.drain_damage,
                drain_heal = entity.drain_heal,
                hatch_time = entity.hatch_time,
+
+               -- Pass mutation-specific stats
+               dud_damage = entity.dud_damage,     -- Used by Eggsaggerated
+               leech_damage = entity.leech_damage, -- Used by Pureblood (if needed)
+               roll_dud_chance = entity.roll_dud_chance,
+               roll_hatch_chance = entity.roll_hatch_chance,
+               roll_leech_chance = entity.roll_leech_chance,
+               broodmother_active = entity.broodmother_active, -- For Broodmother minion buff
+
                -- Sticky Yolk effect stats
                egg_slow_duration = entity.egg_slow_duration,
                egg_slow_factor = entity.egg_slow_factor,

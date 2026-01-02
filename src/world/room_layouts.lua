@@ -32,8 +32,8 @@ for name, layout in pairs(Layouts) do
 end
 
 --- Parse a grid row into cells (no-space format: "R..R..R")
--- @param row String like "R..R..R.."
--- @return Table of characters
+--- @param row String like "R..R..R.."
+--- @return Table of characters
 local function parse_row(row)
    local cells = {}
    for i = 1, #row do
@@ -46,8 +46,8 @@ local function parse_row(row)
 end
 
 --- Parse entire grid into 2D structure (cached on layout)
--- @param layout Layout definition
--- @return {rows, cols, cells}
+--- @param layout Layout definition
+--- @return {rows, cols, cells}
 local function get_parsed_grid(layout)
    if not layout or not layout.grid then return nil end
 
@@ -68,9 +68,9 @@ local function get_parsed_grid(layout)
 end
 
 --- Check if a layout is valid for a room based on door requirements
--- @param layout_name Name of the layout
--- @param room Room object with doors table
--- @return true if layout can be used
+--- @param layout_name Name of the layout
+--- @param room Room object with doors table
+--- @return true if layout can be used
 local function is_layout_valid_for_room(layout_name, room)
    local layout = Layouts[layout_name]
    if not layout or not layout.requires_no_doors then return true end
@@ -86,9 +86,9 @@ local function is_layout_valid_for_room(layout_name, room)
 end
 
 --- Get a random layout for a room type
--- @param room_type "combat", "start", "boss", etc.
--- @param room Optional room object (for door-based filtering)
--- @return Layout definition
+--- @param room_type "combat", "start", "boss", etc.
+--- @param room Optional room object (for door-based filtering)
+--- @return Layout definition
 function RoomLayouts.get_random_layout(room_type, room)
    local all_candidates = LayoutsByRoomType[room_type] or LayoutsByRoomType.combat or {"open"}
 
@@ -119,11 +119,11 @@ function RoomLayouts.get_layout(name)
 end
 
 --- Get all features from a layout with their tile positions
--- Returns a list of {feature, tile_x, tile_y} for each feature tile
--- @param layout Layout definition
--- @param room_inner_x Room inner left edge in tiles (after wall)
--- @param room_inner_y Room inner top edge in tiles (after wall)
--- @return Array of {feature, tx, ty}
+--- Returns a list of {feature, tile_x, tile_y} for each feature tile
+--- @param layout Layout definition
+--- @param room_inner_x Room inner left edge in tiles (after wall)
+--- @param room_inner_y Room inner top edge in tiles (after wall)
+--- @return Array of {feature, tx, ty}
 function RoomLayouts.get_all_features(layout, room_inner_x, room_inner_y)
    local parsed = get_parsed_grid(layout)
    if not parsed then return {} end
@@ -186,12 +186,12 @@ function RoomLayouts.get_all_features(layout, room_inner_x, room_inner_y)
 end
 
 --- Get the feature at a specific tile position (for spawn validation)
--- @param layout Layout definition
--- @param gx Grid X position (0-indexed from room left inner)
--- @param gy Grid Y position (0-indexed from room top inner)
--- @param room_w Room inner width in tiles (should be 27)
--- @param room_h Room inner height in tiles (should be 14)
--- @return Feature type string or nil for floor
+--- @param layout Layout definition
+--- @param gx Grid X position (0-indexed from room left inner)
+--- @param gy Grid Y position (0-indexed from room top inner)
+--- @param room_w Room inner width in tiles (should be 27)
+--- @param room_h Room inner height in tiles (should be 14)
+--- @return Feature type string or nil for floor
 function RoomLayouts.get_feature_at(layout, gx, gy, room_w, room_h)
    local parsed = get_parsed_grid(layout)
    if not parsed then return nil end
@@ -215,8 +215,8 @@ function RoomLayouts.get_feature_at(layout, gx, gy, room_w, room_h)
 end
 
 --- Get tile for a feature type
--- @param feature Feature type string ("rock", "pit", "destructible", "chest", "locked_chest")
--- @return Tile number
+--- @param feature Feature type string ("rock", "pit", "destructible", "chest", "locked_chest", "treasure_chest")
+--- @return Tile number
 function RoomLayouts.get_feature_tile(feature)
    if feature == "rock" then
       return ROCK_TILES[flr(rnd(#ROCK_TILES)) + 1]
@@ -230,6 +230,8 @@ function RoomLayouts.get_feature_tile(feature)
       return CHEST_TILE
    elseif feature == "locked_chest" then
       return LOCKED_CHEST_TILE
+   elseif feature == "treasure_chest" then
+      return TREASURE_CHEST_TILE
    end
    return nil
 end
@@ -251,6 +253,7 @@ function RoomLayouts.get_tile_feature_type(tile)
    -- Check chests
    if tile == CHEST_TILE then return "chest" end
    if tile == LOCKED_CHEST_TILE then return "locked_chest" end
+   if tile == TREASURE_CHEST_TILE then return "treasure_chest" end
    return nil
 end
 

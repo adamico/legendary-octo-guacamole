@@ -1,4 +1,3 @@
-local pgui = require("lib/pgui")
 local SceneManager = require("src/scenes/manager")
 local Pools = require("src/game/config/level_up")
 

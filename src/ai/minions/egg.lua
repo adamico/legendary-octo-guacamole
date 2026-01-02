@@ -34,11 +34,23 @@ return function(entity, world)
 
       -- Hatch into chick when timer reaches 0
       if entity.hatch_timer <= 0 then
-         -- Pass attachment data to chick (Face-Hugger mechanic)
-         local chick = Entities.spawn_chick(world, entity.x, entity.y, {
+         -- Prepare chick options
+         local chick_opts = {
             attachment_target = entity.attachment_target,
             attachment_timer = entity.attachment_timer,
-         })
+         }
+
+         -- Apply Broodmother mutation stats (Double base stats)
+         if entity.broodmother_active then
+            local base_config = GameConstants.Minion.Chick
+            chick_opts.hp = (base_config.hp or 20) * 2
+            chick_opts.attack_damage = (base_config.attack_damage or 3) * 2
+            chick_opts.attack_cooldown = math.floor((base_config.attack_cooldown or 30) / 2)
+            -- Optionally double other stats if needed
+         end
+
+         -- Pass attachment data to chick (Face-Hugger mechanic)
+         Entities.spawn_chick(world, entity.x, entity.y, chick_opts)
          world.del(entity)
       end
    end

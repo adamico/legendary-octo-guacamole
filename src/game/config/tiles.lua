@@ -40,6 +40,7 @@ PIT_TILE = 85                             -- P: pit (blocks walking, not project
 DESTRUCTIBLE_TILES = {150, 151, 158, 159} -- D: breakable obstacles
 CHEST_TILE = 166                          -- C: normal chest
 LOCKED_CHEST_TILE = 167                   -- L: locked chest
+TREASURE_CHEST_TILE = 174                 -- T: treasure chest
 NO_SPAWN_FEATURE = 87
 
 -- Feature type flags (for collision logic)

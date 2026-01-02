@@ -8,7 +8,6 @@ local HitboxUtils = require("src/utils/hitbox_utils")
 local Effects = require("src/systems/effects")
 local DungeonManager = require("src/world/dungeon_manager")
 local FloatingText = require("src/systems/floating_text")
-local Collision = require("src/physics/collision")
 local qsort = require("lib/qsort")
 
 local ObstacleHandlers = {}
@@ -90,55 +89,84 @@ local function open_chest(chest, player)
 
    chest.opened = true
 
-   -- Get loot parameters from config
-   local loot_min = chest.loot_min or 1
-   local loot_max = chest.loot_max or 3
-   local loot_count = loot_min + flr(rnd(loot_max - loot_min + 1))
+   -- Special handling for Treasure Chest (mutations)
+   if chest.is_chest and chest.mutation then
+      local cx = chest.x + chest.width / 2
+      local cy = chest.y + chest.height / 2
+      local spawn_x = cx - 8
+      local spawn_y = cy - 8 -- Center the 16x16 mutation item
 
-   -- Calculate spawn position (center of chest)
-   local cx = chest.x + chest.width / 2
-   local cy = chest.y + chest.height / 2
+      -- Spawn the specific Mutation entity
+      -- We use spawn_pickup generic or we need a specific spawner?
+      -- The mutation name is in chest.mutation (e.g. "Eggsaggerated")
+      -- We need to spawn an entity of type "Mutation" with mutation=chest.mutation
 
-   -- Track spawned positions to avoid overlap
-   local spawned_positions = {}
-   local MIN_SEPARATION = 14 -- Minimum distance between spawned items
-
-   for i = 1, loot_count do
-      local loot_type = pick_loot(CHEST_LOOT)
-
-      -- Spread pickups in a circle pattern with consistent angles
-      local angle = (i / loot_count) * 6.28
-      local base_dist = 16 + (i - 1) * 4 -- Stagger distances: 16, 20, 24, etc.
-      local spawn_x = cx + cos(angle) * base_dist - 8
-      local spawn_y = cy + sin(angle) * base_dist - 8
-
-      -- Snap to floor to avoid pits
-      local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y, DungeonManager.current_room)
-      if sx then
-         spawn_x, spawn_y = sx, sy
-      else
-         -- Fallback to chest center if no valid floor found
-         spawn_x, spawn_y = cx - 8, cy - 8
-      end
-
-      -- Check for overlap with previously spawned items and nudge if needed
-      for _, pos in ipairs(spawned_positions) do
-         local dx, dy = spawn_x - pos.x, spawn_y - pos.y
-         local dist = sqrt(dx * dx + dy * dy)
-         if dist < MIN_SEPARATION and dist > 0 then
-            -- Nudge away from existing item
-            local nudge = (MIN_SEPARATION - dist) / dist
-            spawn_x = spawn_x + dx * nudge
-            spawn_y = spawn_y + dy * nudge
-         elseif dist == 0 then
-            -- Exactly same position, offset randomly
-            spawn_x = spawn_x + rnd(MIN_SEPARATION) - MIN_SEPARATION / 2
-            spawn_y = spawn_y + rnd(MIN_SEPARATION) - MIN_SEPARATION / 2
+      -- Zelda-style item rise animation
+      Effects.spawn_item_rise(world, spawn_x, spawn_y, chest.mutation_sprite, chest.mutation, function(anim_ent)
+         -- On finish: Spawn the actual pickup
+         local pickup = Entities.spawn_pickup(world, anim_ent.x, anim_ent.y, "Mutation", {
+            mutation = chest.mutation,
+            sprite_index = chest.mutation_sprite
+         })
+         -- Small bounce/drop effect upon landing
+         if pickup then
+            pickup.vel_y = -1
          end
-      end
+      end)
 
-      table.insert(spawned_positions, {x = spawn_x, y = spawn_y})
-      Entities.spawn_pickup(world, spawn_x, spawn_y, loot_type)
+      -- Treasure chests don't drop random loot
+   else
+      -- Normal loot logic for regular chests
+      -- Get loot parameters from config
+      local loot_min = chest.loot_min or 1
+      local loot_max = chest.loot_max or 3
+      local loot_count = loot_min + flr(rnd(loot_max - loot_min + 1))
+
+      -- Calculate spawn position (center of chest)
+      local cx = chest.x + chest.width / 2
+      local cy = chest.y + chest.height / 2
+
+      -- Track spawned positions to avoid overlap
+      local spawned_positions = {}
+      local MIN_SEPARATION = 14 -- Minimum distance between spawned items
+
+      for i = 1, loot_count do
+         local loot_type = pick_loot(CHEST_LOOT)
+
+         -- Spread pickups in a circle pattern with consistent angles
+         local angle = (i / loot_count) * 6.28
+         local base_dist = 16 + (i - 1) * 4 -- Stagger distances: 16, 20, 24, etc.
+         local spawn_x = cx + cos(angle) * base_dist - 8
+         local spawn_y = cy + sin(angle) * base_dist - 8
+
+         -- Snap to floor to avoid pits
+         local sx, sy = DungeonManager.snap_to_nearest_floor(spawn_x, spawn_y, DungeonManager.current_room)
+         if sx then
+            spawn_x, spawn_y = sx, sy
+         else
+            -- Fallback to chest center if no valid floor found
+            spawn_x, spawn_y = cx - 8, cy - 8
+         end
+
+         -- Check for overlap with previously spawned items and nudge if needed
+         for _, pos in ipairs(spawned_positions) do
+            local dx, dy = spawn_x - pos.x, spawn_y - pos.y
+            local dist = sqrt(dx * dx + dy * dy)
+            if dist < MIN_SEPARATION and dist > 0 then
+               -- Nudge away from existing item
+               local nudge = (MIN_SEPARATION - dist) / dist
+               spawn_x = spawn_x + dx * nudge
+               spawn_y = spawn_y + dy * nudge
+            elseif dist == 0 then
+               -- Exactly same position, offset randomly
+               spawn_x = spawn_x + rnd(MIN_SEPARATION) - MIN_SEPARATION / 2
+               spawn_y = spawn_y + rnd(MIN_SEPARATION) - MIN_SEPARATION / 2
+            end
+         end
+
+         table.insert(spawned_positions, {x = spawn_x, y = spawn_y})
+         Entities.spawn_pickup(world, spawn_x, spawn_y, loot_type)
+      end
    end
 
    -- Change sprite to open chest (if configured)
@@ -180,6 +208,7 @@ local function push_out(entity, obstacle)
    qsort(push_options, function(a, b) return a.overlap < b.overlap end)
 
    -- Find first push option that doesn't collide with solid tiles
+   local Collision = require("src/physics/collision")
    for _, opt in ipairs(push_options) do
       local new_hb_x = e_hb.x + opt.px
       local new_hb_y = e_hb.y + opt.py
@@ -274,14 +303,20 @@ function ObstacleHandlers.register(handlers)
       push_out(player, chest)
       open_chest(chest, player)
    end
+   handlers.entity["Player,TreasureChest"] = function(player, chest)
+      push_out(player, chest)
+      open_chest(chest, player)
+   end
 
    -- Chick vs Chests (push out only, can't open)
    handlers.entity["Chick,Chest"] = function(chick, chest) push_out(chick, chest) end
    handlers.entity["Chick,LockedChest"] = function(chick, chest) push_out(chick, chest) end
+   handlers.entity["Chick,TreasureChest"] = function(chick, chest) push_out(chick, chest) end
 
    -- Enemy vs Chests (push out only)
    handlers.entity["Enemy,Chest"] = push_out_enemy
    handlers.entity["Enemy,LockedChest"] = push_out_enemy
+   handlers.entity["Enemy,TreasureChest"] = push_out_enemy
 
    -- Melee vs Chest (opens chest)
    handlers.entity["MeleeHitbox,Chest"] = function(hitbox, chest)
@@ -293,6 +328,13 @@ function ObstacleHandlers.register(handlers)
       end
    end
    handlers.entity["MeleeHitbox,LockedChest"] = function(hitbox, chest)
+      local player = nil
+      world.sys("player", function(p) player = p end)()
+      if player then
+         open_chest(chest, player)
+      end
+   end
+   handlers.entity["MeleeHitbox,TreasureChest"] = function(hitbox, chest)
       local player = nil
       world.sys("player", function(p) player = p end)()
       if player then

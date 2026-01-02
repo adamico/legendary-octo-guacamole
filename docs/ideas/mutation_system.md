@@ -4,7 +4,6 @@ The main concept of the mutation system is to allow nudging the player towards a
 
 - egg-based playstyle (egg throwing is the main damage source)
 - chick-based playstyle (chick minions are the main damage source)
-- mixed playstyle (both egg throwing and chick minions are the main damage source)
 - brawler playstyle (movement/melee is the main damage source)
 
 ## Projectile effects

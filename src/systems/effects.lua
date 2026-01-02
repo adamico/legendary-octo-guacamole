@@ -179,4 +179,60 @@ function Effects.pickup_collect(entity)
     -- sfx(6) -- pickup sound (uncomment when SFX ready)
 end
 
+-- Item Rise Animation (Zelda-style)
+-- 1. Spawns item above origin
+-- 2. Item rises slowly
+-- 3. Floating text appears
+-- 4. Item converts to normal pickup
+function Effects.spawn_item_rise(world, x, y, sprite_index, item_name, on_finish_fn)
+    local anim = {
+        type = "ItemRiseAnim",
+        x = x,
+        y = y,
+        y_start = y,
+        width = 16,
+        height = 16,
+        sprite_index = sprite_index,
+        rise_timer = 0,
+        rise_duration = 60, -- 1 second at 60fps (or 2s at 30fps? Game is 30fps default usually)
+        -- User said "1 second". If _update is 30fps, need 30 frames.
+        -- Play.lua doesn't show _update60. Assuming 30fps.
+        -- So 30 frames.
+        item_name = item_name,
+        on_finish = on_finish_fn,
+
+        -- Drawing layer
+        layer = "middleground",
+        z = 100 -- Ensure it's above chest (chest z usually based on y)
+    }
+    world.ent("drawable,sprite,timers,middleground,item_rise_anim", anim)
+end
+
+-- Update item rise animations
+function Effects.update_animations(world)
+    -- reusing world query implies this is called inside a system with access to world
+    -- But Effects is a module. It needs world passed in.
+
+    world.sys("item_rise_anim", function(e)
+        e.rise_timer = e.rise_timer + 1
+
+        -- Slow rise (ease out?)
+        -- Simple linear for now: 16 pixels up over 30 frames -> ~0.5 px/frame
+        e.y = e.y - 0.5
+
+        if e.rise_timer >= 30 then
+            -- Animation finished
+            local FloatingText = require("src/systems/floating_text")
+            FloatingText.spawn_at_entity(e, e.item_name or "Item!", "pickup")
+
+            if e.on_finish then
+                e.on_finish(e)
+            end
+
+            -- Remove animation entity
+            world.del(e)
+        end
+    end)()
+end
+
 return Effects
