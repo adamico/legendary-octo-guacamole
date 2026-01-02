@@ -20,6 +20,11 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Fixed Invalid Picobloc Syntax** (`world.components` usage):
+  - **`animation.lua`**: Replaced non-existent `world.components` access with proper optional component query using `?` suffix (`velocity?`, `fsm?`, `enemy_ai?`, etc.) and passing component buffers as callback arguments.
+  - **`floating_text.lua`**: Replaced `world.components` random-access lookup with proper `world:query_entity()` call for entity position/size retrieval.
+  - **Root Cause**: Code was using a pattern from a different ECS library (eggs.p8?) that doesn't exist in picobloc. In picobloc, components are accessed only through query callbacks, not a global `world.components` table.
+
 - **Completed Phase 7: Cleanup (eggs.p8 removal)**:
   - **Deleted** `lib/eggs.p8/` directory entirely.
   - **Refactored 11 files** from eggs.p8 API (`world.sys()`, `world.del()`) to picobloc API (`world:query()`, `world:remove_entity()`):

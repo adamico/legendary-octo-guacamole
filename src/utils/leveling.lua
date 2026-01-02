@@ -13,14 +13,19 @@ function Leveling.xp_for_level(level)
 end
 
 -- Check and process level ups (called from play.lua with player entity)
+--- @param player EntityProxy
 function Leveling.check_level_up(player)
    if not player then return end
 
+   -- Ensure XP fields exist (early return if component missing)
+   if player.xp == nil then return end
+
    local required = player.xp_to_next_level or Leveling.xp_for_level(player.level or 1)
+   if required == nil then required = Leveling.xp_for_level(player.level or 1) end
 
    while player.xp >= required do
-      player.xp = player.xp - required
-      player.level = player.level + 1
+      player.xp -= required
+      player.level += 1
       player.xp_to_next_level = Leveling.xp_for_level(player.level)
       required = player.xp_to_next_level
 

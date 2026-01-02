@@ -1,6 +1,7 @@
 --- @class EntityProxy
---- @field _world ECSWorld
---- @field _id EntityID
+--- @field private _world ECSWorld Internal reference to ECS world
+--- @field private _id EntityID Internal entity ID storage
+--- @field id EntityID Read-only entity ID accessor
 --- @field x number
 --- @field y number
 --- @field z number

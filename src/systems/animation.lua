@@ -58,22 +58,16 @@ end
 
 -- Update all animations
 function Animation.update(world)
-   -- Access optional components directly
-   local comps = world.components
-   local vel = comps.velocity
-   local fsm = comps.fsm
-   -- REVIEW: do we need to check each ai, or entity types?
-   local enemy_ai = comps.enemy_ai
-   local minion_ai = comps.minion_ai
-   local enemy_type = comps.enemy_type
-   local proj_type = comps.projectile_type
-   local minion_type = comps.minion_type
-
+   -- Query includes all required and optional components
+   -- Optional components use the ? suffix
    local query = {
-      "drawable", "animatable", "direction", "type"
+      "drawable", "animatable", "direction", "type",
+      "velocity?", "fsm?", "enemy_ai?", "minion_ai?",
+      "enemy_type?", "projectile_type?", "minion_type?"
    }
 
-   world:query(query, function(ids, drawable, animatable, dir, type_c)
+   world:query(query, function(ids, drawable, animatable, dir, type_c,
+                               vel, fsm, enemy_ai, minion_ai, enemy_type, proj_type, minion_type)
       for i = ids.first, ids.last do
          -- Increment Timer
          local timer = (animatable.anim_timer[i] or 0) + 1

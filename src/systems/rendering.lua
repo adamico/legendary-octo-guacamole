@@ -150,10 +150,12 @@ function Rendering.draw_layer(world, tag_filter, sorted, visible_rooms)
    -- We always need position and drawable. We optionally take size, flash, etc.
    local components = {"position", "drawable", "size?", "flash?", "room_key?", "animatable?", "enemy_ai?", "minion_ai?"}
 
-   -- Add tag filters
+   -- Add tag filters (split comma-separated strings)
    if tag_filter then
       if type(tag_filter) == "string" then
-         table.insert(components, tag_filter)
+         for _, tag in ipairs(split(tag_filter, ",")) do
+            table.insert(components, tag)
+         end
       else
          for _, t in ipairs(tag_filter) do
             table.insert(components, t)
@@ -205,5 +207,8 @@ function Rendering.draw_layer(world, tag_filter, sorted, visible_rooms)
       end
    end
 end
+
+-- Export utility for HUD/UI drawing
+Rendering.draw_outlined = draw_outlined
 
 return Rendering

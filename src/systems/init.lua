@@ -54,8 +54,7 @@ Systems.init_extended_palette = Lighting.init_extended_palette
 Systems.init_spotlight = Lighting.init_spotlight
 Systems.lighting = Lighting.update
 
--- Shadow systems (self-iterating)
-Systems.sync_shadows = Shadows.sync
+-- Shadow systems (self-iterating, no sync needed - position from parent component)
 Systems.draw_shadows = Shadows.draw
 
 -- Rendering systems

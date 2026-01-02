@@ -10,6 +10,7 @@ local SpatialGrid = require("src/physics/spatial_grid")
 local CollisionFilter = require("src/physics/collision_filter")
 local HitboxUtils = require("src/utils/hitbox_utils")
 Collision.CollisionHandlers = require("src/physics/handlers")
+Collision.active_proxies = {} -- Initialize for first frame safety
 local MathUtils = require("src/utils/math_utils")
 
 local collision_filter = CollisionFilter:new()
@@ -258,8 +259,8 @@ function Collision.resolve_map(entity, room, camera_manager)
     local handler = Collision.CollisionHandlers.map[entity.type or ""]
 
     local function check(axis, vox, voy)
-        local sub = entity["sub_"..axis]
-        local vel = entity["vel_"..axis]
+        local sub = entity["sub_"..axis] or 0
+        local vel = entity["vel_"..axis] or 0
         local move = flr(sub + vel)
         if sub + vel < 0 and sub + vel ~= move then
             move = ceil(sub + vel) - 1

@@ -12,6 +12,7 @@ local AIDebug = require("src/systems/ai_debug")
 local Leveling = require("src/utils/leveling")
 local DebugUI = require("src/ui/debug_ui")
 local PlayEvents = require("src/scenes/play_events")
+local EntityProxy = require("src/utils/entity_proxy")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -23,8 +24,9 @@ local SceneManager = require("src/scenes/manager")
 local Play = SceneManager:addState("Play")
 
 --- @type ECSWorld
-local world -- Global world instance (initialized later)
-local player
+local world        -- Global world instance (initialized later)
+local player_id    -- Raw entity ID (for ECS queries)
+local player_proxy --- @type EntityProxy Cached proxy (for system calls)
 local camera_manager
 local current_room
 
@@ -49,10 +51,11 @@ function Play:enteredState()
    local room = DungeonManager.current_room
    local px = room.pixels.x + room.pixels.w / 2
    local py = room.pixels.y + room.pixels.h / 2
-   player = Entities.spawn_player(world, px, py)
+   player_id = Entities.spawn_player(world, px, py)
+   player_proxy = EntityProxy.new(world, player_id)
 
    -- Initialize camera
-   camera_manager = CameraManager:new(player)
+   camera_manager = CameraManager:new(player_proxy)
    current_room = room
    camera_manager:set_room(current_room)
 
@@ -63,7 +66,7 @@ function Play:enteredState()
    -- Subscribe to events (room transition, level up, game over)
    PlayEvents.subscribe({
       get_world = function() return world end,
-      get_player = function() return player end,
+      get_player = function() return player_proxy end,
       get_current_room = function() return current_room end,
       set_current_room = function(room) current_room = room end,
       get_camera_manager = function() return camera_manager end,
@@ -72,10 +75,10 @@ function Play:enteredState()
    })
 
    -- Setup debug UI (cheats, debug toggles, player stats)
-   DebugUI.init(function() return player end, function() return world end)
+   DebugUI.init(function() return player_proxy end, function() return world end)
 
    -- Setup initial room
-   DungeonManager.setup_room(current_room, player, world)
+   DungeonManager.setup_room(current_room, player_proxy, world)
 end
 
 function Play:update()
@@ -88,11 +91,11 @@ function Play:update()
    end
 
    -- Update minimap logic (trigger detection and tweening)
-   Minimap.update_trigger(player, camera_manager)
+   Minimap.update_trigger(player_proxy, camera_manager)
    Minimap.update()
 
    -- Update spawner
-   Systems.Spawner.update(world, current_room, player)
+   Systems.Spawner.update(world, current_room, player_id)
 
    -- Check room clear
    DungeonManager.check_room_clear(current_room, world)
@@ -106,13 +109,21 @@ function Play:update()
    -- Bomber (bomb placement and fuse countdown)
    Systems.bomber(world)
 
-   -- Physics (self-iterating)
+   -- Physics & Collision Resolution
    Systems.acceleration(world)
    Systems.z_axis(world)
-   Systems.knockback_pre(world) -- Add knockback to velocity before collision
-   Systems.resolve_map_all(world, current_room, camera_manager)
+   Systems.knockback_pre(world) -- Add knockback impulses to velocity
+
+   -- Build spatial grid and entity/mask proxy list ONCE per frame
+   Systems.update_spatial_grid(world)
+
+   -- Resolve collisions using the fresh proxy list
+   Systems.resolve_map_all(world, current_room, camera_manager) -- Entity-Map
+   Systems.resolve_all(world)                                   -- Entity-Entity
+
+   -- Apply final velocities to position
    Systems.velocity(world)
-   Systems.knockback_post(world) -- Decay knockback after movement
+   Systems.knockback_post(world) -- Decay/cleanup (if applicable)
 
    -- Animation & Lifecycle (self-iterating)
    Systems.update_lifecycle(world)
@@ -120,26 +131,19 @@ function Play:update()
 
    -- Combat & AI (self-iterating)
    Systems.shooter(world)
-   Systems.ai(world, player)
+   Systems.ai(world, player_id)
    Emotions.update(world)
-
-   -- Resolve Entity Collisions (Optimized with single grid build)
-   Systems.update_spatial_grid(world)
-   Systems.resolve_all(world)
 
    -- Timers & Health (self-iterating)
    Systems.health_regen(world)
    Systems.timers(world)
-
-   -- Shadows (self-iterating)
-   Systems.sync_shadows(world)
 
    -- Effects
    Systems.Effects.update_shake()
    Systems.FloatingText.update(world)
 
    -- Leveling (check for level ups after XP collection)
-   Leveling.check_level_up(player)
+   Leveling.check_level_up(player_proxy)
 
    if keyp("f2") then
       GameState.debug.show_hitboxes = not GameState.debug.show_hitboxes
@@ -230,13 +234,13 @@ function Play:draw()
    camera()
 
    -- Draw HUD (Health Bar)
-   UI.HealthBar.draw(player)
+   UI.HealthBar.draw(player_proxy)
 
    -- Draw HUD (Inventory)
-   UI.Hud.draw(player)
+   UI.Hud.draw(player_proxy)
 
    -- Draw XP bar
-   UI.XpBar.draw(player)
+   UI.XpBar.draw(player_proxy)
 
    -- Draw minimap
    Minimap.draw(current_room)

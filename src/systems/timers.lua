@@ -33,7 +33,8 @@ function Timers.update(world)
             timers.slow_timer[i] = timers.slow_timer[i] - 1
          end
          -- Lifespan (for temporary hitboxes)
-         if timers.lifespan and timers.lifespan[i] then
+         -- Only process if lifespan > 0 (0 means "not using lifespan")
+         if timers.lifespan and timers.lifespan[i] and timers.lifespan[i] > 0 then
             timers.lifespan[i] = timers.lifespan[i] - 1
             if timers.lifespan[i] <= 0 then
                world:remove_entity(ids[i])

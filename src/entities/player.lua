@@ -35,7 +35,8 @@ function Player.spawn(world, x, y)
       },
       direction = {
          dir_x = 0,
-         dir_y = 1, -- Default facing down
+         dir_y = 1,       -- Default facing down
+         facing = "down", -- Must be set explicitly (0 would break animation lookup)
       },
 
       -- Collision

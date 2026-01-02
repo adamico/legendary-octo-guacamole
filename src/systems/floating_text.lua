@@ -62,24 +62,23 @@ end
 -- Convenience function to spawn damage text at an entity (by ID)
 function FloatingText.spawn_at_entity(entity_id, amount, color, sprite_index)
    if not current_world then return end
+   if not current_world:entity_exists(entity_id) then return end
 
-   -- Lookup Position and Components
-   local pos = current_world.components.position
-   local size = current_world.components.size
+   -- Lookup Position and Size via query_entity
+   current_world:query_entity(entity_id, {"position", "size?"},
+      function(i, pos, size)
+         local x = pos.x[i]
+         local y = pos.y[i]
 
-   if pos and pos.x[entity_id] then
-      local x = pos.x[entity_id]
-      local y = pos.y[entity_id]
+         -- Center based on size if available
+         if size and size.width then
+            x = x + size.width[i] / 2
+         else
+            x = x + 8
+         end
 
-      -- Center based on size if available
-      if size and size.width[entity_id] then
-         x = x + size.width[entity_id] / 2
-      else
-         x = x + 8
-      end
-
-      FloatingText.spawn(x, y, amount, color, sprite_index)
-   end
+         FloatingText.spawn(x, y, amount, color, sprite_index)
+      end)
 end
 
 -- Spawn damage text (defaults to damage color)

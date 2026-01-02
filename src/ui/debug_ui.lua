@@ -16,7 +16,7 @@ local function sync_toggle_visual(toggle, cheat_value)
 end
 
 --- Initialize debug UI elements for the Play scene
---- @param get_player fun(): EntityID Function that returns the player entity ID
+--- @param get_player fun(): EntityProxy Function that returns the player EntityProxy
 --- @param get_world fun(): ECSWorld Function that returns the ECS world
 function DebugUI.init(get_player, get_world)
    -- Cheats Group
@@ -74,10 +74,9 @@ function DebugUI.init(get_player, get_world)
    -- Player Stats Group (Real-time monitoring)
    local stats_group = debugui.create_group(7, debugui.config._ACCENT2_color, true,
       function(self)
-         local player = get_player()
-         local world = get_world()
-         if not player or not world:entity_exists(player) then return end
-         local p = EntityProxy.new(world, player)
+         --- @type EntityProxy
+         local p = get_player()
+         if not p then return end
          self.vars = {
             "[== player stats ==]",
             "hp: "..tostring(p.hp).."/"..tostring(p.max_hp),

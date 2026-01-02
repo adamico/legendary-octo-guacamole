@@ -359,7 +359,7 @@ function Minimap.draw(current_room)
 end
 
 --- Update minimap trigger logic (check player overlap)
---- @param player Player entity
+--- @param player EntityProxy
 --- @param camera_manager CameraManager instance
 function Minimap.update_trigger(player, camera_manager)
    if not player then return end

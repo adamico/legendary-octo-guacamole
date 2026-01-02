@@ -21,7 +21,7 @@ function Input.read_input(world)
    Input.shoot_dir.y = shoot_dir_y
 
    -- Update movement direction for controllable entities
-   world:query({"controllable", "direction"}, function(ids, dir)
+   world:query({"direction", "controllable"}, function(ids, dir)
       for i = ids.first, ids.last do
          -- Movement Input
          local left = btn(GameConstants.controls.move_left)

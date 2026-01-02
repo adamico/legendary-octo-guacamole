@@ -19,7 +19,7 @@ function Shadows.draw(world)
          -- Calculate shadow width (from config or derived from entity size)
          local sw = shadow.shadow_width[i]
          local shadow_widths = shadow.shadow_widths[i]
-         if shadow_widths and dir_name and shadow_widths[dir_name] then
+         if type(shadow_widths) == "table" and dir_name and shadow_widths[dir_name] then
             sw = shadow_widths[dir_name]
          end
          if not sw or sw == 0 then
@@ -31,7 +31,7 @@ function Shadows.draw(world)
          -- Get shadow height
          local sh = shadow.shadow_height[i]
          local shadow_heights = shadow.shadow_heights[i]
-         if shadow_heights and dir_name and shadow_heights[dir_name] then
+         if type(shadow_heights) == "table" and dir_name and shadow_heights[dir_name] then
             sh = shadow_heights[dir_name]
          end
          sh = sh or 3
@@ -39,14 +39,14 @@ function Shadows.draw(world)
          -- Get Y offset
          local offset_y = shadow.shadow_offset_y[i] or 0
          local shadow_offsets_y = shadow.shadow_offsets_y[i]
-         if shadow_offsets_y and dir_name and shadow_offsets_y[dir_name] then
+         if type(shadow_offsets_y) == "table" and dir_name and shadow_offsets_y[dir_name] then
             offset_y = shadow_offsets_y[dir_name]
          end
 
          -- Get X offset
          local offset_x = shadow.shadow_offset_x[i] or 0
          local shadow_offsets_x = shadow.shadow_offsets_x[i]
-         if shadow_offsets_x and dir_name and shadow_offsets_x[dir_name] then
+         if type(shadow_offsets_x) == "table" and dir_name and shadow_offsets_x[dir_name] then
             offset_x = shadow_offsets_x[dir_name]
          end
 

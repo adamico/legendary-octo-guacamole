@@ -10,8 +10,8 @@ local function print_shadowed(str, x, y, col, shadow_col)
    print(str, x, y, col)
 end
 
--- Draw the inventory HUD
--- @param player - The player entity to read stats from
+--- Draw the inventory HUD
+--- @param player EntityProxy The player entity to read stats from
 function Hud.draw(player)
    if not player then return end
 
@@ -38,8 +38,8 @@ function Hud.draw(player)
    print_shadowed(key_str, x + config.text_offset_x, y + config.text_offset_y, config.text_color, config.shadow_color)
 end
 
--- Draw shop item price tags (called in world-space before camera reset)
--- @param shop_world - The ECS world to query for shop items
+--- Draw shop item price tags (called in world-space before camera reset)
+--- @param shop_world ECSWorld The ECS world to query for shop items
 function Hud.draw_shop_prices(shop_world)
    shop_world:query({"shop_item", "drawable", "position"}, function(ids, shop_item, drawable, pos)
       for i = ids.first, ids.last do

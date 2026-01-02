@@ -13,7 +13,7 @@ local BOMB_COOLDOWN = 30 -- Half second
 
 function Bomber.update(world)
    -- Handle player bomb placement
-   world:query({"player", "controllable", "position", "inventory"}, function(ids, pos, inv)
+   world:query({"position", "inventory", "player", "controllable"}, function(ids, pos, inv)
       for i = ids.first, ids.last do
          local player_id = ids[i]
          local player = EntityProxy.new(world, player_id)

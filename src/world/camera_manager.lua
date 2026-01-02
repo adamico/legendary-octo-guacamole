@@ -5,7 +5,7 @@ CameraManager:include(Stateful)
 
 local DungeonManager = require("src/world/dungeon_manager")
 
--- Camera manager responsible for following the player and handling transitions
+--- @param player EntityProxy
 function CameraManager:initialize(player)
     self.player = player
     self.x = 0

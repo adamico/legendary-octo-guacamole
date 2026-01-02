@@ -12,6 +12,8 @@
 
 ## Architecture
 
+- we should change the way the shadows sizes are configured. maybe we could just use the hitbox size since this also changes with rotation of the entity
+
 - implement movement mechanics [BRAINSTORM]
   - [ ] Dodge Roll / Dash (invulnerability frames or vaulting)
   - [ ] Room-Clear Rush (temp speed boost after clearing room)
