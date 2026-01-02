@@ -2,6 +2,7 @@ local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
 local GameState = require("src/game/game_state")
 local EntityUtils = require("src/utils/entity_utils")
+local Input = require("src/input")
 
 local Shooter = {}
 
@@ -16,10 +17,16 @@ function Shooter.update(world)
       for i = ids.first, ids.last do
          local id = ids[i]
 
-         -- Extract Direction
+         -- Extract Direction: use Input.shoot_dir for player, dir component for enemies
          local sx = 0
          local sy = 0
-         if dir then
+         local is_player = player_tag ~= nil
+         if is_player then
+            -- Player uses dedicated aim controls
+            sx = Input.shoot_dir.x
+            sy = Input.shoot_dir.y
+         elseif dir then
+            -- Enemies use their direction component
             sx = dir.dir_x[i]
             sy = dir.dir_y[i]
          end
@@ -63,7 +70,6 @@ function Shooter.update(world)
          end
 
          -- Input check
-         local is_player = player_tag ~= nil
          local attack_pressed = is_player and btnp(GameConstants.controls.attack)
          -- Enemy shoots if cooldown ready (and typically if in range/aggro, managed by AI setting shoot_dir)
          local enemy_shoot = not is_player and cooldown_ready and wants_to_shoot

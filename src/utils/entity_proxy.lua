@@ -190,6 +190,9 @@ local ComponentMap = {
    shot_speed = {"shooter", "shot_speed"},
    range = {"shooter", "range"},
    fire_rate = {"shooter", "fire_rate"},
+   projectile_origin_x = {"shooter", "projectile_origin_x"},
+   projectile_origin_y = {"shooter", "projectile_origin_y"},
+   projectile_origin_z = {"shooter", "projectile_origin_z"},
 
    -- Inventory
    coins = {"inventory", "coins"},

@@ -2,6 +2,7 @@
 
 local HitboxUtils = require("src/utils/hitbox_utils")
 local EntityProxy = require("src/utils/entity_proxy")
+local Input = require("src/input")
 
 local UI = {}
 
@@ -82,14 +83,18 @@ local function draw_hitbox(entity)
 end
 
 -- Draw aim line for an entity (origin matches projectile visual center)
+
 local function draw_aim_line(entity)
    -- Projectile origin is a direct offset from entity sprite top-left
    local origin_x = entity.x + (entity.projectile_origin_x or 0)
    local origin_y = entity.y + (entity.projectile_origin_y or 0)
 
-   -- Get shoot direction
-   local dx = entity.shoot_dir_x or 0
-   local dy = entity.shoot_dir_y or 0
+   -- Get shoot direction from Input module (where it's stored each frame)
+   local dx = Input.shoot_dir.x or 0
+   local dy = Input.shoot_dir.y or 0
+
+   -- Don't draw if not aiming
+   if dx == 0 and dy == 0 then return end
 
    -- Apply z offset (projectile visually rendered at y - z)
    if entity.projectile_origin_z then
