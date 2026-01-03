@@ -14,7 +14,7 @@ return {
    base_xp_to_level = 50,         -- XP to reach level 2
    xp_per_level_linear = 25,      -- Linear growth for levels 1-10
    -- Stats
-   max_speed = 8,                 -- Movement speed (was 2)
+   max_speed = 2,                 -- Movement speed
    shot_speed = 4,
    max_hp_to_damage_ratio = 0.05, -- Damage = max_hp * ratio
    range = 100,                   -- Max distance in pixels
@@ -117,4 +117,9 @@ return {
    melee_height = 16,
    melee_duration = 15,
    melee_knockback = 6,
+   mutations = {
+      Eggsaggerated = 0,
+      Broodmother = 0,
+      Pureblood = 0,
+   },
 }

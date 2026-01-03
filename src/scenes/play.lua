@@ -171,14 +171,13 @@ function Play:enteredState()
             "[== player stats ==]",
             "hp: "..tostring(player.hp).."/"..tostring(player.max_hp),
             "overheal: "..tostring(player.overflow_hp or 0),
-            "damage: "..tostring(player.damage),
             "shot_speed: "..tostring(player.shot_speed),
             "range: "..tostring(player.range),
             "fire_rate: "..tostring(player.fire_rate),
-            "[== inventory ==]",
-            "coins: "..tostring(player.coins),
-            "keys: "..tostring(player.keys),
-            "bombs: "..tostring(player.bombs),
+            "[== mutations ==]",
+            "Broodmother: "..tostring(player.mutations.Broodmother),
+            "Eggsaggerated: "..tostring(player.mutations.Eggsaggerated),
+            "Pureblood: "..tostring(player.mutations.Pureblood),
             "[== xp ==]",
             "level: "..tostring(player.level),
             "xp: "..tostring(player.xp).."/"..tostring(player.xp_to_next_level),
@@ -403,7 +402,10 @@ function Play:draw()
    UI.HealthBar.draw(player)
 
    -- Draw HUD (Inventory)
-   UI.Hud.draw(player)
+   UI.Hud.draw_inventory(player)
+
+   -- Draw mutations
+   UI.Hud.draw_mutations(player)
 
    -- Draw Boss Health Bar (if boss is present)
    UI.Hud.draw_boss_health(world)

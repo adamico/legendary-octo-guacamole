@@ -10,9 +10,9 @@ local Pickup = {}
 --- @param world ECSWorld
 --- @param x number
 --- @param y number
---- @param pickup_type - type key in GameConstants.Pickup (e.g., "HealthPickup", "Coin")
+--- @param pickup_type string- type key in GameConstants.Pickup (e.g., "HealthPickup", "Coin")
 --- @param instance_data optional table with instance-specific overrides
---- @return EntityProxy
+--- @return table|nil
 function Pickup.spawn(world, x, y, pickup_type, instance_data)
     instance_data = instance_data or {}
 

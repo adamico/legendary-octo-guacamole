@@ -9,8 +9,6 @@ local PickupHandlers = {}
 
 -- Mutation application logic
 local function apply_mutation(player, mutation_name)
-   FloatingText.spawn_at_entity(player, mutation_name, "pickup")
-
    if mutation_name == "Eggsaggerated" then
       -- Chances: = 0.75, 0.125, 0.125
       player.roll_dud_chance = 0.75
@@ -46,6 +44,9 @@ local function apply_mutation(player, mutation_name)
       -- Allow melee attacks at 1/2 max health
       player.melee_threshold_ratio = 0.5
    end
+
+   player.mutations = player.mutations or GameConstants.Player.mutations
+   player.mutations[mutation_name] += 1
 end
 
 -- Pickup effect registry (maps pickup_effect string -> handler function)
@@ -110,6 +111,7 @@ local function handle_mutation_pickup(player, mutation)
    local name = mutation.mutation -- Defined in config
    if name then
       apply_mutation(player, name)
+      FloatingText.spawn_at_entity(player, name.." Mutation +1", "pickup")
    end
 
    Effects.pickup_collect(mutation)

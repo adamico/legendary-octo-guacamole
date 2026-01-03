@@ -34,6 +34,9 @@ local GameConstants = {
    -- Obstacles (from obstacles.lua)
    Obstacle = obstacles.Obstacle,
 
+   -- Mutations (from mutations.lua)
+   Mutations = mutations,
+
    -- Effects (from effects.lua)
    PlacedBomb = effects.PlacedBomb,
    Explosion = effects.Explosion,

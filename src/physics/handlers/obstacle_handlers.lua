@@ -93,28 +93,30 @@ local function open_chest(chest, player)
    if chest.is_chest and chest.mutation then
       local cx = chest.x + chest.width / 2
       local cy = chest.y + chest.height / 2
-      local spawn_x = cx - 8
-      local spawn_y = cy - 8 -- Center the 16x16 mutation item
 
-      -- Spawn the specific Mutation entity
-      -- We use spawn_pickup generic or we need a specific spawner?
-      -- The mutation name is in chest.mutation (e.g. "Eggsaggerated")
-      -- We need to spawn an entity of type "Mutation" with mutation=chest.mutation
+      -- Get mutation config to use correct dimensions
+      -- Fix: Lookup in valid sub-table Config -> Mutations -> Mutation -> [Name]
+      local mut_config = (GameConstants.Mutations and GameConstants.Mutations.Mutation and GameConstants.Mutations.Mutation[chest.mutation]) or
+         {}
+      local width = mut_config.width or 32 -- Default to 32 since user confirmed 32x32
+      local height = mut_config.height or 32
+
+      local spawn_x = cx - width / 2
+      local spawn_y = cy - height / 2 -- Center the item
 
       -- Zelda-style item rise animation
       Effects.spawn_item_rise(world, spawn_x, spawn_y, chest.mutation_sprite, chest.mutation, function(anim_ent)
-         -- On finish: Spawn the actual pickup
-         local pickup = Entities.spawn_pickup(world, anim_ent.x, anim_ent.y, "Mutation", {
+         Entities.spawn_pickup(world, anim_ent.x, chest.y - 32, "Mutation", {
             mutation = chest.mutation,
-            sprite_index = chest.mutation_sprite
+            sprite_index = chest.mutation_sprite,
+            width = width,
+            height = height,
+            hitbox_width = mut_config.hitbox_width,
+            hitbox_height = mut_config.hitbox_height,
+            hitbox_offset_x = mut_config.hitbox_offset_x,
+            hitbox_offset_y = mut_config.hitbox_offset_y,
          })
-         -- Small bounce/drop effect upon landing
-         if pickup then
-            pickup.vel_y = -1
-         end
       end)
-
-      -- Treasure chests don't drop random loot
    else
       -- Normal loot logic for regular chests
       -- Get loot parameters from config

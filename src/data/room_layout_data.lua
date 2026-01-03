@@ -74,7 +74,7 @@ LayoutData.CELL_HEIGHT = 2 -- tiles per cell vertically
 LayoutData.Layouts = {
    -- OPEN layouts (used for special rooms)
    open = {
-      room_types = {"start", "boss", "treasure", "combat"},
+      room_types = {"start", "boss", "combat"},
       layout_type = "open",
       floor_pattern = "random",
       grid = nil

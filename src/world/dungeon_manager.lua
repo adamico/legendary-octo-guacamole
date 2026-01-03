@@ -245,7 +245,7 @@ function DungeonManager.place_room_obstacles(room)
          if f.feature == "treasure_chest" then treasure_count += 1 end
       end
       Log.info("Room ("..
-      room.grid_x..","..room.grid_y..") is TREASURE. Found "..treasure_count.." treasure_chest features.")
+         room.grid_x..","..room.grid_y..") is TREASURE. Found "..treasure_count.." treasure_chest features.")
       treasure_selected = Mutations.pick_random_items(treasure_count)
    end
    local treasure_index = 1

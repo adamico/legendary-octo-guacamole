@@ -1,5 +1,7 @@
 -- UI configurations: Hud, Minimap
 
+local MutationsConfig = require("src/game/config/mutations")
+
 return {
    Hud = {
       inventory = {
@@ -15,6 +17,21 @@ return {
             coins = 197,
             bombs = 196,
             keys = 198,
+         }
+      },
+      mutations = {
+         x = 234,            -- Base X position from left
+         y = 249,            -- Base Y position from top (lowered to make room for hearts)
+         spacing_x = 50,     -- Horizontal spacing between items
+         icon_size = 11,     -- Size of icons
+         text_offset_x = 20, -- Text centered below icon
+         text_offset_y = 2,  -- Text below icon (icon_size + 1px gap)
+         text_color = 1,     -- White text
+         shadow_color = 0,   -- Black shadow/outline
+         sprites = {
+            Eggsaggerated = 28,
+            Broodmother = 31,
+            Pureblood = 57,
          }
       },
       combat_timer = {

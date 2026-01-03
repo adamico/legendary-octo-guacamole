@@ -85,6 +85,7 @@ function Player.spawn(world, x, y)
         -- Visual properties
         outline_color = GameConstants.Player.outline_color,
         sort_offset_y = GameConstants.Player.sort_offset_y,
+        mutations = GameConstants.Player.mutations
     }
 
     -- Create entity with shadow tag (shadow auto-spawned)

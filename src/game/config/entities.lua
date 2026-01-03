@@ -249,7 +249,7 @@ return {
          entity_type = "Enemy",
          tags =
          "enemy,boss,shooter,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
-         hp = 300,
+         hp = 600,
          xp_value = 100,
          max_speed = 2,
          contact_damage = 20,
@@ -259,7 +259,7 @@ return {
          -- Combat stats (reuses EnemyBullet projectile)
          is_shooter = true,       -- Required for EnemyBullet projectile type
          shoot_delay = 60,
-         shot_speed = 2,          -- Projectile speed
+         shot_speed = 3,          -- Projectile speed
          vision_range = 300,
          dash_speed_multiplier = 4,
          stun_duration = 60,

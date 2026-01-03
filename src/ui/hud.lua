@@ -10,9 +10,37 @@ local function print_shadowed(str, x, y, col, shadow_col)
    print(str, x, y, col)
 end
 
--- Draw the inventory HUD
--- @param player - The player entity to read stats from
-function Hud.draw(player)
+--- Draw mutations HUD
+--- @param player table - The player entity to read stats from
+function Hud.draw_mutations(player)
+   if not player then return end
+
+   local config = GameConstants.Hud.mutations
+   local x = config.x
+   local y = config.y
+   local spacing_x = config.spacing_x
+
+   -- Draw mutations
+   local mutations = player.mutations
+   local names = {"Eggsaggerated", "Broodmother", "Pureblood"}
+
+   for i = 1, 3 do
+      local mutation_name = names[i]
+      local mutation_level = mutations[mutation_name]
+      x += i == 1 and 0 or spacing_x
+      Rendering.draw_outlined(config.sprites[mutation_name], x, y, config.shadow_color)
+      print_shadowed(
+         mutation_level,
+         x + config.text_offset_x,
+         y + config.text_offset_y,
+         config.text_color,
+         config.shadow_color)
+   end
+end
+
+--- Draw the inventory HUD
+--- @param player table - The player entity to read stats from
+function Hud.draw_inventory(player)
    if not player then return end
 
    local config = GameConstants.Hud.inventory
@@ -38,8 +66,8 @@ function Hud.draw(player)
    print_shadowed(key_str, x + config.text_offset_x, y + config.text_offset_y, config.text_color, config.shadow_color)
 end
 
--- Draw shop item price tags (called in world-space before camera reset)
--- @param shop_world - The ECS world to query for shop items
+--- Draw shop item price tags (called in world-space before camera reset)
+--- @param shop_world table - The ECS world to query for shop items
 function Hud.draw_shop_prices(shop_world)
    shop_world.sys("shop_item,drawable", function(item)
       if item.purchased then return end
@@ -63,8 +91,8 @@ function Hud.draw_shop_prices(shop_world)
    end)()
 end
 
--- Draw boss health bar at top of screen
--- @param world - The ECS world to query for boss entities
+--- Draw boss health bar at top of screen
+--- @param world table - The ECS world to query for boss entities
 function Hud.draw_boss_health(world)
    -- Find boss entity
    local boss = nil
@@ -117,24 +145,6 @@ function Hud.draw_boss_health(world)
    print(name, name_x, bar_y + bar_height + 3, 7)     -- White
 end
 
-local function draw_target_indicator(entity)
-   if not entity.flee_target_x or not entity.flee_target_y then return end
-
-   -- Blinking effect: toggle visibility every 20 frames
-   local frame = entity.boss_timer or 0
-   if frame % 20 < 12 then
-      local scale = 2
-      local sprite = SPAWNER_INDICATOR_SPRITE
-      sspr(
-         sprite,
-         0, 0,
-         16, 16,
-         entity.flee_target_x, entity.flee_target_y,
-         16 * scale, 16 * scale
-      )
-   end
-end
-
 local function draw_trajectory_indicator(entity)
    local is_moving = entity.vel_x ~= 0 or entity.vel_y ~= 0
    local has_target = entity.flee_target_x
@@ -154,8 +164,9 @@ local function draw_trajectory_indicator(entity)
    end
 end
 
--- Draw boss telegraphs (flee targets, attack indicators, trajectory)
--- Call in world-space (before camera reset)
+--- Draw boss telegraphs (flee targets, attack indicators, trajectory)
+--- Call in world-space (before camera reset)
+--- @param world table - The ECS world to query for boss entities
 function Hud.draw_boss_telegraphs(world)
    -- Find boss entity
    local boss = nil
@@ -167,9 +178,7 @@ function Hud.draw_boss_telegraphs(world)
 
    if not boss then return end
 
-   -- Draw trajectory first (behind other elements)
    draw_trajectory_indicator(boss)
-   -- draw_target_indicator(boss)
 end
 
 return Hud
