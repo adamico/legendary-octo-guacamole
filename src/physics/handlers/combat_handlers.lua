@@ -77,6 +77,10 @@ local function projectile_vs_enemy(projectile, enemy)
    -- Trigger impact effect
    Effects.hit_impact(projectile, enemy)
 
+   -- Apply knockback from projectile direction
+   local knockback = GameConstants.Player.base_knockback or 4
+   Effects.apply_knockback(projectile, enemy, knockback)
+
    -- Target painting: Mark this enemy as priority target for all chicks
    AI.ChickAI.paint_target(enemy)
 

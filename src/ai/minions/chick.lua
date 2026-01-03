@@ -189,6 +189,10 @@ local function attack_enemy(entity, target, player)
    target.invuln_timer = 5 -- Brief invuln
    FloatingText.spawn_at_entity(target, -damage, "damage")
 
+   -- Subtle flash effect on hit
+   target.flash_timer = 2
+   target.flash_color = 7 -- White
+
    -- Knockback the chick away from enemy (recoil)
    local dx = entity.x - target.x
    local dy = entity.y - target.y

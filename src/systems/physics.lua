@@ -33,16 +33,9 @@ local function apply_acceleration(entity)
    if dx == 0 then entity.vel_x *= entity.friction end
    if dy == 0 then entity.vel_y *= entity.friction end
 
-   -- Handle slow: reduce max_speed temporarily
-   local max_spd = entity.max_speed
-   if entity.slow_timer and entity.slow_timer > 0 then
-      entity.slow_timer = entity.slow_timer - 1
-      max_spd = max_spd * (entity.slow_factor or 0.5)
-   end
-
    -- Clamp to max speed
-   entity.vel_x = mid(-max_spd, entity.vel_x, max_spd)
-   entity.vel_y = mid(-max_spd, entity.vel_y, max_spd)
+   entity.vel_x = mid(-entity.max_speed, entity.vel_x, entity.max_speed)
+   entity.vel_y = mid(-entity.max_speed, entity.vel_y, entity.max_speed)
 
    -- Stop completely if very slow (prevents drift)
    if abs(entity.vel_x) < 0.1 then entity.vel_x = 0 end
@@ -51,13 +44,23 @@ end
 
 -- Internal: apply velocity to position with sub-pixel precision
 local function apply_velocity(entity)
+   -- Handle slow: reduce velocity temporarily
+   local vel_x = entity.vel_x or 0
+   local vel_y = entity.vel_y or 0
+   if entity.slow_timer and entity.slow_timer > 0 then
+      entity.slow_timer = entity.slow_timer - 1
+      local slow = entity.slow_factor or 0.5
+      vel_x = vel_x * slow
+      vel_y = vel_y * slow
+   end
+
    -- Initialize sub-pixel accumulators if not present
    entity.sub_x = entity.sub_x or 0
    entity.sub_y = entity.sub_y or 0
 
    -- Accumulate velocity (including fractional parts)
-   entity.sub_x += entity.vel_x
-   entity.sub_y += entity.vel_y
+   entity.sub_x += vel_x
+   entity.sub_y += vel_y
 
    -- Extract whole pixel movement
    local move_x = flr(entity.sub_x)
@@ -150,16 +153,17 @@ function Physics.z_axis(world)
       local prev_z = entity.z
       entity.z += entity.vel_z
 
-      -- For vertical shots: shadow moves toward sprite instead of sprite dropping to shadow
+      -- For vertical UPWARD shots: shadow moves toward sprite instead of sprite dropping to shadow
       -- This keeps visual position constant (y - z) while shadow (y) catches up
+      -- Only apply for upward shots (dir_y < 0) - downward shots use normal sprite-falls-to-shadow behavior
       -- Only apply while z > 0 (still falling) - stop when grounded
-      if entity.vertical_shot and entity.vel_z < 0 and entity.z > 0 then
-         -- Stop projectile movement - only shadow should catch up to visual position
-         entity.vel_x = 0
-         entity.vel_y = 0
-         -- Decrease Y by the same amount Z decreased, keeps visual_y = y - z constant
+      -- IMPORTANT: Don't stop vel_x/vel_y - let the egg continue its full trajectory
+      local is_upward_shot = entity.dir_y and entity.dir_y < 0
+      if entity.vertical_shot and is_upward_shot and entity.vel_z < 0 and entity.z > 0 then
+         -- Move shadow toward visual position by the same amount Z decreased
+         -- This keeps visual_y = y - z constant while the egg continues moving
          local z_delta = entity.z - prev_z -- This is negative
-         entity.y += z_delta               -- Move shadow toward visual position
+         entity.y += z_delta               -- Shadow catches up to sprite
       end
 
       -- Ground collision (only for entities that use z elevation)
@@ -196,7 +200,7 @@ function Physics.z_axis(world)
                   -- Spawns a health pickup equal to the drain heal amount
 
                   local sx, sy = DungeonManager.snap_to_nearest_floor(entity.x, entity.y, DungeonManager.current_room)
-                  if not sx then sx, sy = entity.x, entity.y end  -- Fall back to original position
+                  if not sx then sx, sy = entity.x, entity.y end -- Fall back to original position
                   Entities.spawn_health_pickup(world, sx, sy, drain_heal)
                end
             end

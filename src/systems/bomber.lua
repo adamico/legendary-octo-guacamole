@@ -49,6 +49,26 @@ function Bomber.update(world)
       if bomb.fuse_timer then
          bomb.fuse_timer -= 1
 
+         -- Blinking red flash as bomb is about to explode
+         local blink_interval
+         if bomb.fuse_timer < 30 then
+            blink_interval = 2 -- Fast blinking in last 0.5 seconds
+         elseif bomb.fuse_timer < 60 then
+            blink_interval = 4 -- Medium blinking
+         elseif bomb.fuse_timer < 90 then
+            blink_interval = 8 -- Slow blinking when starting to warn
+         end
+
+         if blink_interval then
+            -- Toggle flash on/off based on frame modulo
+            if bomb.fuse_timer % (blink_interval * 2) < blink_interval then
+               bomb.flash_timer = 1
+               bomb.flash_color = 8 -- Red
+            else
+               bomb.flash_timer = 0
+            end
+         end
+
          if bomb.fuse_timer <= 0 then
             -- Explode! Spawn 3x3 grid of explosions
             local radius = bomb.explosion_radius or 1
