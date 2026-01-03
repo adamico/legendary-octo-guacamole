@@ -20,6 +20,10 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Fixed Enemy Flash Effect Priority**:
+  - **Issue**: When enemies were hit by eggs, the yolk outline effect (orange outline on painted targets) was overriding the white flash effect, making it invisible.
+  - **Fix**: Modified `rendering.lua` to skip outline rendering when `flash_timer > 0`. The flash effect now takes priority and is fully visible for its 10-frame duration (~166ms).
+  - **Result**: Enemies now properly flash white when hit, then the yolk outline reappears after the flash completes.
 - **Implemented Green Witch Boss Enemy**:
   - **Entity Configuration**: Added `GreenWitch` to `entities.lua` with 300 HP, 3 phases based on HP thresholds (66%, 33%), sprites 208/209.
   - **Phase-Based AI FSM**: Created `src/ai/enemies/boss.lua` with 3-phase behavior:

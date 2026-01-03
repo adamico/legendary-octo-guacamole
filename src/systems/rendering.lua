@@ -125,7 +125,8 @@ local function draw_sprite(entity)
       local height = entity.height
       local split_row = entity.split_row
 
-      if entity.outline_color ~= nil then
+      -- Skip outline if entity is flashing (flash takes priority)
+      if entity.outline_color ~= nil and not was_flashing then
          Rendering.draw_outlined_composite(
             entity.sprite_top, entity.sprite_bottom,
             sx, sy, width, height, split_row,
@@ -144,7 +145,8 @@ local function draw_sprite(entity)
          drawable = Rotator.get(entity.sprite_index, entity.rotation_angle)
       end
 
-      if entity.outline_color ~= nil then
+      -- Skip outline if entity is flashing (flash takes priority)
+      if entity.outline_color ~= nil and not was_flashing then
          Rendering.draw_outlined(drawable, sx, sy, entity.outline_color, flip_x, flip_y)
       else
          spr(drawable, sx, sy, flip_x, flip_y)
