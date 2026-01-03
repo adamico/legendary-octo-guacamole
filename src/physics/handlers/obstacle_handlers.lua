@@ -333,20 +333,6 @@ function ObstacleHandlers.register(handlers)
          open_chest(chest, player)
       end
    end
-   handlers.entity["MeleeHitbox,LockedChest"] = function(hitbox, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player)
-      end
-   end
-   handlers.entity["MeleeHitbox,TreasureChest"] = function(hitbox, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player)
-      end
-   end
 
    -- Melee vs Destructible
    handlers.entity["MeleeHitbox,Destructible"] = function(hitbox, destructible)
@@ -373,24 +359,6 @@ function ObstacleHandlers.register(handlers)
    handlers.entity["EnemyProjectile,Destructible"] = function(projectile, destructible)
       destroy_destructible(destructible, projectile)
       world.del(projectile)
-   end
-
-   -- Projectile vs Chest (opens chest)
-   handlers.entity["Projectile,Chest"] = function(projectile, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player)
-      end
-      projectile_hit_obstacle(projectile, "Destructible") -- Use destructible behavior (break egg)
-   end
-   handlers.entity["Projectile,LockedChest"] = function(projectile, chest)
-      local player = nil
-      world.sys("player", function(p) player = p end)()
-      if player then
-         open_chest(chest, player) -- Will check for key
-      end
-      projectile_hit_obstacle(projectile, "Destructible")
    end
 
    -- EnemyProjectile vs Chest (just deletes projectile, doesn't open)
