@@ -265,6 +265,11 @@ local function projectile_hit_obstacle(projectile, obstacle_type)
    local hb = HitboxUtils.get_hitbox(projectile)
    local spawn_x = hb.x + hb.w / 2 - 8
    local spawn_y = hb.y + hb.h / 2 - 8
+   local cx = hb.x + hb.w / 2
+   local cy = hb.y + hb.h / 2
+
+   -- Yolk particles on obstacle impact
+   Effects.spawn_particles(cx, cy, "yolk", 8)
 
    if obstacle_type == "Rock" then
       -- Hard Obstacle: Spawns Yolk Splat (same as wall)
@@ -348,6 +353,17 @@ function ObstacleHandlers.register(handlers)
    handlers.entity["Projectile,Destructible"] = function(projectile, destructible)
       destroy_destructible(destructible, projectile)
       projectile_hit_obstacle(projectile, "Destructible")
+   end
+
+   -- Projectile vs Chest (player egg hits chest - spawns yolk splat)
+   handlers.entity["Projectile,Chest"] = function(projectile, chest)
+      projectile_hit_obstacle(projectile, "Rock") -- Treat like rock (hard obstacle)
+   end
+   handlers.entity["Projectile,LockedChest"] = function(projectile, chest)
+      projectile_hit_obstacle(projectile, "Rock")
+   end
+   handlers.entity["Projectile,TreasureChest"] = function(projectile, chest)
+      projectile_hit_obstacle(projectile, "Rock")
    end
 
    -- EnemyProjectile vs Rock (no pickup)

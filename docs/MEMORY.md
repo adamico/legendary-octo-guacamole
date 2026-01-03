@@ -20,6 +20,12 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Batch Particle System**:
+  - **New Module**: Created `src/systems/particles.lua` using Picotron's batch GFX operations (`circfill` with userdata).
+  - **Object Pool Design**: 256-particle pool stored in `userdata("f64", 9, 256)` for efficient memory usage.
+  - **Batch Rendering**: Single `circfill(draw_buf, 0, count, 4, 4)` call draws all living particles.
+  - **Presets**: 5 particle types with distinct behaviors: `hit_spark` (burst outward), `explosion` (large fires), `blood` (gravity), `smoke` (rises), `sparkle` (twinkle).
+  - **Integration**: Updated `effects.lua` to use `Particles.spawn_burst()` and added init/update/draw to `play.lua`.
 - **Fixed Enemy Flash Effect Priority**:
   - **Issue**: When enemies were hit by eggs, the yolk outline effect (orange outline on painted targets) was overriding the white flash effect, making it invisible.
   - **Fix**: Modified `rendering.lua` to skip outline rendering when `flash_timer > 0`. The flash effect now takes priority and is fully visible for its 10-frame duration (~166ms).

@@ -9,6 +9,7 @@ local UI = require("src/ui")
 local Wander = require("src/ai/primitives/wander")
 local AI = require("src/ai")
 local Leveling = require("src/utils/leveling")
+local Particles = require("src/systems/particles")
 
 local DungeonManager = World.DungeonManager
 local CameraManager = World.CameraManager
@@ -29,6 +30,7 @@ function Play:enteredState()
    world = eggs() -- MUST re-initialize world on every entry for Restart to work
    Systems.init_extended_palette()
    Systems.init_spotlight()
+   Particles.init()
 
    -- Initialize level seed for reproducible dungeon generation
    local seed = GameState.level_seed or flr(time() * 1000)
@@ -251,10 +253,11 @@ function Play:update()
    -- Shadows (self-iterating)
    Systems.sync_shadows(world)
 
-   -- Effects
+   -- Effects & Particles
    Systems.Effects.update_shake()
    Systems.Effects.update_animations(world)
    Systems.FloatingText.update()
+   Particles.update()
 
    -- Leveling (check for level ups after XP collection)
    Leveling.check_level_up(player)
@@ -326,6 +329,16 @@ function Play:draw()
    -- 2. Middleground Layer: Characters (Y-Sorted)
    Systems.draw_layer(world, "middleground,drawable", true)
    Emotions.draw(world)
+
+   -- Particles clipped to room inner bounds (excludes walls)
+   local inner = current_room:get_inner_bounds()
+   local particle_clip = {
+      x = inner.x1 * 16 - cam_x,
+      y = inner.y1 * 16 - cam_y,
+      w = (inner.x2 - inner.x1 + 1) * 16,
+      h = (inner.y2 - inner.y1 + 1) * 16
+   }
+   Particles.draw(particle_clip)
    Systems.FloatingText.draw()
 
    -- 3. Global Effects & Debug

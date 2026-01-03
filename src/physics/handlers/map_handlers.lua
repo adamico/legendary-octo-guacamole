@@ -4,6 +4,7 @@
 local Entities = require("src/entities")
 local HitboxUtils = require("src/utils/hitbox_utils")
 local GameConstants = require("src/game/game_config")
+local Particles = require("src/systems/particles")
 
 local MapHandlers = {}
 
@@ -33,6 +34,9 @@ function MapHandlers.register(handlers)
       -- Spawn Yolk Splat at wall base (visual + slow + edible)
       local spawn_x = cx - GRID_SIZE / 2
       local spawn_y = cy - GRID_SIZE / 2
+
+      -- Yolk particles on wall impact
+      Particles.spawn_burst(cx, cy, "yolk", 8)
 
       -- Using Entities convenience helper for YolkSplat
       Entities.spawn_yolk_splat(world, spawn_x, spawn_y, {

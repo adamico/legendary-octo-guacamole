@@ -4,7 +4,9 @@
 local GameState = require("src/game/game_state")
 local GameConstants = require("src/game/game_config")
 local Entities = require("src/entities")
-local EntityUtils = require("src/utils/entity_utils")
+local HitboxUtils = require("src/utils/hitbox_utils")
+local Particles = require("src/systems/particles")
+local Effects = require("src/systems/effects")
 
 local Bomber = {}
 
@@ -16,7 +18,7 @@ function Bomber.update(world)
    world.sys("player,controllable", function(player)
       -- Check cooldown
       if player.bomb_cooldown and player.bomb_cooldown > 0 then
-         player.bomb_cooldown = player.bomb_cooldown - 1
+         player.bomb_cooldown -= 1
          return
       end
 
@@ -27,11 +29,13 @@ function Bomber.update(world)
       if input_pressed and has_bombs then
          -- Consume bomb from inventory if not infinite
          if not GameState.cheats.infinite_inventory then
-            player.bombs = player.bombs - 1
+            player.bombs -= 1
          end
 
-         -- Spawn bomb at player's center position (tile-aligned)
-         local cx, cy = EntityUtils.get_center(player)
+         -- Spawn bomb at player's hitbox center
+         local hb = HitboxUtils.get_hitbox(player)
+         local cx = hb.x + hb.w / 2
+         local cy = hb.y + hb.h / 2
          Entities.spawn_bomb(world, cx, cy)
 
          -- Set cooldown
@@ -43,13 +47,20 @@ function Bomber.update(world)
    world.sys("bomb", function(bomb)
       -- Decrement fuse timer
       if bomb.fuse_timer then
-         bomb.fuse_timer = bomb.fuse_timer - 1
+         bomb.fuse_timer -= 1
 
          if bomb.fuse_timer <= 0 then
             -- Explode! Spawn 3x3 grid of explosions
             local radius = bomb.explosion_radius or 1
             Entities.spawn_explosion_grid(world, bomb.x, bomb.y, radius)
 
+            -- Explosion particles at bomb center
+            local cx = bomb.x + (bomb.width or 16) / 2
+            local cy = bomb.y + (bomb.height or 16) / 2
+            Particles.spawn_burst(cx, cy, "explosion") -- Uses preset count
+
+            -- Strong screen shake
+            Effects.screen_shake(6, 8)
             -- Destroy obstacles in explosion area
             Bomber.destroy_obstacles_in_radius(world, bomb.x, bomb.y, radius)
 
