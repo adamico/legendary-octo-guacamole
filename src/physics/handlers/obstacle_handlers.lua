@@ -294,6 +294,10 @@ function ObstacleHandlers.register(handlers)
    handlers.entity["Chick,Rock"] = function(chick, rock) push_out(chick, rock) end
    handlers.entity["Chick,Destructible"] = function(chick, dest) push_out(chick, dest) end
 
+   -- Chick vs Enemy (one-sided push: only move chick, not enemy)
+   handlers.entity["Chick,Enemy"] = function(chick, enemy) push_out(chick, enemy) end
+   handlers.entity["Enemy,Chick"] = function(enemy, chick) push_out(chick, enemy) end
+
    -- Player vs Chests (touching opens them)
    handlers.entity["Player,Chest"] = function(player, chest)
       push_out(player, chest)

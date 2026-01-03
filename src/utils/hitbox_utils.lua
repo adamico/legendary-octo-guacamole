@@ -1,5 +1,10 @@
 local HitboxUtils = {}
 
+function HitboxUtils.get_center(entity)
+    local hitbox = HitboxUtils.get_hitbox(entity)
+    return hitbox.x + hitbox.w / 2, hitbox.y + hitbox.h / 2
+end
+
 -- Get hitbox bounds in world space
 -- Returns {x, y, w, h} for collision detection
 -- Supports two formats:

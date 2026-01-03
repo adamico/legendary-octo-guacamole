@@ -63,6 +63,10 @@ function Play:enteredState()
       world.sys("projectile", function(e) world.del(e) end)()
       world.sys("pickup", function(e) world.del(e) end)()
       world.sys("skull", function(e) world.del(e) end)()
+      -- Clean up enemies when unlock_all_rooms cheat is active
+      if GameState.cheats.unlock_all_rooms then
+         world.sys("enemy", function(e) world.del(e) end)()
+      end
       -- Teleport minions to player in new room
       world.sys("minion", function(e)
          e.x = player.x
@@ -123,6 +127,12 @@ function Play:enteredState()
       nil,
       function(self) GameState.cheats.infinite_inventory = not GameState.cheats.infinite_inventory end)
    add(debugui.elements, infinite_inv_toggle)
+
+   local unlock_rooms_toggle = debugui.create_toggle(7, debugui.config._ACCENT3_color, "unlock_all_rooms",
+      function(self) sync_toggle_visual(self, GameState.cheats.unlock_all_rooms) end,
+      nil,
+      function(self) GameState.cheats.unlock_all_rooms = not GameState.cheats.unlock_all_rooms end)
+   add(debugui.elements, unlock_rooms_toggle)
 
    -- Debug Group
    add(debugui.elements, debugui.create_group(7, debugui.config._ACCENT1_color, true, function(self)
@@ -264,6 +274,9 @@ function Play:update()
    if keyp("f5") then
       GameState.cheats.infinite_inventory = not GameState.cheats.infinite_inventory
    end
+   if keyp("f6") then
+      GameState.cheats.unlock_all_rooms = not GameState.cheats.unlock_all_rooms
+   end
 end
 
 function Play:draw()
@@ -307,6 +320,9 @@ function Play:draw()
    -- 1. Background Layer: Shadows, Pickups
    Systems.draw_shadows(world, clip_square)
    Systems.draw_layer(world, "background,drawable", false)
+
+   -- Boss Telegraphs (drawn behind entities but above background)
+   UI.Hud.draw_boss_telegraphs(world)
 
    -- 2. Middleground Layer: Characters (Y-Sorted)
    Systems.draw_layer(world, "middleground,drawable", true)
@@ -388,6 +404,9 @@ function Play:draw()
 
    -- Draw HUD (Inventory)
    UI.Hud.draw(player)
+
+   -- Draw Boss Health Bar (if boss is present)
+   UI.Hud.draw_boss_health(world)
 
    -- Draw XP bar
    UI.XpBar.draw(player)

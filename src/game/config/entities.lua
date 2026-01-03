@@ -245,6 +245,71 @@ return {
          shadow_width = 17,
          outline_color = 1,
       },
+      GreenWitch = {
+         entity_type = "Enemy",
+         tags =
+         "enemy,boss,shooter,timers,velocity,map_collidable,collidable,health,drawable,animatable,sprite,shadow,middleground",
+         hp = 300,
+         xp_value = 100,
+         max_speed = 2,
+         contact_damage = 20,
+         -- Phase thresholds (fraction of max HP)
+         phase2_threshold = 0.66, -- Switch at 66% HP
+         phase3_threshold = 0.33, -- Switch at 33% HP
+         -- Combat stats (reuses EnemyBullet projectile)
+         is_shooter = true,       -- Required for EnemyBullet projectile type
+         shoot_delay = 60,
+         shot_speed = 2,          -- Projectile speed
+         vision_range = 300,
+         dash_speed_multiplier = 4,
+         stun_duration = 60,
+         -- Minion summoning
+         summon_cooldown = 180,
+         summon_type = "Skulker",
+         summon_count = 2,
+         -- Visuals
+         width = 24,
+         height = 32,
+         hitbox_width = 18,
+         hitbox_height = 20,
+         hitbox_offset_x = 3,
+         hitbox_offset_y = 2,
+         sprite_index_offsets = {
+            down = 208,
+            right = 208,
+            left = 208,
+            up = 208,
+         },
+         animations = {
+            down = {
+               idle      = {indices = {208}, durations = {30}},
+               walking   = {indices = {208}, durations = {8}},
+               attacking = {indices = {209}, durations = {30}},
+               death     = {indices = {208}, durations = {30}}
+            },
+            up = {
+               idle      = {indices = {208}, durations = {30}},
+               walking   = {indices = {208}, durations = {8}},
+               attacking = {indices = {209}, durations = {30}},
+               death     = {indices = {208}, durations = {30}}
+            },
+            right = {
+               idle      = {indices = {208}, durations = {30}, flip = true},
+               walking   = {indices = {208}, durations = {8}, flip = true},
+               attacking = {indices = {209}, durations = {30}, flip = true},
+               death     = {indices = {208}, durations = {30}, flip = true}
+            },
+            left = {
+               idle      = {indices = {208}, durations = {30}},
+               walking   = {indices = {208}, durations = {8}},
+               attacking = {indices = {209}, durations = {30}},
+               death     = {indices = {208}, durations = {30}}
+            }
+         },
+         shadow_offset_y = 6,
+         shadow_width = 22,
+         outline_color = 1,
+      },
    },
    -- Player-summoned minions
    Minion = {

@@ -6,7 +6,6 @@ local machine = require("lib/lua-state-machine/statemachine")
 local Wander = require("src/ai/primitives/wander")
 local Chase = require("src/ai/primitives/chase")
 local Emotions = require("src/systems/emotions")
-local EntityUtils = require("src/utils/entity_utils")
 local HitboxUtils = require("src/utils/hitbox_utils")
 
 local SHOOTER_VISION_RANGE = 200

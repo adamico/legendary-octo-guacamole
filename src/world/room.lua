@@ -1,5 +1,6 @@
 local machine = require("lib/lua-state-machine/statemachine")
 local Room = Class("Room")
+local GameState = require("src/game/game_state")
 
 function Room:initialize(tx, ty, w, h, is_safe)
     self.tiles = {x = tx, y = ty, w = w, h = h}
@@ -23,6 +24,8 @@ function Room:initialize(tx, ty, w, h, is_safe)
         },
         callbacks = {
             onenterspawning = function()
+                -- Skip door blocking if cheat enabled
+                if GameState.cheats.unlock_all_rooms then return end
                 if room.doors then
                     for _, door in pairs(room.doors) do
                         door.sprite = DOOR_BLOCKED_TILE

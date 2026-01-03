@@ -3,9 +3,9 @@
 -- Self-contained (doesn't use wander/chase primitives due to unique movement)
 
 local machine = require("lib/lua-state-machine/statemachine")
-local EntityUtils = require("src/utils/entity_utils")
 local Emotions = require("src/systems/emotions")
 local HitboxUtils = require("src/utils/hitbox_utils")
+local Dash = require("src/ai/primitives/dash")
 
 local PUZZLED_DURATION = 60 -- frames to stay puzzled before patrol
 
@@ -137,23 +137,8 @@ local function dasher_ai(entity, player)
          fsm:spot()
       end
    elseif fsm:is("windup") then
-      -- Stop moving during windup (already set by callback)
-      entity.vel_x = 0
-      entity.vel_y = 0
-
       -- Track player during windup so dash is accurate
-      if dist > 0 then
-         entity.dash_target_dx = dx / dist
-         entity.dash_target_dy = dy / dist
-
-         -- Update facing direction to match target so animation rotates correctly
-         entity.dir_x = sgn(entity.dash_target_dx)
-         entity.dir_y = sgn(entity.dash_target_dy)
-
-         -- Force update current_direction for animation system (since vel is 0)
-         entity.current_direction = EntityUtils.get_direction_name(entity.dash_target_dx, entity.dash_target_dy,
-            entity.current_direction)
-      end
+      Dash.windup(entity, dx, dy, dist, false)
 
       entity.dasher_timer = entity.dasher_timer - 1
       if entity.dasher_timer <= 0 then
@@ -161,11 +146,7 @@ local function dasher_ai(entity, player)
       end
    elseif fsm:is("dash") then
       -- Move at 4x speed in cached direction
-      local dash_speed = entity.max_speed * entity.dash_speed_multiplier
-      entity.vel_x = entity.dash_target_dx * dash_speed
-      entity.vel_y = entity.dash_target_dy * dash_speed
-      entity.dir_x = sgn(entity.dash_target_dx)
-      entity.dir_y = sgn(entity.dash_target_dy)
+      local hit_wall = Dash.update(entity)
 
       -- Rotate sprite
       entity.rotation_timer = (entity.rotation_timer or 0) + 1
@@ -176,9 +157,8 @@ local function dasher_ai(entity, player)
       end
 
       -- Transition: collision with wall (hit_wall) or player (dasher_collision)
-      if entity.dasher_collision or entity.hit_wall then
+      if entity.dasher_collision or hit_wall then
          fsm:collide()
-         entity.hit_wall = false -- Clear flag
       end
    elseif fsm:is("stun") then
       -- Stay idle (already set by callback)

@@ -10,6 +10,7 @@ local skulker_ai = require("src/ai/enemies/skulker")
 local skull_ai = require("src/ai/enemies/skull")
 local shooter_ai = require("src/ai/enemies/shooter")
 local dasher_ai = require("src/ai/enemies/dasher")
+local boss_ai = require("src/ai/enemies/boss")
 
 -- Minion AI profiles
 local ChickAI = require("src/ai/minions/chick")
@@ -29,6 +30,7 @@ local enemy_profiles = {
    Skull = skull_ai,
    Shooter = shooter_ai,
    Dasher = dasher_ai,
+   GreenWitch = boss_ai,
 }
 
 -- Minion AI lookup table (maps minion_type to AI function)

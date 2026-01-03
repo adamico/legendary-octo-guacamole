@@ -20,6 +20,16 @@ The project is a Picotron game (Lua-based) using an ECS architecture.
 
 ### Recent Activities
 
+- **Implemented Green Witch Boss Enemy**:
+  - **Entity Configuration**: Added `GreenWitch` to `entities.lua` with 300 HP, 3 phases based on HP thresholds (66%, 33%), sprites 208/209.
+  - **Phase-Based AI FSM**: Created `src/ai/enemies/boss.lua` with 3-phase behavior:
+    - **Phase 1 (100-66% HP)**: Chase + Shoot (aggressive) - maintains shooting distance, periodic projectile attacks.
+    - **Phase 2 (66-33% HP)**: Wander + Summon (defensive) - shorter flee steps, alternates between shooting (3-shot burst) and summoning (capped at 6 minions). Uses randomized flee targets.
+    - **Phase 3 (33-0% HP)**: Enraged 6-step rotation: Flee → Shoot → Flee → Summon → Flee → Dash (windup + charge). Rapid-fire shooting.
+  - **Boss Spawning**: Modified `spawner.lua` to spawn boss at room center in boss rooms (90-frame spawn delay).
+  - **Minion Summoning**: Added boss summoning logic in `ai.lua` - spawns configured minion type when `summon_pending` flag set.
+  - **Boss Health Bar**: Added `Hud.draw_boss_health()` in `hud.lua` - large health bar at top of screen with phase indicators and color changes.
+  - **Integration**: Boss health bar rendered in `play.lua` UI layer.
 - **Start of Session**: Fixed various gameplay bugs including chest spawning mechanics, bomb interactions, and visual feedback.
   - **Chest Loot Improvements**:
     - Implemented smart spawning for chest loot: items now check for valid floor tiles (avoiding pits) and stagger their positions to prevent overlapping with each other.

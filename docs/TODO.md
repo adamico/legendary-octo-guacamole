@@ -2,9 +2,7 @@
 
 ## Next
 
-- add genetic mutation system (powerups that modify the mechanics) [BRAINSTORM]
-- add locked bio lab (treasure room) with challenge mechanics [BRAINSTORM]
-- add boss room with special enemy [BRAINSTORM]
+- [x] add boss room with special enemy (Green Witch implemented with 3-phase AI)
 
 ## Bugs
 

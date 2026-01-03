@@ -20,6 +20,30 @@ local UNREACHABLE_BLACKLIST_TIME = 5.0 -- Seconds to blacklist an unreachable en
 -- Target painting: enemy hit by player becomes priority target for all chicks
 local painted_target = nil
 
+--- Check if any food (yolk splats) exists within range
+--- Used to decide if chick should abandon combat to seek food
+--- @param entity table - The chick
+--- @param world table - ECS world
+--- @return boolean - True if food is nearby
+local function food_exists_nearby(entity, world, range)
+   range = range or 100
+   local range_sq = range * range
+   local ex, ey = entity.x, entity.y
+   local found = false
+
+   world.sys("yolk_splat", function(food)
+      if found then return end -- Early exit
+      local dx = food.x - ex
+      local dy = food.y - ey
+      local dist_sq = dx * dx + dy * dy
+      if dist_sq < range_sq then
+         found = true
+      end
+   end)()
+
+   return found
+end
+
 local function init_fsm(entity)
    entity.chick_fsm = machine.create({
       initial = "wandering",
@@ -273,8 +297,23 @@ local function chick_ai(entity, world)
    local has_target = nearest_enemy ~= nil
 
    -- OPTIMIZATION: Use squared distances for range comparisons
+   -- For attack range: distance from chick center to EDGE of target hitbox (not center)
    local attack_range_sq = entity.attack_range * entity.attack_range
-   local in_attack_range = has_target and enemy_dist_sq < attack_range_sq
+   local in_attack_range = false
+   if has_target then
+      -- Get chick center and target hitbox
+      local chk_hb = HitboxUtils.get_hitbox(entity)
+      local chk_cx, chk_cy = chk_hb.x + chk_hb.w / 2, chk_hb.y + chk_hb.h / 2
+      local tgt_hb = HitboxUtils.get_hitbox(nearest_enemy)
+
+      -- Calculate distance to nearest edge of target hitbox
+      local closest_x = max(tgt_hb.x, min(chk_cx, tgt_hb.x + tgt_hb.w))
+      local closest_y = max(tgt_hb.y, min(chk_cy, tgt_hb.y + tgt_hb.h))
+      local edge_dx, edge_dy = chk_cx - closest_x, chk_cy - closest_y
+      local edge_dist_sq = edge_dx * edge_dx + edge_dy * edge_dy
+
+      in_attack_range = edge_dist_sq < attack_range_sq
+   end
 
    -- State transitions based on priority: hungry > attack > chase > follow > wander
    -- Track previous target to detect target changes
@@ -333,8 +372,10 @@ local function chick_ai(entity, world)
          Emotions.set(entity, "seeking_food")
       end
    elseif fsm:is("chasing") then
-      -- If hungry, prioritize food
-      if is_hungry then
+      -- If hungry AND food exists, prioritize food
+      -- (Don't abandon combat for non-existent food - that causes the bug where chicks
+      -- lose their target at 50% HP and never reacquire it)
+      if is_hungry and food_exists_nearby(entity, world, entity.food_seek_range) then
          PathFollow.clear_path(entity)
          fsm:get_hungry()
          entity.chase_target = nil
@@ -352,8 +393,9 @@ local function chick_ai(entity, world)
          entity.chase_target = nearest_enemy
       end
    elseif fsm:is("attacking") then
-      -- If hungry, prioritize food
-      if is_hungry then
+      -- If hungry AND food exists, prioritize food
+      -- (Don't abandon attack for non-existent food)
+      if is_hungry and food_exists_nearby(entity, world, entity.food_seek_range) then
          fsm:get_hungry()
          entity.chase_target = nil
          -- Lost target?

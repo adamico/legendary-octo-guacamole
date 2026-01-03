@@ -56,7 +56,20 @@ end
 -- config: { wave_pattern = pattern } or legacy { enemies = { count, types } }
 function Spawner.populate(room, player)
     -- Early exit if not in populated state or no config
-    if not room or not room.lifecycle:is("populated") or not room.contents_config then return end
+    if not room or not room.lifecycle:is("populated") then return end
+
+    -- Boss room handling: spawn single boss at room center
+    if room.room_type == "boss" then
+        local bounds = room:get_inner_bounds()
+        local cx = ((bounds.x1 + bounds.x2) / 2) * GRID_SIZE
+        local cy = ((bounds.y1 + bounds.y2) / 2) * GRID_SIZE
+        room.enemy_positions = {{x = cx, y = cy, type = "GreenWitch"}}
+        room.spawn_timer = 90 -- Longer spawn delay for dramatic effect
+        return
+    end
+
+    -- Skip non-combat rooms (shop, treasure, start)
+    if not room.contents_config then return end
 
     local WavePatterns = require("src/world/wave_patterns")
     local RoomLayouts = require("src/world/room_layouts")

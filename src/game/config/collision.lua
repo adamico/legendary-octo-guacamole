@@ -9,18 +9,23 @@ local CollisionLayers = {
    WORLD = 32,            -- 0b100000
    OBSTACLE = 64,         -- 0b1000000
    EXPLOSION = 128,       -- 0b10000000
+   MINION = 256,          -- 0b100000000 (friendly minions - don't collide with enemies)
 }
+
+-- Shorthand aliases for readability
+local L = CollisionLayers
 
 -- What each layer can collide with (bitmask)
 local CollisionMasks = {
-   [1] = 2 + 8 + 16 + 32 + 64 + 128, -- PLAYER: Enemy + EnemyProjectile + Pickup + World + Obstacle + Explosion
-   [2] = 1 + 4 + 32 + 64 + 128,      -- ENEMY: Player + PlayerProjectile + World + Obstacle + Explosion
-   [4] = 2 + 32 + 64,                -- PLAYER_PROJECTILE: Enemy + World + Obstacle
-   [8] = 1 + 32 + 64,                -- ENEMY_PROJECTILE: Player + World + Obstacle
-   [16] = 1 + 16,                    -- PICKUP: Player + other Pickups
-   [32] = 1 + 2 + 4 + 8 + 64,        -- WORLD: Everything except Pickup (+Obstacle)
-   [64] = 1 + 2 + 4 + 8 + 32 + 128,  -- OBSTACLE: Player + Enemy + Projectiles + World + Explosion
-   [128] = 1 + 2 + 64,               -- EXPLOSION: Player + Enemy + Obstacle
+   [L.PLAYER]            = L.ENEMY + L.ENEMY_PROJECTILE + L.PICKUP + L.WORLD + L.OBSTACLE + L.EXPLOSION,
+   [L.ENEMY]             = L.PLAYER + L.PLAYER_PROJECTILE + L.WORLD + L.OBSTACLE + L.EXPLOSION + L.MINION,
+   [L.PLAYER_PROJECTILE] = L.ENEMY + L.WORLD + L.OBSTACLE,
+   [L.ENEMY_PROJECTILE]  = L.PLAYER + L.WORLD + L.OBSTACLE,
+   [L.PICKUP]            = L.PLAYER + L.PICKUP,
+   [L.WORLD]             = L.PLAYER + L.ENEMY + L.PLAYER_PROJECTILE + L.ENEMY_PROJECTILE + L.OBSTACLE + L.MINION,
+   [L.OBSTACLE]          = L.PLAYER + L.ENEMY + L.PLAYER_PROJECTILE + L.ENEMY_PROJECTILE + L.WORLD + L.EXPLOSION,
+   [L.EXPLOSION]         = L.PLAYER + L.ENEMY + L.OBSTACLE,
+   [L.MINION]            = L.ENEMY + L.WORLD + L.OBSTACLE,
 }
 
 -- Entity type to collision layer mapping
@@ -41,8 +46,8 @@ local EntityCollisionLayer = {
    LockedChest = CollisionLayers.OBSTACLE,
    ShopItem = CollisionLayers.OBSTACLE,
    Explosion = CollisionLayers.EXPLOSION,
-   Chick = CollisionLayers.WORLD,
-   Egg = CollisionLayers.WORLD,
+   Chick = CollisionLayers.MINION,
+   Egg = CollisionLayers.MINION,
 }
 
 return {

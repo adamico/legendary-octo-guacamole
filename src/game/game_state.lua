@@ -11,8 +11,9 @@ local GameState = {
    cheats = {
       noclip = false,
       godmode = false,
-      free_attacks = false, -- Removes shot/melee costs and activation conditions
+      free_attacks = false,     -- Removes shot/melee costs and activation conditions
       infinite_inventory = false,
+      unlock_all_rooms = false, -- All doors stay open, no enemies required
    },
    -- Level seed for reproducible dungeon generation (nil = random)
    level_seed = 83,
