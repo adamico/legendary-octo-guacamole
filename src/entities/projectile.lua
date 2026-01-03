@@ -4,7 +4,7 @@
 local GameConstants = require("src/game/game_config")
 local EntityUtils = require("src/utils/entity_utils")
 local HitboxUtils = require("src/utils/hitbox_utils")
-
+local Particles = require("src/systems/particles")
 local Projectile = {}
 
 -- Unified spawn function using Type Object pattern
@@ -126,6 +126,20 @@ function Projectile.spawn_from_origin(world, shooter, dx, dy, projectile_type, i
     -- Use threshold check in case dx/dy are floats
     local is_vertical = (abs(dy) > 0.1) and (abs(dx) < 0.1)
     instance_data.vertical_shot = is_vertical
+
+    -- Muzzle flash particles at directional offset
+    local direction = EntityUtils.get_direction_name(dx, dy)
+    local flash_x, flash_y = origin_x, origin_y - projectile_z
+
+    -- Use directional muzzle flash offsets if available
+    if shooter.muzzle_flash_offsets and direction then
+        local offset = shooter.muzzle_flash_offsets[direction]
+        if offset then
+            flash_x = shooter.x + offset.x
+            flash_y = shooter.y + offset.y - projectile_z
+        end
+    end
+    Particles.spawn_burst(flash_x, flash_y, "muzzle_flash", nil, shooter.muzzle_flash_colors)
 
     return Projectile.spawn(world, spawn_x, spawn_y, dx, dy, projectile_type, instance_data)
 end

@@ -45,10 +45,17 @@ return {
    -- Yolk Splat Settings (Wall/Rock impacts)
    yolk_splat_duration = 300, -- 5 seconds
    yolk_slow_factor = 0.7,    -- Enemies move at 70% speed
-   -- Projectile origin (offset from sprite top-left, i.e., entity.x and entity.y)
    projectile_origin_x = 12,  -- X offset from sprite left edge
    projectile_origin_y = 24,  -- Y offset from sprite top edge
    projectile_origin_z = 16,  -- Z elevation for horizontal shots
+   -- Muzzle flash offsets per direction (from sprite top-left)
+   muzzle_flash_offsets = {
+      down  = {x = 12, y = 30},
+      up    = {x = 12, y = 18},
+      right = {x = 24, y = 24},
+      left  = {x = 4, y = 24},
+   },
+   muzzle_flash_colors = {7, 6, 12}, -- white, light gray, light blue
    -- Inventory
    coins = 0,
    keys = 1,

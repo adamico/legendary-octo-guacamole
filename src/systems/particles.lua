@@ -86,6 +86,18 @@ local PRESETS = {
       gravity = 0,
       friction = 0.95,
    },
+   muzzle_flash = {
+      count = 4,
+      speed_min = 1.5,
+      speed_max = 3.0,
+      life_min = 8,
+      life_max = 15,
+      size_min = 1,
+      size_max = 2,
+      colors = {7, 6, 12}, -- white, light gray, light blue
+      gravity = 0,
+      friction = 0.8,
+   },
 }
 
 --- Initialize the particle system
@@ -138,11 +150,13 @@ end
 --- @param y number Center Y
 --- @param ptype string Particle type ("hit_spark", "explosion", etc)
 --- @param count number|nil Override count
-function Particles.spawn_burst(x, y, ptype, count)
+--- @param colors table|nil Override colors array
+function Particles.spawn_burst(x, y, ptype, count, colors)
    local preset = PRESETS[ptype]
    if not preset then return end
 
    count = count or preset.count
+   colors = colors or preset.colors
 
    for i = 1, count do
       -- Random direction
@@ -153,7 +167,7 @@ function Particles.spawn_burst(x, y, ptype, count)
 
       -- Random properties
       local life = preset.life_min + flr(rnd(1) * (preset.life_max - preset.life_min + 1))
-      local color = preset.colors[flr(rnd(1) * #preset.colors) + 1]
+      local color = colors[flr(rnd(1) * #colors) + 1]
       local size = preset.size_min + flr(rnd(1) * (preset.size_max - preset.size_min + 1))
 
       Particles.spawn(x, y, vx, vy, life, color, size, preset.gravity, preset.friction)

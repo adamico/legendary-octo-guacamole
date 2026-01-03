@@ -146,6 +146,14 @@ return {
          shadow_width = 17,
          shadow_height = 6,
          outline_color = 1,
+         -- Muzzle flash (green magic)
+         muzzle_flash_offsets = {
+            down  = {x = 8, y = 14},
+            up    = {x = 8, y = 2},
+            right = {x = 14, y = 8},
+            left  = {x = 2, y = 8},
+         },
+         muzzle_flash_colors = {11, 3, 26}, -- green, dark green, purple
       },
       Skull = {
          entity_type = "Enemy",
@@ -309,6 +317,14 @@ return {
          shadow_offset_y = 6,
          shadow_width = 22,
          outline_color = 1,
+         -- Muzzle flash (dark magic)
+         muzzle_flash_offsets = {
+            down  = {x = 12, y = 28},
+            up    = {x = 12, y = 4},
+            right = {x = 22, y = 16},
+            left  = {x = 2, y = 16},
+         },
+         muzzle_flash_colors = {26, 27, 8}, -- purple, dark purple, red
       },
    },
    -- Player-summoned minions

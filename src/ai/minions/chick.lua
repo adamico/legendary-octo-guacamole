@@ -88,14 +88,28 @@ local function init_fsm(entity)
             from = "following",
             to = "wandering"
          },
+         {
+            name = "die",
+            from = "*",
+            to = "death"
+         },
       },
       callbacks = {
          onwandering = function(self, event, from, to) Emotions.set(entity, "idle") end,
          onseeking_food = function(self, event, from, to) Emotions.set(entity, "seeking_food") end,
          onchasing = function(self, event, from, to) Emotions.set(entity, "chasing") end,
          onfollowing = function(self, event, from, to) Emotions.set(entity, "following") end,
+         onenterdeath = function(self, event, from, to)
+            Emotions.set(entity, "seeking_food")
+            entity.vel_x = 0
+            entity.vel_y = 0
+            entity.acc_x = 0
+            entity.acc_y = 0
+            entity.anim_timer = 0
+         end
       }
    })
+   entity.fsm = entity.chick_fsm
 end
 
 --- Find nearest enemy within vision range (current room only)
@@ -230,6 +244,18 @@ local function chick_ai(entity, world)
    -- Decrement attack timer
    if entity.attack_timer and entity.attack_timer > 0 then
       entity.attack_timer = entity.attack_timer - 1
+   end
+
+   -- Check for death
+   if entity.hp and entity.hp <= 0 then
+      if entity.chick_fsm and not entity.chick_fsm:is("death") then
+         entity.chick_fsm:die()
+      end
+   end
+
+   -- Abort updates if dead
+   if entity.chick_fsm and entity.chick_fsm:is("death") then
+      return
    end
 
    -- OPTIMIZATION: Cache player reference early (needed for Face-Hugger and bonuses)

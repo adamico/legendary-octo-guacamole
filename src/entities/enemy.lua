@@ -51,6 +51,8 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
     enemy.shadow_offsets_x = config.shadow_offsets_x
     enemy.shadow_widths = config.shadow_widths
     enemy.shadow_heights = config.shadow_heights
+    enemy.muzzle_flash_offsets = config.muzzle_flash_offsets
+    enemy.muzzle_flash_colors = config.muzzle_flash_colors
 
     -- 4. Dynamic/Behavior initialization
     if enemy.sprite_index_offsets then

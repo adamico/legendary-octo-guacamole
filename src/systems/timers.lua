@@ -27,9 +27,15 @@ function Timers.update(world)
          entity.hp_drain_timer = (entity.hp_drain_timer or 0) + 1
          if entity.hp_drain_timer >= entity.hp_drain_rate then
             entity.hp_drain_timer = 0
-            entity.hp = entity.hp - 1
+            entity.hp -= 1
             if entity.hp <= 0 then
-               world.del(entity)
+               if entity.fsm and entity.fsm:is("death") then
+                  -- Already dying, wait for animation
+               elseif entity.fsm and entity.fsm.die then
+                  entity.fsm:die()
+               else
+                  world.del(entity)
+               end
             end
          end
       end

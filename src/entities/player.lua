@@ -78,6 +78,8 @@ function Player.spawn(world, x, y)
         projectile_origin_x = GameConstants.Player.projectile_origin_x or 0,
         projectile_origin_y = GameConstants.Player.projectile_origin_y or 0,
         projectile_origin_z = GameConstants.Player.projectile_origin_z or 0,
+        muzzle_flash_offsets = GameConstants.Player.muzzle_flash_offsets,
+        muzzle_flash_colors = GameConstants.Player.muzzle_flash_colors,
         shoot_cooldown_duration = GameConstants.Player.fire_rate,
         -- Health regen properties
         regen_trigger_field = "time_since_shot", -- Trigger for regen

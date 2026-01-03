@@ -60,7 +60,7 @@ function Lifecycle.update_fsm(entity, world)
                 handler(world or _G.world, entity)
             end
         elseif entity.anim_complete_state == "attacking" then
-            if not entity.anim_looping and fsm:can("finish") then
+            if not entity.anim_looping and fsm.finish then
                 fsm:finish()
             end
         end
@@ -73,16 +73,16 @@ function Lifecycle.update_fsm(entity, world)
     local is_moving = (abs(entity.vel_x or 0) > 0.1 or abs(entity.vel_y or 0) > 0.1)
 
     if is_moving then
-        if fsm:can("walk") then fsm:walk() end
+        if fsm.walk then fsm:walk() end
     else
-        if fsm:can("stop") then fsm:stop() end
+        if fsm.stop then fsm:stop() end
     end
 
     -- Hit transition (invuln timer indicates recent damage)
     if entity.invuln_timer and entity.invuln_timer > 0 then
-        if fsm:can("hit") then fsm:hit() end
+        if fsm.hit then fsm:hit() end
     elseif fsm:is("hurt") then
-        if fsm:can("recover") then fsm:recover() end
+        if fsm.recover then fsm:recover() end
     end
 
     -- Death check

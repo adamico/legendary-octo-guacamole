@@ -1,8 +1,8 @@
 -- Entity death behavior registry
 local Entities = require("src/entities")
-local GameConstants = require("src/game/game_config")
 local Events = require("src/game/events")
 local DungeonManager = require("src/world/dungeon_manager")
+local Effects = require("src/systems/effects")
 
 local DeathHandlers = {}
 
@@ -30,6 +30,13 @@ end
 DeathHandlers.Player = function(world, entity)
    Log.trace("Player died!")
    Events.emit(Events.GAME_OVER)
+end
+
+DeathHandlers.Chick = function(world, entity)
+   local cx = entity.x + (entity.width or 16) / 2
+   local cy = entity.y + (entity.height or 16) / 2
+   Effects.spawn_particles(cx, cy, "blood", 8)
+   world.del(entity)
 end
 
 DeathHandlers.Enemy = function(world, entity)
