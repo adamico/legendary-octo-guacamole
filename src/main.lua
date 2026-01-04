@@ -11,7 +11,7 @@ Log.trace("Log.init: current_level = "..Log.current_level)
 
 local Scenes = require("src/scenes")
 
-local starting_scene = "Play"
+local starting_scene = "Title"
 local scene_manager = Scenes.Manager:new()
 
 function _init()
