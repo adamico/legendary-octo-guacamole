@@ -53,7 +53,10 @@ function Lifecycle.update_fsm(entity, world)
     -- Handle completed animations (Death / Attack finish)
     if entity.anim_complete_state then
         if entity.anim_complete_state == "death" then
-            local handler = DeathHandlers[entity.type] or DeathHandlers.default
+            -- Priority: enemy_type (for specific enemies like Boss), then type, then default
+            local handler = DeathHandlers[entity.enemy_type]
+                         or DeathHandlers[entity.type]
+                         or DeathHandlers.default
             if not entity.death_cleanup_called then
                 entity.death_cleanup_called = true
                 -- Pass world if available, checking for both local arg and global fallback

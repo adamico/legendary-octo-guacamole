@@ -1,7 +1,7 @@
 local pgui = require("lib/pgui")
 local SceneManager = require("src/scenes/manager")
 local MenuNav = require("src/ui/menu_nav")
-local GameOver = SceneManager:addState("GameOver")
+local Victory = SceneManager:addState("Victory")
 
 local restart_clicked = false
 local return_to_title_clicked = false
@@ -11,8 +11,8 @@ end
 -- Menu navigation
 local nav = MenuNav.new(2)
 
-function GameOver:enteredState()
-   Log.trace("Entered GameOver scene")
+function Victory:enteredState()
+   Log.trace("Entered Victory scene")
    -- Reset all GFX state to ensure clean visuals
    pal()           -- Reset color remaps
    palt()          -- Reset transparency (color 0 is transparent for spr/map)
@@ -22,13 +22,13 @@ function GameOver:enteredState()
    nav:reset()
 end
 
-function GameOver:exitedState()
+function Victory:exitedState()
    restart_clicked = false
    return_to_title_clicked = false
    nav:reset()
 end
 
-function GameOver:update()
+function Victory:update()
    pgui:refresh()
 
    -- Update navigation and check for confirm
@@ -50,10 +50,9 @@ function GameOver:update()
    nav:apply_hover(pgui)
 
    -- Using safer standard colors: 5 (dark grey), 12 (cyan), 7 (white), 0 (black)
-   -- Pad labels to same width for uniform buttons
    local buttons = {
-      {"button", {text = MenuNav.pad_label(restart_label, max_width), margin = margin, stroke = true, color = {5, 12, 7, 0}}},
-      {"button", {text = MenuNav.pad_label(return_to_title_label, max_width), margin = margin, stroke = true, color = {5, 12, 7, 0}}}
+      {"button", {text = restart_label, margin = margin, stroke = true, color = {5, 12, 7, 0}}},
+      {"button", {text = return_to_title_label, margin = margin, stroke = true, color = {5, 12, 7, 0}}}
    }
 
    local stack = pgui:component("vstack", {
@@ -75,22 +74,22 @@ function GameOver:update()
    if restart_clicked then self:gotoState("Play") end
 end
 
-function GameOver:draw()
+function Victory:draw()
    -- Dark red/black background for game over
    cls(0)
    rectfill(0, SCREEN_HEIGHT / 2 - 40, SCREEN_WIDTH, SCREEN_HEIGHT / 2 + 60, 1) -- Dark blue/grey band
 
-   local game_over = "GAME OVER"
+   local victory = "Victory!"
    local font_scale = 2
-   local text_x = SCREEN_WIDTH / 2 - (#game_over * 5 * font_scale) / 2
+   local text_x = SCREEN_WIDTH / 2 - (#victory * 5 * font_scale) / 2
    local text_y = SCREEN_HEIGHT / 2 - 20
 
    -- Shadow/Outline for text
-   fprint(game_over, text_x + 1, text_y + 1, 21, font_scale) -- Black shadow
-   fprint(game_over, text_x, text_y, 8, font_scale) -- Red text
+   fprint(victory, text_x + 1, text_y + 1, 21, font_scale) -- Black shadow
+   fprint(victory, text_x, text_y, 8, font_scale) -- Red text
 
    pgui:draw()
    nav:draw_arrow(pgui)
 end
 
-return GameOver
+return Victory

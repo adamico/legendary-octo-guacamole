@@ -11,7 +11,7 @@ local fprint           = function(...)
 	require("src/utils/text_utils").fprint(simple_font, ...)
 end
 
-local characters_y = SCREEN_HEIGHT / 2 - 80
+local characters_y = SCREEN_HEIGHT / 2 - 74
 
 local chicken = {
 	x = SCREEN_WIDTH / 2 - 80,
@@ -60,24 +60,26 @@ function Title:update()
 		local confirmed         = nav:update(pgui)
 
 		-- Main menu
-		local new_game_label    = "New Game"
-		local help_label        = "Help"
-		local quit_label        = "Quit"
-		local max_width         = max(#new_game_label, #help_label, #quit_label)
+		local play_button_label = "   Play   "
+		local title_help_label  = "   Help   "
+		local exit_button_label = "   Exit   "
+		local max_width         = max(#play_button_label, #title_help_label, #exit_button_label)
 		local margin            = 3
 		local gap               = 3
 
 		-- Calculate button positions BEFORE creating vstack
-		local buttons_stack_pos = vec(SCREEN_WIDTH / 2 - max_width * 5 / 2 - margin * 2,
-			SCREEN_HEIGHT / 2 - nav.num_buttons * 7 / 2 - margin * 2)
+      local buttons_stack_x = SCREEN_WIDTH / 2 - max_width * 5 / 2 - margin * 2
+      local buttons_stack_y = SCREEN_HEIGHT / 2 - nav.num_buttons * 7 / 2 - margin * 2 - 4
+		local buttons_stack_pos = vec(buttons_stack_x, buttons_stack_y)
 
 		nav:calculate_button_rects(buttons_stack_pos, nav.num_buttons, max_width, margin, gap)
 		nav:apply_hover(pgui)
 
+		-- Pad labels to same width for uniform buttons
 		local contents = {
-			{"button", {text = new_game_label, margin = margin, stroke = true}},
-			{"button", {text = help_label, margin = margin, stroke = true}},
-			{"button", {text = quit_label, margin = margin, stroke = true}}
+			{"button", {text = MenuNav.pad_label(play_button_label, max_width), margin = margin, stroke = true}},
+			{"button", {text = MenuNav.pad_label(title_help_label, max_width), margin = margin, stroke = true}},
+			{"button", {text = MenuNav.pad_label(exit_button_label, max_width), margin = margin, stroke = true}}
 		}
 		local stack = pgui:component("vstack", {
 			pos      = buttons_stack_pos,
@@ -142,7 +144,6 @@ local function draw_instructions()
 
 	-- Game Info
 	fprint("GAMEPLAY", 8, start_y + line_height * 5.5, accent)
-
 	fprint("* shooting eggs cost 5 hp each (50% dud, 35% hatch, 15% leech)", 8, start_y + line_height * 6.5, color)
 	fprint("* defeat enemies for xp", 8, start_y + line_height * 7.5, color)
 	fprint("* level up to boost stats", 8, start_y + line_height * 8.5, color)
@@ -164,8 +165,14 @@ function Title:draw()
 	if show_help then
 		draw_instructions()
 	else
-		cls(3)
-		camera()
+		cls(0)
+      local band_height = 80
+      local band_x1 = 0
+      local band_y1 = SCREEN_HEIGHT / 2 - band_height / 2
+      local band_x2 = SCREEN_WIDTH
+      local band_y2 = SCREEN_HEIGHT / 2 + band_height / 2
+      local band_fill = 13
+		rectfill(band_x1, band_y1, band_x2, band_y2, band_fill)
 		local game_title_label = "Pizak"
 		local font_scale = 2
 		local x = SCREEN_WIDTH / 2 - (#game_title_label * 5 * font_scale) / 2
@@ -174,6 +181,7 @@ function Title:draw()
 		spr(chicken.sprite_id, chicken.x, chicken.y)
 		spr(player.sprite_id, player.x, player.y)
 		pgui:draw()
+		nav:draw_arrow(pgui)
 	end
 end
 

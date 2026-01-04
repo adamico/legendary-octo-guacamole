@@ -79,6 +79,18 @@ DeathHandlers.Enemy = function(world, entity)
    world.del(entity)
 end
 
+DeathHandlers.Boss = function(world, entity)
+   -- Trigger victory event
+   Log.trace("Boss defeated!")
+   Events.emit(Events.VICTORY)
+
+   -- Remove boss entity
+   world.del(entity)
+end
+
+-- Alias for GreenWitch enemy_type
+DeathHandlers.GreenWitch = DeathHandlers.Boss
+
 DeathHandlers.default = function(world, entity)
    Log.trace("Entity died: "..(entity.type or "Unknown"))
    world.del(entity)

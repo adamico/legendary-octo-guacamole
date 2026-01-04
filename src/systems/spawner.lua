@@ -2,6 +2,9 @@
 local Entities = require("src/entities")
 local GameConstants = require("src/game/game_config")
 local DungeonManager = require("src/world/dungeon_manager")
+local WavePatterns = require("src/world/wave_patterns")
+local RoomLayouts = require("src/world/room_layouts")
+
 local Spawner = {}
 
 Spawner.indicator_sprite = SPAWNER_INDICATOR_SPRITE
@@ -70,9 +73,6 @@ function Spawner.populate(room, player)
 
     -- Skip non-combat rooms (shop, treasure, start)
     if not room.contents_config then return end
-
-    local WavePatterns = require("src/world/wave_patterns")
-    local RoomLayouts = require("src/world/room_layouts")
 
     -- Get room inner bounds once (in pixel space) for bounds checking
     local room_bounds = room:get_inner_bounds()

@@ -9,7 +9,8 @@ Events.ROOM_TRANSITION = "room:transition"
 Events.GAME_OVER = "game:over"
 Events.MINIMAP_ZONE_ENTER = "minimap:zone_enter"
 Events.MINIMAP_ZONE_EXIT = "minimap:zone_exit"
-Events.LEVEL_UP = "level_up"
+Events.LEVEL_UP = "game:level_up"
+Events.VICTORY = "game:victory"
 
 --- Subscribe to an event
 -- @param event The event constant (e.g., Events.ROOM_CLEAR)

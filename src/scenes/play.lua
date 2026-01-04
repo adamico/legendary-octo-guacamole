@@ -92,6 +92,10 @@ function Play:enteredState()
       self:gotoState("GameOver")
    end)
 
+   Events.on(Events.VICTORY, function()
+      self:gotoState("Victory")
+   end)
+
    -- Subscribe to room clear events
    Events.on(Events.ROOM_CLEAR, function(room)
       -- No healing on room clear anymore (as per new design)
