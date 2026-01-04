@@ -2,8 +2,6 @@
 
 ## Next
 
-- [x] add boss room with special enemy (Green Witch implemented with 3-phase AI)
-
 ## Bugs
 
 - the chest spawned items are spawned too far from the chest
@@ -46,17 +44,16 @@
 
 - add icons for levelup choices [BRAINSTORM]
 - add a bouncing effect for the pickup items [BRAINSTORM]
-- separate upper and lower body animations [BRAINSTORM]
 - improve the visuals of the aiming line [BRAINSTORM]
 - decorate the starting room with game instructions [BRAINSTORM]
-- improve the title screen [BRAINSTORM]
-- improve the game over screen [BRAINSTORM]
-- add a credits screen [BRAINSTORM]
-- add a special screen or player effect when shooting an egg which damages the player (to show the cost of the shot) [BRAINSTORM]
 - chest drops should have a popup animation [BRAINSTORM]
 - add warnings for enemy attacks (dash, shoot) [BRAINSTORM]
+- add particles for destructibles impact 
 
 ## Audio
 
-- add music [BRAINSTORM]
-- add sound effects [BRAINSTORM]
+- add sound effects:
+  - bomb ticking
+  - bomb explosion
+  - dasher dashing
+  - chicks eating yolk
