@@ -4,6 +4,8 @@ include("lib/eggs.p8/eggs.lua")
 
 Class = require("lib/middleclass")
 Stateful = require("lib/stateful")
+Font = require("lib/picofont")
+simple_font = Font:new(require("src/assets/simple_font"))
 
 Log = require("lib/log")
 Log.init("trace")

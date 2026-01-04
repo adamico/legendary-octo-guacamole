@@ -1,9 +1,13 @@
 local pgui = require("lib/pgui")
 local SceneManager = require("src/scenes/manager")
+local MenuNav = require("src/ui/menu_nav")
 local GameOver = SceneManager:addState("GameOver")
 
 local restart_clicked = false
 local return_to_title_clicked = false
+
+-- Menu navigation
+local nav = MenuNav.new(2)
 
 function GameOver:enteredState()
    Log.trace("Entered GameOver scene")
@@ -12,15 +16,21 @@ function GameOver:enteredState()
    palt()          -- Reset transparency (color 0 is transparent for spr/map)
    camera()        -- Reset camera to 0,0
    poke(0x550b, 0) -- Reset pen palette row to 0 (crucial for lighting fix)
+   -- Reset navigation state
+   nav:reset()
 end
 
 function GameOver:exitedState()
    restart_clicked = false
    return_to_title_clicked = false
+   nav:reset()
 end
 
 function GameOver:update()
    pgui:refresh()
+
+   -- Update navigation and check for confirm
+   local confirmed = nav:update(pgui)
 
    local restart_label = "Restart"
    local return_to_title_label = "Return to Title"
@@ -28,16 +38,20 @@ function GameOver:update()
    local margin = 4
    local gap = 4
 
+   -- Calculate button positions BEFORE creating vstack
+   local buttons_stack_pos = vec(
+      SCREEN_WIDTH / 2 - (max_width * 5 + margin * 2) / 2,
+      SCREEN_HEIGHT / 2 + 10
+   )
+   
+   nav:calculate_button_rects(buttons_stack_pos, nav.num_buttons, max_width, margin, gap)
+   nav:apply_hover(pgui)
+
    -- Using safer standard colors: 5 (dark grey), 12 (cyan), 7 (white), 0 (black)
    local buttons = {
       {"button", {text = restart_label, margin = margin, stroke = true, color = {5, 12, 7, 0}}},
       {"button", {text = return_to_title_label, margin = margin, stroke = true, color = {5, 12, 7, 0}}}
    }
-
-   local buttons_stack_pos = vec(
-      SCREEN_WIDTH / 2 - (max_width * 5 + margin * 2) / 2,
-      SCREEN_HEIGHT / 2 + 10 -- Positioned slightly below center
-   )
 
    local stack = pgui:component("vstack", {
       pos = buttons_stack_pos,
@@ -50,8 +64,9 @@ function GameOver:update()
       color = {0, 0, 0, 0}
    })
 
-   restart_clicked = stack[1]
-   return_to_title_clicked = stack[2]
+   -- Check button activations (mouse click or keyboard confirm)
+   restart_clicked = nav:is_activated(1, stack[1], confirmed)
+   return_to_title_clicked = nav:is_activated(2, stack[2], confirmed)
 
    if return_to_title_clicked then self:gotoState("Title") end
    if restart_clicked then self:gotoState("Play") end
