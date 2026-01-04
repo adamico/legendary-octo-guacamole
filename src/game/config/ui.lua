@@ -20,7 +20,7 @@ return {
          }
       },
       mutations = {
-         x = 234,            -- Base X position from left
+         x = 254,            -- Base X position from left
          y = 249,            -- Base Y position from top (lowered to make room for hearts)
          spacing_x = 50,     -- Horizontal spacing between items
          icon_size = 11,     -- Size of icons
