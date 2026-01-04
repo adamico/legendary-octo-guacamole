@@ -1,0 +1,67 @@
+<h1>Pizak</h1>
+
+<p><strong>A Binding of Isaac-inspired dungeon crawler where your health is your ammunition.</strong></p>
+
+<hr>
+
+<h2>About the Game</h2>
+
+<p>Pizak flips the traditional dungeon crawler formula on its head. Every shot costs 5 HP—a resource you must manage carefully. But eggs are unpredictable: some are duds that barely scratch enemies, others hatch into allies that fight alongside you, and rare ones leech health back to you. Master the chaos of your ammunition and discover the art of measured aggression in this roguelike dungeon crawler.</p>
+
+<h2>Core Mechanics</h2>
+
+<ul>
+    <li><strong>Twin-Stick Controls</strong> – Move with the second D-pad, aim with the first D-pad, fire with O button</li>
+    <li><strong>Health as Ammo</strong> – Each egg projectile costs 5 HP (you start with 100 HP, so spend wisely)</li>
+    <li><strong>Three-Outcome Egg System</strong> – Each fired egg has different results: Duds (50% - 3 damage), Hatching Eggs (35% - spawn a Chick minion), or Leeches (15% - deal 5 damage and drop health)</li>
+    <li><strong>Vampiric Melee Attack</strong> – When critically low on health (≤20 HP), unleash a close-range attack that restores health on hit</li>
+    <li><strong>XP & Leveling</strong> – Defeat enemies to earn XP. Reach level 2 at 50 XP, then scale linearly. Each level increases your combat stats</li>
+    <li><strong>Mutation System</strong> – Unlock powerful mutations that modify your eggs, damage, range, and more. Build your own playstyle with stat-altering effects</li>
+    <li><strong>Positioning Matters</strong> – Fight near walls to quickly reclaim missed shots, or brave open spaces for greater risk</li>
+    <li><strong>Bombs & Explosives</strong> – Press X to place destructive bombs that spawn from your inventory</li>
+</ul>
+
+<h2>Features</h2>
+
+<ul>
+    <li>✨ <strong>Procedural Dungeon Generation</strong> – No two runs are alike, with carve-based room layouts featuring rocks, obstacles, pits, chests, and treasure vaults</li>
+    <li>🗺️ <strong>Isaac-Style Minimap</strong> – Complete with fog of war, smart rotation (flees the player), and special location markers (Boss, Treasure)</li>
+    <li>⚔️ <strong>Smart Enemy AI</strong> – Five distinct enemy types with FSM-based behavior: Skulker (intelligent pursuit), Shooter (ranged with vision range), Dasher (aggressive charging), Skull (invincible pressure mechanic), Boss (multi-phase with shooting and summoning), and tactical wave formations</li>
+    <li>🐣 <strong>Minion System</strong> – Fire eggs that hatch into Chicks—intelligent minions with A* pathfinding that seek food and chase enemies alongside you</li>
+    <li>💥 <strong>Satisfying Feedback</strong> – Floating damage/heal numbers (red/green), particle effects with batch optimization, visual screen shake, and enemy flash effects</li>
+    <li>🎮 <strong>Smooth Twin-Stick Gameplay</strong> – Responsive aiming with dashed trajectory preview and frame-perfect input</li>
+    <li>📈 <strong>XP & Leveling System</strong> – Defeat enemies to gain XP and level up (50 XP to reach level 2, scales linearly)</li>
+    <li>⚡ <strong>Advanced Physics</strong> – Z-axis elevation simulation for arcing projectiles, friction-based knockback decay, and spatial collision detection with bitmask filtering</li>
+    <li>💡 <strong>Dynamic Lighting & Shadows</strong> – Palette-swapping spotlight system centered on the player for immersive atmosphere</li>
+</ul>
+
+<h2>Strategic Depth</h2>
+
+<p>Pizak isn't just about reflexes—it's about strategy and resource management:</p>
+
+<ul>
+    <li><strong>Accuracy is paramount</strong> – Every projectile is a resource commitment. Wasting ammunition means losing healing opportunities</li>
+    <li><strong>Build Variety</strong> – Mutations create unique playstyles. Will you boost damage, range, fire rate, or unlock special egg effects? No two runs are identical</li>
+    <li><strong>Positioning is crucial</strong> – Tight corridors and walls can trap you, while open spaces make Chick minions harder to manage</li>
+    <li><strong>Tension is constant</strong> – The health cost of every attack creates meaningful decision-making. Do you fire now or play it safe?</li>
+    <li><strong>Skull Pressure System</strong> – Lingering in cleared rooms too long spawns an invincible pursuer that forces you to progress</li>
+    <li><strong>Minion Synergy</strong> – Deploy Chick minions to create diversions, split enemy attention, and wear down tougher foes with coordinated attacks</li>
+    <li><strong>Boss Challenge</strong> – Face a formidable boss deep in the dungeon with unique attack patterns and multiple phases. Learn its rhythm and adapt your strategy to survive</li>
+</ul>
+
+<h2>Built With</h2>
+
+<p>Pizak is built with <strong>Lua on Picotron</strong>, featuring:</p>
+
+<ul>
+    <li><strong>Entity-Component-System (ECS) Architecture</strong> – Efficient, data-driven entity management using the eggs library</li>
+    <li><strong>Advanced Collision System</strong> – Spatial hashing with bitmask-based filtering for hundreds of simultaneous interactions</li>
+    <li><strong>Pub/Sub Event Bus</strong> – Decoupled communication system for UI, logic, and game state</li>
+    <li><strong>Type Object Pattern</strong> – Data-driven configuration for enemies, projectiles, and pickups</li>
+    <li><strong>State Machines</strong> – FSM-based AI for intelligent, emotional enemy behaviors</li>
+    <li><strong>Batch-Optimized Rendering</strong> – Y-sorted 2.5D visual pipeline with lighting and shadow systems</li>
+</ul>
+
+<hr>
+
+<p><strong>Are you ready to spend your life to save it? Enter the dungeon and discover what fate awaits in Pizak.</strong></p>
