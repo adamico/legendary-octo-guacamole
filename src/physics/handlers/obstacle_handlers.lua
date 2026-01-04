@@ -183,7 +183,6 @@ local function open_chest(chest, player)
    return true
 end
 
-
 --- Push entity out of obstacle (AABB minimum penetration resolution)
 ---
 --- Respects solid tiles - won't push entity into walls
@@ -225,9 +224,6 @@ local function push_out(entity, obstacle)
          return
       end
    end
-
-   -- All directions blocked - entity is trapped, don't push
-   -- This prevents phasing through walls
 end
 
 --- Push enemy out of obstacle and handle Dasher stun
@@ -254,8 +250,8 @@ end
 --- Helper: handle egg break on obstacle collision
 --- Guards against being called multiple times for the same projectile
 ---
---- @param projectile The projectile to handle
---- @param obstacle_type The type of obstacle the projectile hit
+--- @param projectile table The projectile to handle
+--- @param obstacle_type string The type of obstacle the projectile hit
 local function projectile_hit_obstacle(projectile, obstacle_type)
    -- Prevent double processing if projectile hits multiple obstacles in same frame
    if projectile.hit_obstacle then return end
@@ -284,6 +280,8 @@ local function projectile_hit_obstacle(projectile, obstacle_type)
       Effects.spawn_visual_effect(world, spawn_x, spawn_y, 29, 15) -- Broken egg visual
    end
 
+   -- REFACTOR: Use SoundManager.play("egg_break") or similar
+   sfx(3) -- Egg break sound
    world.del(projectile)
 end
 

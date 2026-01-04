@@ -48,6 +48,7 @@ function GameOver:update()
 
    nav:calculate_button_rects(buttons_stack_pos, nav.num_buttons, max_width, margin, gap)
    nav:apply_hover(pgui)
+   nav:play_hover_sfx(pgui)
 
    -- Using safer standard colors: 5 (dark grey), 12 (cyan), 7 (white), 0 (black)
    -- Pad labels to same width for uniform buttons

@@ -47,6 +47,7 @@ function Player.spawn(world, x, y)
         shoot_cooldown = 0,
         -- Combat Stats
         shot_speed = GameConstants.Player.shot_speed,
+        sfx_shoot = GameConstants.Player.sfx_shoot,
         max_hp_to_damage_ratio = GameConstants.Player.max_hp_to_damage_ratio,
         knockback = GameConstants.Player.base_knockback,
         range = GameConstants.Player.range,

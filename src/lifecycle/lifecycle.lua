@@ -35,6 +35,8 @@ function Lifecycle.init_fsm(entity)
                 -- Stop remaining movement
                 entity.vel_x = 0
                 entity.vel_y = 0
+                -- REFACTOR: Use SoundManager.play("enemy_death") or similar
+                sfx(8) -- enemy death sound
             end
         }
     })

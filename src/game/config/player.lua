@@ -19,6 +19,7 @@ return {
    max_hp_to_damage_ratio = 0.05, -- Damage = max_hp * ratio
    range = 100,                   -- Max distance in pixels
    fire_rate = 15,                -- Frames between shots
+   sfx_shoot = 2,                 -- Sound effect ID for shooting
    base_knockback = 4,            -- Base knockback applied to all player attacks
    vampiric_heal = 0.3,           -- Heal player for 30% of damage dealt, is this used?
    -- Egg outcome probabilities (single roll, 3 outcomes)

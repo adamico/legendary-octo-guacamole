@@ -140,7 +140,8 @@ function Effects.hit_impact(source, target, intensity)
    if target.type == "Player" then
       -- sfx(2) -- pain sound (uncomment when SFX ready)
    elseif target.type == "Enemy" then
-      -- sfx(5) -- hit sound (uncomment when SFX ready)
+      -- REFACTOR: Use SoundManager.play("enemy_hit") or similar
+      sfx(4) -- hit sound (uncomment when SFX ready)
    end
 
    -- Screen shake (intensity-based)

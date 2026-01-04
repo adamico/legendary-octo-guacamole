@@ -6,6 +6,8 @@ local Title            = SceneManager:addState("Title")
 local new_game_clicked = false
 local quit_clicked     = false
 local help_clicked     = false
+local credit_clicked   = false
+local show_credits     = false
 local show_help        = false
 local fprint           = function(...)
 	require("src/utils/text_utils").fprint(simple_font, ...)
@@ -34,7 +36,7 @@ local player = {
 }
 
 -- Menu navigation
-local nav              = MenuNav.new(3)
+local nav              = MenuNav.new(4)
 
 function Title:enteredState()
 	Log.trace("Entered Title scene")
@@ -44,16 +46,18 @@ function Title:enteredState()
 	poke(0x550b, 0)
 	show_help = false
 	nav:reset()
+   fetch(CARTPATH.."sfx/title.sfx"):poke(0x80000) -- load 256k into 0x80000..0xbffff
+   music(0, nil, nil, 0x80000) -- play music using 0x80000 as the audio base address
 end
 
 function Title:update()
 	pgui:refresh()
 
-	if show_help then
-		-- Help screen: allow exiting with any button press
+	if show_help or show_credits then
 		if btnp(0) or btnp(1) or btnp(2) or btnp(3) or btnp(4) or btnp(5) or btnp(6) or
 		   btnp(8) or btnp(9) or btnp(10) or btnp(11) or btnp(12) or btnp(13) then
 			show_help = false
+         show_credits = false
 		end
 	else
 		-- Update navigation and check for confirm
@@ -62,8 +66,9 @@ function Title:update()
 		-- Main menu
 		local play_button_label = "   Play   "
 		local title_help_label  = "   Help   "
+      local credits_label     = "  Credits  "
 		local exit_button_label = "   Exit   "
-		local max_width         = max(#play_button_label, #title_help_label, #exit_button_label)
+		local max_width         = #credits_label
 		local margin            = 3
 		local gap               = 3
 
@@ -74,11 +79,13 @@ function Title:update()
 
 		nav:calculate_button_rects(buttons_stack_pos, nav.num_buttons, max_width, margin, gap)
 		nav:apply_hover(pgui)
+		nav:play_hover_sfx(pgui)
 
 		-- Pad labels to same width for uniform buttons
 		local contents = {
 			{"button", {text = MenuNav.pad_label(play_button_label, max_width), margin = margin, stroke = true}},
 			{"button", {text = MenuNav.pad_label(title_help_label, max_width), margin = margin, stroke = true}},
+			{"button", {text = MenuNav.pad_label(credits_label, max_width), margin = margin, stroke = true}},
 			{"button", {text = MenuNav.pad_label(exit_button_label, max_width), margin = margin, stroke = true}}
 		}
 		local stack = pgui:component("vstack", {
@@ -98,10 +105,15 @@ function Title:update()
 		-- Check button activations (mouse click or keyboard confirm)
 		new_game_clicked = nav:is_activated(1, stack[1], confirmed)
 		help_clicked     = nav:is_activated(2, stack[2], confirmed)
-		quit_clicked     = nav:is_activated(3, stack[3], confirmed)
+      credit_clicked   = nav:is_activated(3, stack[3], confirmed)
+		quit_clicked     = nav:is_activated(4, stack[4], confirmed)
 
-		if new_game_clicked then self:gotoState("Play") end
+		if new_game_clicked then
+         sfx(1)
+         self:gotoState("Play")
+      end
 		if help_clicked then show_help = true end
+      if credit_clicked then show_credits = true end
 		if quit_clicked then exit() end
 	end
 end
@@ -113,6 +125,20 @@ function Title:exitedState()
 	show_help = false
 	nav:reset()
 	Log.trace("Exited Title scene")
+end
+
+local function draw_footer()
+	-- Footer box
+   local accent = 8
+	local footer_x1 = 5
+	local footer_x2 = SCREEN_WIDTH - 5
+	local footer_y1 = SCREEN_HEIGHT - 85
+	local footer_y2 = footer_y1 + 15
+	rectfill(footer_x1, footer_y1, footer_x2, footer_y2, 2)
+	rect(footer_x1, footer_y1, footer_x2, footer_y2, accent)
+	if t() * 60 % 30 < 15 then
+		fprint("Press any button to continue", 12, footer_y1 + 4, 7)
+	end
 end
 
 local function draw_instructions()
@@ -149,21 +175,27 @@ local function draw_instructions()
 	fprint("* level up to boost stats", 8, start_y + line_height * 8.5, color)
 	fprint("* melee attack when less then 1 heart left", 8, start_y + line_height * 9.5, color)
 
-	-- Footer box
-	local footer_x1 = 5
-	local footer_x2 = SCREEN_WIDTH - 5
-	local footer_y1 = SCREEN_HEIGHT - 85
-	local footer_y2 = footer_y1 + 15
-	rectfill(footer_x1, footer_y1, footer_x2, footer_y2, 2)
-	rect(footer_x1, footer_y1, footer_x2, footer_y2, accent)
-	if t() * 60 % 30 < 15 then
-		fprint("Press any button to continue", 12, footer_y1 + 4, 7)
-	end
+   draw_footer()
+end
+
+
+local function draw_credits()
+   cls(1)
+   fprint("CREDITS", 8, 8, 8)
+   fprint("Game Design & Programming: kc00l + AI agents (Anthropic Claude + Google Gemini)", 8, 30, 7)
+   fprint("Art: spritesheets from ToyBox Jam 2025 assets", 8, 42, 7)
+   fprint("Music: Picotunes vol 1 by @grubermusic, adapted to Picotron by @kc00l", 8, 54, 7)
+
+   fprint("Made with Picotron for ToyBox Jam 2025", 8, 80, 7)
+
+   draw_footer()
 end
 
 function Title:draw()
 	if show_help then
 		draw_instructions()
+   elseif show_credits then
+      draw_credits()
 	else
 		cls(0)
       local band_height = 80

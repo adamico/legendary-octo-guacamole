@@ -18,6 +18,8 @@ function LevelUp:pushedState(player_entity)
    add(bonuses, rnd(Pools.Chick))
 
    selected_index = 2 -- Reset to center
+   -- REFACTOR: Use SoundManager.play("level_up") or similar
+   sfx(5) -- level up sound
 end
 
 function LevelUp:update()

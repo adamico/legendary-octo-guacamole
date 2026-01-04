@@ -45,6 +45,8 @@ function MapHandlers.register(handlers)
          yolk_slow_factor = GameConstants.Player.yolk_slow_factor,
       })
 
+      -- REFACTOR: Use SoundManager.play("egg_break") or similar
+      sfx(3) -- Egg break sound
       world.del(projectile)
    end
 

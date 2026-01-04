@@ -55,18 +55,24 @@ local PickupEffects = {}
 PickupEffects.coin = function(player, pickup)
    local amount = pickup.amount or 1
    player.coins = (player.coins or 0) + amount
+   -- REFACTOR: Use SoundManager.play("pickup") or similar
+   sfx(6) -- pickup sound
    FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
 end
 
 PickupEffects.key = function(player, pickup)
    local amount = pickup.amount or 1
    player.keys = (player.keys or 0) + amount
+   -- REFACTOR: Use SoundManager.play("pickup") or similar
+   sfx(6) -- pickup sound
    FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
 end
 
 PickupEffects.bomb = function(player, pickup)
    local amount = pickup.amount or 1
    player.bombs = (player.bombs or 0) + amount
+   -- REFACTOR: Use SoundManager.play("pickup") or similar
+   sfx(6) -- pickup sound
    FloatingText.spawn_at_entity(player, amount, "pickup", pickup.sprite_index)
 end
 
@@ -78,14 +84,16 @@ PickupEffects.health = function(player, pickup)
       player.overflow_hp = (player.overflow_hp or 0) + (player.hp - player.max_hp)
       player.hp = player.max_hp
    end
-
+   -- REFACTOR: Use SoundManager.play("pickup") or similar
+   sfx(6) -- pickup sound
    FloatingText.spawn_at_entity(player, heal_amount, "heal", pickup.sprite_index)
 end
 
 PickupEffects.xp = function(player, pickup)
    local amount = pickup.xp_amount or 10
    player.xp = (player.xp or 0) + amount
-   -- Note: Floating text intentionally omitted per design
+   -- REFACTOR: Use SoundManager.play("pickup") or similar
+   sfx(6) -- pickup sound
 end
 
 -- Unified pickup collection handler

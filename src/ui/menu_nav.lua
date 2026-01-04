@@ -14,6 +14,8 @@ function MenuNav.new(num_buttons)
       using_keyboard = true,
       last_mouse_x = 0,
       last_mouse_y = 0,
+      last_active_index = nil,  -- Track for hover/selection sfx
+      hover_sfx = 0,            -- Sound effect to play on hover/select change
    }
 
    setmetatable(nav, {__index = MenuNav})
@@ -27,6 +29,7 @@ function MenuNav:reset()
    self.using_keyboard = true
    self.last_mouse_x = 0
    self.last_mouse_y = 0
+   self.last_active_index = nil
 end
 
 -- Check if up navigation is pressed
@@ -61,12 +64,12 @@ function MenuNav:update(pgui)
 
    -- Handle keyboard navigation
    if MenuNav.nav_up() then
-      self.selected_index = self.selected_index - 1
+      self.selected_index -= 1
       if self.selected_index < 1 then self.selected_index = self.num_buttons end
       self.using_keyboard = true
    end
    if MenuNav.nav_down() then
-      self.selected_index = self.selected_index + 1
+      self.selected_index += 1
       if self.selected_index > self.num_buttons then self.selected_index = 1 end
       self.using_keyboard = true
    end
@@ -158,6 +161,20 @@ function MenuNav:get_active_index(pgui)
    else
       return self:get_hovered_index(pgui)
    end
+end
+
+--- Check if active button changed and play sound effect
+--- Call this after calculate_button_rects() and before draw_arrow()
+--- @param pgui table The pgui instance
+function MenuNav:play_hover_sfx(pgui)
+
+   local current = self:get_active_index(pgui)
+   if current and current ~= self.last_active_index then
+      if self.hover_sfx then
+         sfx(self.hover_sfx)
+      end
+   end
+   self.last_active_index = current
 end
 
 --- Draw navigation arrow sprite next to the active button

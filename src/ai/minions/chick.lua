@@ -15,7 +15,6 @@ local DungeonManager = require("src/world/dungeon_manager")
 
 -- Configuration: How long to try reaching an unreachable target before giving up
 local MAX_CHASE_STUCK_FRAMES = 60      -- ~1 second at 60fps
-local UNREACHABLE_BLACKLIST_TIME = 5.0 -- Seconds to blacklist an unreachable enemy
 
 -- Target painting: enemy hit by player becomes priority target for all chicks
 local painted_target = nil
@@ -106,6 +105,8 @@ local function init_fsm(entity)
             entity.acc_x = 0
             entity.acc_y = 0
             entity.anim_timer = 0
+            -- REFACTOR: Use SoundManager.play("enemy_death") or similar
+            sfx(8) -- enemy death sound
          end
       }
    })
@@ -199,8 +200,12 @@ local function attack_enemy(entity, target, player)
    if player and player.minion_damage_bonus then
       damage = damage + player.minion_damage_bonus
    end
-   target.hp = target.hp - damage
+   target.hp -= damage
    target.invuln_timer = 5 -- Brief invuln
+   -- REFACTOR: Use SoundManager.play("chick_attack") or similar
+   -- since this is a very frequently played sound, consider using random pitch/volume variation
+   -- and also limiting the number of simultaneous instances to avoid audio clutter
+   sfx(7) -- chick attack sound
    FloatingText.spawn_at_entity(target, -damage, "damage")
 
    -- Subtle flash effect on hit
@@ -249,6 +254,7 @@ local function chick_ai(entity, world)
    -- Check for death
    if entity.hp and entity.hp <= 0 then
       if entity.chick_fsm and not entity.chick_fsm:is("death") then
+
          entity.chick_fsm:die()
       end
    end

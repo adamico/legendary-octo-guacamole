@@ -122,6 +122,7 @@ return {
          shoot_delay = 120,
          vision_range = 200,
          is_shooter = true,
+         sfx_shoot = 9,
          wander_radius = 48,
          wander_speed_mult = 0.5,
          wander_pause_min = 30,
@@ -269,6 +270,7 @@ return {
          shoot_delay = 60,
          shot_speed = 3,          -- Projectile speed
          vision_range = 300,
+         sfx_shoot = 9,
          dash_speed_multiplier = 4,
          stun_duration = 60,
          -- Minion summoning

@@ -65,6 +65,7 @@ function Enemy.spawn(world, x, y, enemy_type, instance_data)
         enemy.shoot_cooldown_duration = enemy.shoot_delay or 60
         enemy.projectile_type = "EnemyBullet"
         enemy.health_as_ammo = false -- Enemies have unlimited ammo
+        enemy.sfx_shoot = GameConstants.Enemy[enemy_type].sfx_shoot or 9
 
         -- Note: shooter and timers tags should be added in constants.lua enemy config
     end

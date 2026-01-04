@@ -98,6 +98,7 @@ function Shooter.update(world)
                egg_slow_factor = entity.egg_slow_factor,
             }
          )
+         sfx(entity.sfx_shoot)
 
          entity.shoot_cooldown = entity.shoot_cooldown_duration or 15
       end

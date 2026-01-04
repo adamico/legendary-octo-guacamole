@@ -55,6 +55,8 @@ function Play:enteredState()
    Minimap.init()
    Minimap.visit(current_room)
 
+   fetch(CARTPATH.."sfx/game.sfx"):poke(0x80000) -- load 256k into 0x80000..0xbffff
+   music(0, nil, nil, 0x80000) -- play music using 0x80000 as the audio base address
    -- Subscribe to room transition events
    Events.on(Events.ROOM_TRANSITION, function(new_room)
       current_room = new_room
