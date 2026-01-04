@@ -84,7 +84,7 @@ local function open_chest(chest, player)
          return false
       end
       -- Consume key(s)
-      player.keys = player.keys - key_cost
+      player.keys -= key_cost
    end
 
    chest.opened = true
@@ -116,6 +116,8 @@ local function open_chest(chest, player)
             hitbox_offset_x = mut_config.hitbox_offset_x,
             hitbox_offset_y = mut_config.hitbox_offset_y,
          })
+         -- REFACTOR: Use SoundManager.play("mutation_spawn") or similar
+         sfx(11) -- mutation spawn sound
       end)
    else
       -- Normal loot logic for regular chests
@@ -178,6 +180,8 @@ local function open_chest(chest, player)
 
    -- Mark as dead and delete
    chest.dead = true
+   -- REFACTOR: Use SoundManager.play("chest_open") or similar
+   sfx(13) -- chest open sound
    world.del(chest)
 
    return true
@@ -432,7 +436,8 @@ function ObstacleHandlers.register(handlers)
 
       -- Visual feedback
       FloatingText.spawn_at_entity(player, shop_item.item_name or "Purchased!", "pickup")
-
+      -- REFACTOR: Use SoundManager.play("pickup") or similar
+      sfx(6) -- pickup sound
       -- Remove from world
       world.del(shop_item)
    end

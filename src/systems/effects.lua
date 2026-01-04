@@ -138,7 +138,8 @@ function Effects.hit_impact(source, target, intensity)
 
    -- Audio (context-based)
    if target.type == "Player" then
-      -- sfx(2) -- pain sound (uncomment when SFX ready)
+      -- REFACTOR: Use SoundManager.play("player_hit") or similar
+      sfx(target.sfx_hit) -- player hit sound
    elseif target.type == "Enemy" then
       -- REFACTOR: Use SoundManager.play("enemy_hit") or similar
       sfx(4) -- hit sound (uncomment when SFX ready)
@@ -172,7 +173,8 @@ end
 -- Pickup/collect effect
 function Effects.pickup_collect(entity)
    Effects.spawn_particles(entity.x, entity.y, "sparkle", 8)
-   -- sfx(6) -- pickup sound (uncomment when SFX ready)
+   -- REFACTOR: Use SoundManager.play("pickup") or similar
+   sfx(6) -- pickup sound
 end
 
 -- Item Rise Animation (Zelda-style)

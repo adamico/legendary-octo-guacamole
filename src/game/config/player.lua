@@ -4,6 +4,7 @@ return {
    width = 24,
    height = 32,
    max_health = 100,
+   sfx_hit = 12,
    max_hp_to_shot_cost_ratio = 0.05, -- 5 hp per shot
    recovery_percent = 0.8,           -- I don't think we need this anymore
    regen_rate = 0,

@@ -65,6 +65,8 @@ local function init_fsm(entity)
             entity.vel_y = 0
             entity.dasher_collision = nil
             entity.rotation_angle = 0
+            -- REFACTOR: Use SoundManager.play("egg_break") or similar
+            sfx(3) -- Egg break sound
          end,
          onenterpuzzled = function()
             Emotions.set(entity, "confused")

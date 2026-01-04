@@ -68,9 +68,9 @@ local function get_parsed_grid(layout)
 end
 
 --- Check if a layout is valid for a room based on door requirements
---- @param layout_name Name of the layout
+--- @param layout_name string Name of the layout
 --- @param room Room object with doors table
---- @return true if layout can be used
+--- @return false|true if layout can be used
 local function is_layout_valid_for_room(layout_name, room)
    local layout = Layouts[layout_name]
    if not layout or not layout.requires_no_doors then return true end
@@ -86,7 +86,7 @@ local function is_layout_valid_for_room(layout_name, room)
 end
 
 --- Get a random layout for a room type
---- @param room_type "combat", "start", "boss", etc.
+--- @param room_type string "combat", "start", "boss", etc.
 --- @param room Optional room object (for door-based filtering)
 --- @return Layout definition
 function RoomLayouts.get_random_layout(room_type, room)

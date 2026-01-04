@@ -36,7 +36,7 @@ function Player.spawn(world, x, y)
         hp = GameConstants.Player.max_health,
         max_hp = GameConstants.Player.max_health,
         max_hp_to_shot_cost_ratio = GameConstants.Player.max_hp_to_shot_cost_ratio,
-
+        sfx_hit = GameConstants.Player.sfx_hit,
         -- Calculated properties (removed to ensure dynamic calculation)
         -- shot_cost is calculated by systems based on max_hp * ratio
         recovery_percent = GameConstants.Player.recovery_percent,

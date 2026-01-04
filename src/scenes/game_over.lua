@@ -20,6 +20,8 @@ function GameOver:enteredState()
    poke(0x550b, 0) -- Reset pen palette row to 0 (crucial for lighting fix)
    -- Reset navigation state
    nav:reset()
+   fetch(CARTPATH.."sfx/game_over.sfx"):poke(0x80000) -- load 256k into 0x80000..0xbffff
+   music(0, nil, nil, 0x80000) -- play music using 0x80000 as the audio base address
 end
 
 function GameOver:exitedState()

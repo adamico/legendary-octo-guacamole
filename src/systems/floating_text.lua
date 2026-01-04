@@ -14,11 +14,11 @@ local function get_config()
 end
 
 --- Spawn a floating text at an entity's position
----
---- @param x, y: world position (center of entity recommended)
---- @param amount: number or string to display
---- @param text_type: "damage", "heal", or "pickup" (optional, auto-detected from amount if omitted)
---- @param sprite_index: optional sprite index to display before the text
+--- @param x any
+--- @param y any
+--- @param amount any
+--- @param text_type any
+--- @param sprite_index any
 function FloatingText.spawn(x, y, amount, text_type, sprite_index)
    local config = get_config()
 

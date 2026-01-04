@@ -82,6 +82,10 @@ function Play:enteredState()
       end)()
       Systems.FloatingText.clear()
       AI.ChickAI.clear_target() -- Clear painted target from previous room
+      if new_room.room_type ~= "combat" then
+         fetch(CARTPATH.."sfx/"..new_room.room_type..".sfx"):poke(0x80000) -- load 256k into 0x80000..0xbffff
+         music(0, nil, nil, 0x80000) -- play music using 0x80000 as the audio base address
+      end
    end)
 
    -- Subscribe to Level Up event
@@ -101,6 +105,8 @@ function Play:enteredState()
    -- Subscribe to room clear events
    Events.on(Events.ROOM_CLEAR, function(room)
       -- No healing on room clear anymore (as per new design)
+      -- REFACTOR: Use SoundManager.play("room_clear") or similar
+      sfx(10) -- room clear sound
    end)
 
    -- Setup debugui cheats toggles (clickable)

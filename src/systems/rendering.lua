@@ -74,6 +74,13 @@ end
 
 -- Internal sprite drawer (combines flash check and standard drawing)
 local function draw_sprite(entity)
+   -- Invulnerability blink: skip drawing every other frame
+   if entity.invuln_timer and entity.invuln_timer > 0 then
+      if flr(entity.invuln_timer / 4) % 2 == 0 then
+         return -- Skip this frame (blink off)
+      end
+   end
+
    local was_flashing = entity.flash_timer and entity.flash_timer > 0
    Effects.update_flash(entity)
 

@@ -2,18 +2,20 @@
 -- Defines purchasable items available in shop rooms
 
 local ShopItems = {}
+local FloatingText = require("src/systems/floating_text")
 
 -- All purchasable items
 ShopItems.pool = {
    {
       id = "heart_container",
       name = "Heart Container",
-      description = "+20 Max HP",
+      description = "+10 Max HP",
       price = 15,
       sprite = 56,
       apply = function(player)
-         player.max_hp = player.max_hp + 20
-         player.hp = math.min(player.hp + 20, player.max_hp)
+         player.max_hp += 10
+         player.hp = math.min(player.hp + 10, player.max_hp)
+         FloatingText.spawn_at_entity(player, 1, "heal", 56)
       end
    },
    {
@@ -24,6 +26,7 @@ ShopItems.pool = {
       sprite = 38,
       apply = function(player)
          player.bombs = (player.bombs or 0) + 3
+         FloatingText.spawn_at_entity(player, 3, "bomb", 38)
       end
    },
    {
@@ -34,6 +37,7 @@ ShopItems.pool = {
       sprite = 39,
       apply = function(player)
          player.keys = (player.keys or 0) + 2
+         FloatingText.spawn_at_entity(player, 2, "key", 39)
       end
    },
 }

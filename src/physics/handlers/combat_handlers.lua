@@ -231,6 +231,8 @@ local function explosion_vs_player(explosion, player)
    Effects.hit_impact(explosion, player, "heavy_shake")
    apply_explosion_knockback(explosion, player, 16)
    player.invuln_timer = player.invulnerability_duration or 120
+   -- REFACTOR: Use SoundManager.play("player_hit") or similar
+   sfx(player.sfx_hit) -- player hit sound
 end
 
 -- Handler for Explosion hitting Enemy
